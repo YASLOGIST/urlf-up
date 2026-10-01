@@ -197,6 +197,110 @@ export class Surface {
     return this;
   }
 
+  /**
+   * Soft additive beam with a Gaussian cross-section and a linear falloff
+   * along its length. This is the god-ray / light-shaft primitive: `segment()`
+   * gives you a hard-edged stroke, which reads as a drawn line; this gives you
+   * something that reads as light in air.
+   */
+  glowLine(ax, ay, bx, by, width, rgb, intensityA, intensityB = 0) {
+    const { width: W, height: H, data } = this;
+    const sigma = width * 0.5;
+    const reach = sigma * 2.6;
+    const x0 = Math.max(0, Math.floor(Math.min(ax, bx) - reach));
+    const x1 = Math.min(W - 1, Math.ceil(Math.max(ax, bx) + reach));
+    const y0 = Math.max(0, Math.floor(Math.min(ay, by) - reach));
+    const y1 = Math.min(H - 1, Math.ceil(Math.max(ay, by) + reach));
+    const vx = bx - ax;
+    const vy = by - ay;
+    const vv = vx * vx + vy * vy || 1;
+    const inv2s2 = 1 / (2 * sigma * sigma);
+    for (let y = y0; y <= y1; y++) {
+      for (let x = x0; x <= x1; x++) {
+        const px = x + 0.5 - ax;
+        const py = y + 0.5 - ay;
+        const t = (px * vx + py * vy) / vv;
+        if (t < 0 || t > 1) continue;
+        const dx = px - vx * t;
+        const dy = py - vy * t;
+        const d2 = dx * dx + dy * dy;
+        const k = Math.exp(-d2 * inv2s2) * (intensityA + (intensityB - intensityA) * t);
+        if (k < 1e-4) continue;
+        const i = (y * W + x) * 3;
+        data[i] += rgb[0] * k;
+        data[i + 1] += rgb[1] * k;
+        data[i + 2] += rgb[2] * k;
+      }
+    }
+    return this;
+  }
+
+  /**
+   * Bloom — the single largest difference between a render that looks like
+   * light and a render that looks like vector art.
+   *
+   * Extract everything above `threshold`, blur it, add it back. The blur is
+   * three successive box passes rather than a true Gaussian: three boxes are
+   * within ~3 % of a Gaussian by the central limit theorem, and a box blur is
+   * O(1) per pixel at *any* radius because it runs on a sliding sum. A real
+   * Gaussian at this radius would be ~40× slower for a difference nobody can
+   * see at 1200 px wide.
+   *
+   * `region` confines the work to a bounding box, which is what makes it
+   * affordable to bloom the animated hub on all 72 frames.
+   */
+  bloom({ threshold = 0.3, radius = 16, intensity = 0.5, region = null } = {}) {
+    const { width: W, height: H, data } = this;
+    const rx0 = region ? Math.max(0, region[0] | 0) : 0;
+    const ry0 = region ? Math.max(0, region[1] | 0) : 0;
+    const rx1 = region ? Math.min(W - 1, region[2] | 0) : W - 1;
+    const ry1 = region ? Math.min(H - 1, region[3] | 0) : H - 1;
+    const bw = rx1 - rx0 + 1;
+    const bh = ry1 - ry0 + 1;
+    if (bw < 3 || bh < 3) return this;
+
+    const src = new Float32Array(bw * bh * 3);
+    let any = false;
+    for (let y = 0; y < bh; y++) {
+      const row = (y + ry0) * W;
+      for (let x = 0; x < bw; x++) {
+        const i = (row + x + rx0) * 3;
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        if (lum <= threshold) continue;
+        // Energy-conserving extraction: keep the hue, keep only the overshoot.
+        const k = (lum - threshold) / lum;
+        const o = (y * bw + x) * 3;
+        src[o] = r * k;
+        src[o + 1] = g * k;
+        src[o + 2] = b * k;
+        any = true;
+      }
+    }
+    if (!any) return this;
+
+    const tmp = new Float32Array(bw * bh * 3);
+    const r1 = Math.max(1, Math.round(radius / 3));
+    for (let pass = 0; pass < 3; pass++) {
+      boxBlurH(src, tmp, bw, bh, r1);
+      boxBlurV(tmp, src, bw, bh, r1);
+    }
+
+    for (let y = 0; y < bh; y++) {
+      const row = (y + ry0) * W;
+      for (let x = 0; x < bw; x++) {
+        const o = (y * bw + x) * 3;
+        const i = (row + x + rx0) * 3;
+        data[i] += src[o] * intensity;
+        data[i + 1] += src[o + 1] * intensity;
+        data[i + 2] += src[o + 2] * intensity;
+      }
+    }
+    return this;
+  }
+
   /** Multiply the whole surface by a per-pixel scalar. Used for the vignette. */
   modulate(fn) {
     const { width, height, data } = this;
@@ -209,6 +313,43 @@ export class Surface {
       }
     }
     return this;
+  }
+}
+
+/* ── Separable box blur (the engine under `Surface#bloom`) ────────────────── */
+
+/** Horizontal sliding-sum pass. Edges clamp, so the blur does not darken them. */
+function boxBlurH(src, dst, w, h, r) {
+  const span = r * 2 + 1;
+  const inv = 1 / span;
+  for (let y = 0; y < h; y++) {
+    const row = y * w;
+    for (let c = 0; c < 3; c++) {
+      let sum = src[row * 3 + c] * (r + 1);
+      for (let x = 1; x <= r; x++) sum += src[(row + Math.min(x, w - 1)) * 3 + c];
+      for (let x = 0; x < w; x++) {
+        dst[(row + x) * 3 + c] = sum * inv;
+        sum += src[(row + Math.min(x + r + 1, w - 1)) * 3 + c];
+        sum -= src[(row + Math.max(x - r, 0)) * 3 + c];
+      }
+    }
+  }
+}
+
+/** Vertical sliding-sum pass. */
+function boxBlurV(src, dst, w, h, r) {
+  const span = r * 2 + 1;
+  const inv = 1 / span;
+  for (let x = 0; x < w; x++) {
+    for (let c = 0; c < 3; c++) {
+      let sum = src[x * 3 + c] * (r + 1);
+      for (let y = 1; y <= r; y++) sum += src[(Math.min(y, h - 1) * w + x) * 3 + c];
+      for (let y = 0; y < h; y++) {
+        dst[(y * w + x) * 3 + c] = sum * inv;
+        sum += src[(Math.min(y + r + 1, h - 1) * w + x) * 3 + c];
+        sum -= src[(Math.max(y - r, 0) * w + x) * 3 + c];
+      }
+    }
   }
 }
 

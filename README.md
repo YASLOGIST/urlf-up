@@ -12,7 +12,7 @@
 
 <p>
   <img alt="critical path 50.2 kB gzip" src="https://img.shields.io/badge/critical%20path-50.2%20kB%20gzip-D4AF37?style=flat-square&labelColor=0B0B0B">
-  <img alt="199 specs passing" src="https://img.shields.io/badge/specs-199%20passing-D4AF37?style=flat-square&labelColor=0B0B0B">
+  <img alt="209 specs passing" src="https://img.shields.io/badge/specs-209%20passing-D4AF37?style=flat-square&labelColor=0B0B0B">
   <img alt="axe 0 violations" src="https://img.shields.io/badge/axe--core-0%20violations-D4AF37?style=flat-square&labelColor=0B0B0B">
   <img alt="2 runtime dependencies" src="https://img.shields.io/badge/runtime%20deps-2-D4AF37?style=flat-square&labelColor=0B0B0B">
   <img alt="zero UI framework" src="https://img.shields.io/badge/UI%20framework-none-FF1E00?style=flat-square&labelColor=0B0B0B">
@@ -50,7 +50,7 @@ up into a claim.
 | :--------------------------------- | -------------------------------------------------: | :------------------------------------------------- |
 | Critical path, gzip                |                     **50.2 kB** across **3 files** | build fails above 24 kB HTML / 170 kB total        |
 | Reduction vs. pre-upgrade baseline |                   **−61.0 %** (128.7 kB → 50.2 kB) | `measure:baseline` exits 1 on regression           |
-| Automated specs                    |                             **199** across 9 files | CI, every push                                     |
+| Automated specs                    |                            **209** across 10 files | CI, every push                                     |
 | Accessibility                      |     **0** axe-core violations in **5** page states | CI, every push                                     |
 | Runtime dependencies               | **2** (`@supabase/supabase-js`, `@capacitor/core`) | contract test proves each is imported              |
 | Simulation cost                    |    **0.0108 ms/frame** @ 80 particles (was 0.0405) | `npm run bench`                                    |
@@ -349,8 +349,8 @@ simulation, no backend contract · ◌ not built
 | PWA manifest + 11 generated icon assets               | `public/manifest.webmanifest`, `public/icons/` |   ●   | 135.7 kB, rasterised from SDF code                                                                    |
 | Service worker v3                                     | `public/sw.js`                                 |   ●   | network-first navigation (4 s timeout) · cache-first hashed assets · SWR for the rest · 120-entry cap |
 | Offline fallback document                             | `sw.js` → `OFFLINE_HTML`                       |   ●   | inline, dependency-free                                                                               |
-| **Animated Open Graph card**                          | `public/og-image-animated.gif`                 |   ●   | 1200×630 · 72 frames · 3.6 s loop · 605 kB — [§3.8](#38-brand-asset-pipeline--the-open-graph-card)    |
-| True-colour OG still                                  | `public/og-cover.png`                          |   ●   | identical frame, 174 kB, for clients preferring a raster still                                        |
+| **Animated Open Graph card**                          | `public/og-image-animated.gif`                 |   ●   | 1200×630 · 72 frames · 3.6 s loop · 879 kB — [§3.8](#38-brand-asset-pipeline--the-open-graph-card)    |
+| True-colour OG still                                  | `public/og-cover.png`                          |   ●   | identical frame, 275 kB, for clients preferring a raster still                                        |
 | SEO: canonical, hreflang ×3, sitemap, robots, JSON-LD | document + `public/`                           |   ●   | contract-tested                                                                                       |
 | Native shells                                         | `android/`, `ios/`, Capacitor 7                |   ◐   | not exercised in CI — needs Xcode / Android SDK                                                       |
 | Degraded mode with no credentials                     | `src/lib/supabase.js` stub                     |   ●   | site renders, scrolls, animates; writes resolve `BackendUnavailableError`                             |
@@ -574,8 +574,8 @@ graph LR
   RES --> Q["lib/gif.mjs<br/>brand-seeded median cut<br/>6-bit histogram · 255 colours"]
   Q --> DIFF["temporal diff<br/>smallest changed rect<br/>transparent elsewhere"]
   DIFF --> LZW["LZW · variable code width"]
-  LZW --> GIF["og-image-animated.gif<br/>605 kB"]
-  RES --> PNG["og-cover.png<br/>174 kB true colour"]
+  LZW --> GIF["og-image-animated.gif<br/>879 kB"]
+  RES --> PNG["og-cover.png<br/>275 kB true colour"]
 
   classDef out fill:#141414,stroke:#D4AF37,color:#f7f6f3;
   class GIF,PNG out;
@@ -595,33 +595,90 @@ Seven techniques do the work, and each one is load-bearing:
 
 ### Measured result
 
-| Metric                                        |                                                                     Value |
-| :-------------------------------------------- | ------------------------------------------------------------------------: |
-| Canvas                                        |        1200 × 630 (the 1.91 : 1 contract every unfurler lays out against) |
-| Frames · loop                                 | 72 · 3.6 s at 5 cs/frame (above the 4 cs floor browsers silently rewrite) |
-| Palette                                       |                                         255 colours + 1 transparent index |
-| Frame 0 payload (full 756,000 px)             |                                                                  102.7 kB |
-| Frames 1–71 payload                           |                                 **7.0 kB mean** (4.3 kB min, 12.8 kB max) |
-| Pixels actually re-encoded across the loop    |                                                       **2.3 %** of 54.4 M |
-| Naive full-frame encode of the same 72 frames |                                                                  ~7.22 MB |
-| **Shipped**                                   |           **605 kB — 12.2× smaller**, well inside every crawler's ceiling |
-| Determinism                                   |               byte-identical on every machine; seeded PRNG, no timestamps |
-| Dependencies used to produce it               |                                                                     **0** |
+| Metric                                     |                                                                     Value |
+| :----------------------------------------- | ------------------------------------------------------------------------: |
+| Canvas                                     |        1200 × 630 (the 1.91 : 1 contract every unfurler lays out against) |
+| Frames · loop                              | 72 · 3.6 s at 5 cs/frame (above the 4 cs floor browsers silently rewrite) |
+| Palette                                    |                                         255 colours + 1 transparent index |
+| Frame 0 payload (a full 756,000 px poster) |                                                                  136.8 kB |
+| Frames 1–71 payload                        |                                **10.4 kB mean** (6.6 kB min, 20.3 kB max) |
+| Pixels whose value actually changes        |                                            **2.8 %** of the loop's 54.4 M |
+| Naive full-frame encode of the same 72     |                                                                   9.62 MB |
+| **Shipped**                                |           **879 kB — 11.2× smaller**, well inside every crawler's ceiling |
+| Still poster                               |                            `og-cover.png`, 275 kB, true colour, identical |
+| Determinism                                |        byte-identical across runs (`md5` verified); seeded PRNG, no clock |
+| Dependencies used to produce it            |                                                                     **0** |
+
+### The optical model
+
+The card is lit, not drawn. Five rules produce that, and every one of them is a line of
+code rather than an asset:
+
+|   # | Rule                                                                                                    | What it buys                                                                                                                                                                                                      |
+| --: | :------------------------------------------------------------------------------------------------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|   1 | Composite in **linear light**, encode to sRGB exactly once                                              | Additive glow in gamma space darkens midtones and turns overlapping highlights grey. This single rule is the most common reason procedural "premium" art looks cheap.                                             |
+|   2 | **Bloom** the static layer: extract the overshoot above a threshold, blur it, add it back               | Light bleeds into its surroundings. Without it, type and geometry sit _on_ the card instead of _in_ it. Three box passes approximate a Gaussian to within ~3 % at O(1) per pixel.                                 |
+|   3 | One **key light at 132°**, and every circular element obeys it                                          | The rim, the bevel inside it, the graduated dial and the dashed track are all stroked with brightness tracking that angle. A ring at constant alpha is an outline; a ring that tracks a light is a machined edge. |
+|   4 | **Atmospheric depth** — 30 dim bokeh discs and 20 volumetric shafts, all clamped out of the type column | Gives the constellation something to sit in front of. Light behind letterforms costs contrast, and contrast is the only thing that keeps the card legible at 240 px wide in a Slack sidebar.                      |
+|   5 | A **vertical gradient on the headline**, near-white at the cap line to warm bone at the baseline        | The eye reads the gradient as a light source above the card. It is the difference between type that is lit and type that is filled.                                                                               |
+
+### What a diff-encoded GIF actually charges for
+
+This is the part that is easy to get wrong, and the measurements are blunt about it.
+
+A GIF frame is **one rectangle**. Pixels that did not change are written as the
+transparent index — cheap, but still written. So the price of a frame is set by the
+_bounding box of everything that moved_, not by how much of it moved:
+
+| Quantity                                             |       Value |
+| :--------------------------------------------------- | ----------: |
+| Pixels whose value actually changes, per frame       |     ~10,800 |
+| Pixels inside the re-encoded rectangle, per frame    | **336,000** |
+| Overhead imposed purely by the single-box constraint |     **31×** |
+
+Which means the lever is **choreography, not detail**. Three decisions, each measured
+by rebuilding the whole card and weighing the file:
+
+| Decision                                                                                       |   Before |    After |           Δ |
+| :--------------------------------------------------------------------------------------------- | -------: | -------: | ----------: |
+| A point of light orbiting the full perimeter every frame → **two runners locked to the sheen** | 1,226 kB | 1,076 kB | **−150 kB** |
+| Three continuously expanding shock rings → **one, duty-cycled, contained by the rim**          | 1,076 kB |   872 kB | **−204 kB** |
+| Adding a per-frame bloom pass over the dial                                                    | 1,000 kB |   872 kB | **−128 kB** |
+
+The first two are intuitive once you know the rule: a lit pixel on the left edge and a
+lit pixel on the right edge force all 71 deltas to span the entire 1200 px, so the
+headline and the dial get re-encoded seventy-one times to animate a dot. Tying the
+runners to the specular sweep collapsed the mean rectangle from 876 × 523 to
+651 × 508 — and it reads better, because the card now performs one scanning gesture and
+then rests, instead of fidgeting.
+
+The third is not intuitive at all: **adding** a blur made the file _smaller_. Bloom
+smooths the hub, ordered dithering has less gradient to break up, and LZW finds far
+longer runs. Optical quality and compression pointed the same way, which does not
+happen often enough to assume.
+
+> [!NOTE]
+> **Film grain was prototyped and rejected.** It looked good and it was never going to
+> pay for itself: on an 8-frame probe it took the GIF from 329 kB to 547 kB and the PNG
+> poster from 282 kB to **1,194 kB**, to supply texture the ordered dither already
+> supplies. It is not in the tree — `Surface#grain` was deleted rather than left
+> unused.
+
+### Reproducing and art-directing it
 
 ```bash
 npm run og                                   # regenerate both assets
 npm run og -- --frames=96 --delay=4          # smoother, longer loop
-npm run og -- --poster=26                    # art-direct: pick the still frame
+npm run og -- --poster=20 --out=/tmp/look    # art-direct: render elsewhere, pick a frame
 npm run brand                                # icons + favicon + OG, all of it
 ```
 
 Composition: `UR LF ✘ UP` eyebrow, a two-line display headline carrying a specular sweep,
 the positioning line, the domain — and on the right, **VISIONARY**, **BUILDER** and
-**ENABLER** wired by filaments into the mark at the centre, with light packets travelling
-inward and flaring the core on arrival. One idea, stated four ways: _minds converging_.
-The loop is 3.6 s, seamless, and everything that does not carry that idea is still — which
-is simultaneously the design decision and the compression strategy.
-
+**ENABLER** wired by filaments into the mark at the centre of a graduated dial, with light
+packets travelling inward and flaring the core on arrival. One idea, stated four ways:
+_minds converging_. The loop is 3.6 s, seamless, and everything that does not carry that
+idea is still — which is simultaneously the design decision and the compression strategy.
 ---
 
 # 4 · Tech Stack
@@ -638,7 +695,7 @@ is simultaneously the design decision and the compression strategy.
 | Scheduling    | Cal.com iframe                                 | —           | The single allowed third-party frame origin.                                                                                               |
 | Visual layer  | Dependency-free WebGL2, written in-repo        | —           | Replaced `three` + `@react-three/*` + `gsap` + `lenis` (~600 kB) that **nothing imported**. 2 draw calls.                                  |
 | Native shells | Capacitor                                      | 7           | `android/`, `ios/`, `capacitor.config.ts`.                                                                                                 |
-| Tests         | Vitest + jsdom + axe-core                      | `^3.2`      | 199 specs: unit, flow, contract, accessibility.                                                                                            |
+| Tests         | Vitest + jsdom + axe-core                      | `^3.2`      | 209 specs: unit, flow, contract, accessibility.                                                                                            |
 | Lint / format | ESLint flat config + Prettier                  | `^9` / `^3` | Rules target the defect classes this codebase actually suffered, not style.                                                                |
 | Hosting       | Any static CDN                                 | —           | No server-side code of any kind.                                                                                                           |
 | Node          | ≥ 20.19                                        | —           | `engines` enforced.                                                                                                                        |
@@ -718,7 +775,7 @@ graph LR
   P["push / PR"] --> Q["quality"]
   P --> B["build"]
   P --> D["audit"]
-  Q --> Q1["eslint"] --> Q2["prettier --check"] --> Q3["199 specs<br/>unit · flow · contract · a11y"] --> Q4["coverage + per-file thresholds"]
+  Q --> Q1["eslint"] --> Q2["prettier --check"] --> Q3["209 specs<br/>unit · flow · contract · a11y"] --> Q4["coverage + per-file thresholds"]
   B --> B1["vite build<br/>fails on inline style or size budget"] --> B2["measure"] --> B3["measure:baseline<br/>exit 1 if the critical path grew"] --> B4["bench"]
   D --> D1["npm audit --omit=dev --audit-level=high"]
 ```
@@ -757,7 +814,7 @@ cp .env.example .env.local    # then fill VITE_SUPABASE_URL and VITE_SUPABASE_AN
 | `npm run dev`                                  | Vite dev server, bound to `0.0.0.0`                                                     |
 | `npm run build`                                | production build; **fails** on an inline `<style>` over 2 kB or a blown size budget     |
 | `npm run preview`                              | serve `dist/`                                                                           |
-| `npm test`                                     | 199 specs — unit, flow, contract, accessibility                                         |
+| `npm test`                                     | 209 specs — unit, flow, contract, accessibility                                         |
 | `npm run test:watch`                           | the same, in watch mode                                                                 |
 | `npm run test:coverage`                        | coverage with enforced per-file thresholds                                              |
 | `npm run lint` · `lint:fix`                    | ESLint flat config                                                                      |
@@ -806,14 +863,15 @@ scripts/
   generate-icons.mjs       PWA icons + favicon, from SDF code
   lib/
     brand.mjs              brand tokens + copy — one source of truth for every asset
-    surface.mjs            linear-light SDF rasteriser
+    surface.mjs            linear-light SDF rasteriser + bloom + volumetric beams
     type.mjs               geometric monoline face, authored as stroke geometry
     gif.mjs                median-cut quantiser + temporal diff + LZW (GIF89a)
     png.mjs                minimal PNG encoder
   measure-bundle.mjs       size report + baseline comparison
   bench-field.mjs          simulation and draw-call benchmark
 public/                    icons · manifest · sw.js · og-image-animated.gif · og-cover.png
-tests/                     unit · flows · contracts · a11y        (199 specs)
+tests/                     unit · flows · contracts · a11y        (209 specs)
+  unit/compositor.test.js  bloom energy conservation · blur edge clamping · beam clamps
 docs/                      ARCHITECTURE.md · VERIFICATION.md · MIGRATIONS.md
 archive/                   superseded code and documents, kept for provenance
 .baseline/dist/            the verbatim pre-upgrade build, for falsifiable comparisons
