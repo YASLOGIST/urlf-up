@@ -1,0 +1,32 @@
+# Verbatim historical code — reformatting it would destroy the diff that
+# proves it is unchanged.
+archive/
+src/styles/legacy.css
+.baseline/
+dist/
+coverage/
+node_modules/
+android/
+ios/
+package-lock.json
+public/icons/
+
+# Pre-existing modules kept deliberately close to their original form so the
+# upgrade diff stays reviewable. They are linted for correctness but not
+# reformatted; rewriting them is explicitly out of scope for this pass.
+src/core.js
+src/dashboard.js
+src/settings.js
+src/auth.js
+src/ideas.js
+src/ui.js
+src/avatar.js
+src/chip-input.js
+src/icons.js
+src/matchingEngine.js
+src/escrowEngine.js
+src/components/
+seed_db.js
+test_engine.mjs
+tools/
+scripts/generate_invite.js

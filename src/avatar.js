@@ -1,4 +1,4 @@
-import { showToast } from './ui'
+import { showToast } from './ui.js'
 
 const MAX_OUTPUT_BYTES = 1_000_000 // 1MB post-compression hard cap
 

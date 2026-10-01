@@ -1,0 +1,108 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # The build must never depend on real credentials. Everything that needs the
+  # backend is exercised against the in-repo stub, so CI deliberately runs in
+  # degraded mode — which also proves degraded mode still builds and boots.
+  NODE_VERSION: '20'
+
+jobs:
+  quality:
+    name: Lint, format, test, a11y
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Format check
+        run: npm run format:check
+
+      - name: Unit, flow, contract and accessibility tests
+        # tests/a11y runs axe-core over the real index.html in English, Arabic
+        # and with each dialog open. Any violation fails the build.
+        run: npm run test -- --reporter=verbose
+
+      - name: Coverage
+        run: npm run test:coverage -- --reporter=dot
+
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/
+          retention-days: 7
+
+  build:
+    name: Build and size budget
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        # vite.config.js fails the build itself if any authored inline <style>
+        # exceeds 2 kB or if the gzipped HTML/total exceeds the size budget.
+        run: npm run build
+
+      - name: Measure bundle
+        run: npm run measure
+
+      - name: Compare against the recorded baseline
+        # .baseline/dist is the verbatim pre-upgrade build, committed so that
+        # every improvement claim stays falsifiable.
+        if: hashFiles('.baseline/dist/**') != ''
+        run: npm run measure:baseline
+
+      - name: Field renderer benchmark
+        run: npm run bench
+
+      - name: Upload build
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 7
+
+  dependency-audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - name: Fail on high or critical advisories in runtime dependencies
+        run: npm audit --omit=dev --audit-level=high

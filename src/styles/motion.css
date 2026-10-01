@@ -1,0 +1,258 @@
+/* ===========================================================================
+ * motion.css — the motion system
+ *
+ * One place that defines *how long* things take, *how* they ease, and *how far*
+ * they travel. Everything else references these tokens. The rules below animate
+ * `transform` and `opacity` only (compositor-only properties), so a reveal can
+ * never trigger layout or paint on the main thread.
+ *
+ * Accessibility contract:
+ *   - `prefers-reduced-motion: reduce` collapses every duration to ~1ms and
+ *     removes every translation/scale. Content still becomes visible — motion
+ *     is never the only channel that conveys state.
+ *   - Nothing in here flashes; no rule produces more than 3 luminance changes
+ *     per second.
+ * =========================================================================== */
+
+:root {
+  /* ── Durations ─────────────────────────────────────────────────────────── */
+  --mo-instant: 90ms;
+  --mo-fast: 160ms;
+  --mo-base: 280ms;
+  --mo-slow: 480ms;
+  --mo-slower: 720ms;
+
+  /* ── Easing curves ─────────────────────────────────────────────────────── */
+  --mo-standard: cubic-bezier(0.22, 0.61, 0.36, 1); /* enter / general */
+  --mo-exit: cubic-bezier(0.4, 0, 1, 1); /* leave */
+  --mo-emphasis: cubic-bezier(0.16, 1, 0.3, 1); /* hero / large surfaces */
+  --mo-spring: cubic-bezier(0.34, 1.56, 0.64, 1); /* playful overshoot */
+
+  /* ── Travel distances ──────────────────────────────────────────────────── */
+  --mo-rise: 28px;
+  --mo-rise-sm: 14px;
+  --mo-scale-in: 0.965;
+
+  /* ── Stagger ───────────────────────────────────────────────────────────── */
+  --mo-stagger: 70ms;
+
+  /* ── Elevation / glow (shared by effects) ──────────────────────────────── */
+  --mo-glow-gold: 0 0 0 1px rgba(212, 175, 55, 0.22), 0 18px 48px -18px rgba(212, 175, 55, 0.45);
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+ * Reveal primitives.
+ * An element opts in with `data-reveal="<variant>"`; the IntersectionObserver
+ * in src/motion/reveal.js adds `data-revealed` when it enters the viewport.
+ * The *initial* hidden state is only applied when JS is alive (`.js` on <html>),
+ * so a no-JS visitor sees fully-rendered content instead of a blank page.
+ * ─────────────────────────────────────────────────────────────────────────── */
+.js [data-reveal] {
+  opacity: 0;
+  will-change: transform, opacity;
+  transition:
+    opacity var(--mo-slow) var(--mo-standard),
+    transform var(--mo-slow) var(--mo-emphasis);
+  transition-delay: var(--mo-delay, 0ms);
+}
+
+.js [data-reveal="rise"] {
+  transform: translate3d(0, var(--mo-rise), 0);
+}
+.js [data-reveal="rise-sm"] {
+  transform: translate3d(0, var(--mo-rise-sm), 0);
+}
+.js [data-reveal="fade"] {
+  transform: none;
+}
+.js [data-reveal="scale"] {
+  transform: scale3d(var(--mo-scale-in), var(--mo-scale-in), 1);
+}
+.js [data-reveal="left"] {
+  transform: translate3d(calc(-1 * var(--mo-rise)), 0, 0);
+}
+.js [data-reveal="right"] {
+  transform: translate3d(var(--mo-rise), 0, 0);
+}
+
+.js [data-reveal][data-revealed] {
+  opacity: 1;
+  transform: none;
+}
+
+/* Release the compositor layer once the reveal has finished so we do not hold
+   a GPU texture per element for the lifetime of the page. */
+.js [data-reveal][data-reveal-done] {
+  will-change: auto;
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+ * Scroll progress bar (top of viewport). Driven by a single CSS custom
+ * property written once per rAF — no layout, no reflow.
+ * ─────────────────────────────────────────────────────────────────────────── */
+.scroll-progress {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 2px;
+  z-index: 9000;
+  pointer-events: none;
+  transform-origin: 0 50%;
+  transform: scaleX(var(--scroll-progress, 0));
+  background: linear-gradient(90deg, var(--gold-soft, #b8941f), var(--gold-bright, #f4d77a));
+  opacity: 0.9;
+  contain: strict;
+}
+[dir="rtl"] .scroll-progress {
+  transform-origin: 100% 50%;
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+ * Micro-interactions.
+ * `data-magnetic` buttons lean ~6px toward the pointer. Values are written to
+ * CSS vars from rAF so the style recalculation stays on the compositor.
+ * ─────────────────────────────────────────────────────────────────────────── */
+[data-magnetic] {
+  transform: translate3d(var(--mag-x, 0px), var(--mag-y, 0px), 0);
+  transition: transform var(--mo-fast) var(--mo-spring);
+}
+[data-magnetic]:active {
+  transform: translate3d(var(--mag-x, 0px), var(--mag-y, 0px), 0) scale(0.98);
+}
+
+/* Tilt cards get their rotation from CSS vars too (set by motion/tilt.js). */
+[data-tilt] {
+  transform: perspective(900px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg))
+    translate3d(0, var(--tilt-lift, 0px), 0);
+  transition: transform var(--mo-base) var(--mo-standard);
+}
+[data-tilt][data-tilt-active] {
+  transition: transform var(--mo-instant) linear;
+}
+
+/* Sheen that tracks the pointer across a tilt card. Pure compositor work:
+   a radial-gradient painted into a pseudo-element that only changes opacity. */
+[data-tilt]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--mo-base) var(--mo-standard);
+  background: radial-gradient(
+    240px circle at var(--tilt-px, 50%) var(--tilt-py, 50%),
+    rgba(244, 215, 122, 0.14),
+    transparent 62%
+  );
+}
+[data-tilt][data-tilt-active]::after {
+  opacity: 1;
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+ * Count-up numerals: reserve the widest glyph box so the odometer cannot
+ * cause layout shift while it animates (CLS protection).
+ * ─────────────────────────────────────────────────────────────────────────── */
+[data-countup] {
+  font-variant-numeric: tabular-nums;
+  display: inline-block;
+  min-width: var(--countup-reserve, auto);
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+ * Skeletons — a calm 1.6s sweep, well under the 3 flashes/second ceiling.
+ * ─────────────────────────────────────────────────────────────────────────── */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.045);
+  border-radius: var(--r, 8px);
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translate3d(-100%, 0, 0);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.07), transparent);
+  animation: skeleton-sweep 1.6s var(--mo-standard) infinite;
+}
+@keyframes skeleton-sweep {
+  to {
+    transform: translate3d(100%, 0, 0);
+  }
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+ * Modal choreography. Backdrop fades, card rises — both compositor-only.
+ * ─────────────────────────────────────────────────────────────────────────── */
+.modal-overlay {
+  transition:
+    opacity var(--mo-base) var(--mo-standard),
+    visibility var(--mo-base) var(--mo-standard);
+}
+.modal-overlay .modal-card {
+  transform: translate3d(0, 18px, 0) scale(0.985);
+  opacity: 0;
+  transition:
+    transform var(--mo-base) var(--mo-emphasis),
+    opacity var(--mo-base) var(--mo-standard);
+}
+.modal-overlay.modal--open .modal-card {
+  transform: none;
+  opacity: 1;
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+ * THE REDUCED-MOTION CONTRACT
+ * Every animated surface above degrades to an instant, non-translating state.
+ * ─────────────────────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --mo-instant: 1ms;
+    --mo-fast: 1ms;
+    --mo-base: 1ms;
+    --mo-slow: 1ms;
+    --mo-slower: 1ms;
+    --mo-stagger: 0ms;
+    --mo-rise: 0px;
+    --mo-rise-sm: 0px;
+    --mo-scale-in: 1;
+  }
+
+  html {
+    scroll-behavior: auto !important;
+  }
+
+  .js [data-reveal],
+  .js [data-reveal][data-revealed] {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  [data-magnetic],
+  [data-tilt] {
+    transform: none !important;
+  }
+  [data-tilt]::after {
+    display: none;
+  }
+
+  .skeleton::after {
+    animation: none;
+  }
+
+  .modal-overlay .modal-card {
+    transform: none;
+    opacity: 1;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}

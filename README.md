@@ -1,312 +1,179 @@
-<div align="center">
+# UrLife — Where Minds Meet
+
+A single-page marketing site and member console for an Arab-world startup
+studio. Visionaries submit ideas, Builders bring skills, Enablers bring
+capital; an AI pre-brief and a 45-minute closed meeting decide what gets built.
+
+Vanilla ES modules. No UI framework. Two runtime dependencies.
 
 ```
-██╗   ██╗██████╗     ██╗     ██╗███████╗███████╗    ██╗███████╗    ██╗   ██╗██████╗
-██║   ██║██╔══██╗    ██║     ██║██╔════╝██╔════╝    ██║██╔════╝    ██║   ██║██╔══██╗
-██║   ██║██████╔╝    ██║     ██║█████╗  █████╗      ██║███████╗    ██║   ██║██████╔╝
-██║   ██║██╔══██╗    ██║     ██║██╔══╝  ██╔══╝      ██║╚════██║    ██║   ██║██╔═══╝
-╚██████╔╝██║  ██║    ███████╗██║██║     ███████╗    ██║███████║    ╚██████╔╝██║
- ╚═════╝ ╚═╝  ╚═╝    ╚══════╝╚╝╚╝     ╚══════╝    ╚═╝╚══════╝     ╚═════╝ ╚═╝
-
-         ▓▓▓  T H E   O P E R A T I N G   S Y S T E M   O F   T H E   O P E R A T O R  ▓▓▓
+critical path   49.8 kB gzip  ·  3 files
+tests           181 specs     ·  axe: 0 violations in 5 page states
+build           Vite 6        ·  fails on inline styles or a blown size budget
 ```
 
-# **UR LIFE IS UP**
-
-### *Absolute Focus · Zero Friction · Pure Dominance · Sovereign by Design*
-
-> **This is not a platform. This is the operating system of the operator who refuses average.**
->
-> The blueprint that forges the elite businessman and the high-performance supertrader.
-> The substrate that compounds identity, capital, and time into sovereignty.
-
-[![Mission](https://img.shields.io/badge/MISSION-SOVEREIGNTY-D4AF37?style=for-the-badge&labelColor=000000)]()
-[![Floor](https://img.shields.io/badge/FLOOR-%24100M%20USD-D4AF37?style=for-the-badge&labelColor=000000)]()
-[![Hedge](https://img.shields.io/badge/HEDGE-5%2C000%20KG%20AU-D4AF37?style=for-the-badge&labelColor=000000)]()
-[![Origin](https://img.shields.io/badge/LAUNCHPAD-CAIRO%20·%20EG-D4AF37?style=for-the-badge&labelColor=000000)]()
-[![Identity](https://img.shields.io/badge/IDENTITY-UNSTOPPABLE-D4AF37?style=for-the-badge&labelColor=000000)]()
-
-[**Declaration**](#-the-declaration) ·
-[**Verdict**](#-the-verdict) ·
-[**Code**](#-the-operators-code) ·
-[**Movements**](#-the-four-movements) ·
-[**Origin**](#-the-origin) ·
-[**Creed**](#-the-creed)
-
-</div>
+> The previous README described a different product entirely — a "$100M
+> sovereignty operating system delivered through a 3D WebGL ceremony" — which
+> matched neither the shipped markup nor the database schema. It is preserved
+> verbatim at `archive/legacy-reports/README-manifesto.md` rather than deleted.
 
 ---
 
-## 🜂 The Declaration
+## Quick start
 
-UR LIFE IS UP is a **cognitive operating system upgrade** delivered through a 3D WebGL ceremony.
-
-It exists to do one thing — and refuses to do anything else:
-
-> **Forge the elite operator. Compress decades into days. End the era of average.**
-
-This is not motivation. Motivation is the consolation prize of the unserious.
-This is **architecture**. The architecture of identity, capital, and time, fused into a single executable trajectory.
-
----
-
-## ⚜ The Verdict
-
-The goals are not aspirations. They are **specifications.**
-
-| Specification | Value | Status |
-| :--- | :---: | :--- |
-| **The Floor** | `$100,000,000 USD` | Non-negotiable. The floor — never the ceiling. |
-| **The Hedge** | `5,000 KG of Gold` | Sovereign reserve. Hedge against every fiat collapse. |
-| **The Identity** | `Unstoppable self` | The only acceptable version. All others are interim. |
-| **The Sovereignty** | `Absolute` | Financial · Mental · Temporal · Geographic. |
-| **The Timeline** | `Compressed` | Decades into days. Days into deployed leverage. |
-
-> A goal without a number is a wish. A number without a system is a slogan. UR LIFE IS UP delivers both, in operating form.
-
----
-
-## 🗝 The Operator's Code
-
-Seven non-negotiables. Every movement of this system descends from these.
-
-| # | Code | Translation |
-| :---: | :--- | :--- |
-| **I** | **Identity precedes outcome** | Become the operator first. The wins follow automatically. |
-| **II** | **Asymmetry over effort** | One asymmetric bet beats one thousand symmetric trades. |
-| **III** | **Speed of decision is the alpha** | The market does not reward correctness. It rewards correct decisions made faster. |
-| **IV** | **Risk is the only currency** | Manage downside surgically. Upside takes care of itself. |
-| **V** | **Compounding is sacred** | Never interrupt compounding — of capital, of skill, of identity. |
-| **VI** | **Average is the enemy** | Average inputs produce average outputs. Average is a slow death. |
-| **VII** | **Sovereignty is the destination** | Every action must increase optionality, not consume it. |
-
----
-
-## 🧬 The Four Movements
-
-The full journey from average to apex. Four movements. No skipping. No shortcuts that aren't already engineered into the system.
-
-```mermaid
-flowchart LR
-    M1[I · The Mind<br/>Identity Reprogramming]
-    M2[II · The Action<br/>Superhuman Execution]
-    M3[III · The Capital<br/>Wealth Engineering]
-    M4[IV · The Destination<br/>God-Tier Life]
-
-    M1 --> M2 --> M3 --> M4
-
-    M4 -.->|compounds back into| M1
-
-    style M1 fill:#000,stroke:#D4AF37,color:#D4AF37,stroke-width:3px
-    style M2 fill:#000,stroke:#D4AF37,color:#D4AF37,stroke-width:3px
-    style M3 fill:#000,stroke:#D4AF37,color:#D4AF37,stroke-width:3px
-    style M4 fill:#000,stroke:#F4D374,color:#F4D374,stroke-width:3px
+```bash
+npm ci
+npm run dev        # http://localhost:5173
 ```
 
-> The arrow back is not decoration. **Sovereignty re-funds identity.** The system is closed-loop. Every win at Movement IV makes Movement I stronger. This is why it compounds.
-
----
-
-### Ⅰ · THE MIND
-#### *Identity Reprogramming*
-
-> The average mind produces average outcomes by design. Before any tactic, the substrate itself must be rewired.
-
-The work of this movement is **destruction before construction**:
-
-- **Destroy limiting beliefs.** Beliefs inherited from average people produce average results. They are software bugs. Patch them.
-- **Rewire habits for decision speed.** Hesitation is the most expensive habit in capital markets. Strip it.
-- **Forge emotional control.** The market punishes emotion at scale. Emotional control is not suppression — it is **conscious choice of state.**
-- **Install systems thinking.** Stop optimizing single moves. Optimize the system that produces the moves.
-- **Install asymmetric vision.** Train the eye to detect 10× opportunities the average mind walks past every day.
-
-**Exit condition:** The operator no longer recognizes their previous self. The old defaults no longer activate. The new identity is the only available state.
-
----
-
-### Ⅱ · THE ACTION
-#### *Superhuman Execution*
-
-> Execution is where 99% of operators die. Not because they don't know — because they don't ship.
-
-The work of this movement is **time compression**:
-
-- **20-day skill blueprints.** Spaced repetition + Feynman + active recall = top 1% in any high-value skill within twenty days. Not metaphorically. Operationally.
-- **AI as personal multiplier.** Every repetitive cognitive task is delegated to AI. The operator's brain runs only on the work AI cannot do.
-- **Automation everywhere it touches money.** Operations that don't compound get scripted. Operations that compound get protected.
-- **Deep-work blocks.** Minimum 90-minute uninterrupted blocks for the only work that creates asymmetric value. Phone in another room. Notifications off.
-- **The leap, not the climb.** While average operators climb linearly, the operator leaps via AI, leverage, and compounding curves.
-
-**Exit condition:** The operator ships at a velocity that competitors cannot model. The output ratio is no longer 1:1 — it is 10:1, then 100:1.
-
----
-
-### Ⅲ · THE CAPITAL
-#### *Wealth Engineering & Supertrader Mechanics*
-
-> Capital is the compressed form of every previous decision. Engineer capital like an architect, not a gambler.
-
-The work of this movement is **surgical capital deployment**:
-
-#### Market Mastery
-
-- **Analyze global markets with lethal clarity.** Equities, FX, commodities, crypto, private deals — every market is a system with exploitable structure.
-- **Hunt arbitrage gaps.** Mispriced attention, mispriced risk, mispriced time. The gaps are everywhere — only trained eyes see them.
-- **Exploit underpriced attention.** The largest 10× returns of the next decade live in attention that the herd hasn't priced yet.
-
-#### Risk Doctrine
-
-> **The doctrine: minimize loss size. Maximize win size. Engineer positive expectancy that compounds infinitely.**
-
-The operator does not chase win rates. The operator chases **expectancy with managed downside.** A 40% win rate with 5R winners eats a 90% win rate with 1R winners alive.
-
-| Principle | Operational Translation |
-| :--- | :--- |
-| **Position sizing first** | Risk per trade is a function of capital, not conviction. Conviction is a bias. |
-| **Asymmetric R-multiples** | Never accept less than 3R potential. Walk away from 1R setups regardless of "feel." |
-| **Stop-loss is sacred** | The stop is set before entry. Never widened. Never rationalized. |
-| **Defense before offense** | A drawdown that takes 50% to recover requires 100% gain. Defense protects the compound. |
-| **Process over outcome** | Outcomes are noisy. Process is signal. Grade the process, not the P&L. |
-
-#### Income Engine
-
-Multiple uncorrelated income streams, each engineered for compounding:
-- Trading edge (positive expectancy, surgical risk)
-- Productized expertise (skills that pay in sleep)
-- Equity in ventures (asymmetric upside via ownership)
-- Sovereign reserves (gold, hard assets — the hedge against every fiat regime)
-
-**Exit condition:** Capital generates capital. The operator's time is no longer the bottleneck. The compound is autonomous.
-
----
-
-### Ⅳ · THE DESTINATION
-#### *Designing the God-Tier Life*
-
-> The destination is not luxury. The destination is **sovereignty.**
-
-The work of this movement is **architecting the life that the previous three movements unlock**:
-
-- **Time freedom** — calendars built around the operator's energy, not external demands.
-- **Geographic freedom** — operate from anywhere. Be unanchored to any single jurisdiction.
-- **Financial freedom** — capital that produces capital. No single income stream is load-bearing.
-- **Cognitive freedom** — attention that the operator owns, not that algorithms harvest.
-- **Identity freedom** — no version of the past self has voting rights in the present.
-- **Empire scaling** — the operator's systems extend beyond themselves. The work outlives the operator.
-
-**Exit condition:** None. This movement does not exit. It is the steady state. The compounding loop closes here and re-funds Movement I — at a higher altitude.
-
----
-
-## ⚔ The Anti-Pattern
-
-The system explicitly rejects:
-
-- ❌ **Hustle theater.** Performative work without compounding output.
-- ❌ **Symmetric bets.** Equal risk for equal reward is a tax on time.
-- ❌ **Win-rate worship.** Win rate without expectancy is amateur theater.
-- ❌ **Information consumption without execution.** Knowledge that doesn't ship is entertainment.
-- ❌ **Identity tourism.** Trying on personas without committing to the substrate change.
-- ❌ **Optionality hoarding.** Holding options is not strategy. Deploying them is.
-- ❌ **Apologizing for ambition.** Ambition does not require permission. It requires execution.
-
-> The shape of the operator is defined as much by what they refuse as by what they pursue.
-
----
-
-## 🜔 The Origin
-
-The empire's launchpad is **Cairo.**
-
-Not Silicon Valley. Not London. Not Singapore.
-
-**Cairo.**
-
-Where empires have been launched for five thousand years. Where the pyramids were engineered with a precision that modern instruments still struggle to match. Where the timeline is measured in dynasties, not quarters.
-
-The 3D Earth in the substrate spins, focuses, and locks onto a single coordinate. That coordinate is the operator's launchpad — and an unapologetic declaration:
-
-> **The next great empires will rise where the first ones did. We do not borrow other people's geographies. We build from ours.**
-
----
-
-## 🌌 The Digital Substrate
-
-Philosophy without a substrate is theory. The substrate is the proof.
-
-UR LIFE IS UP is delivered through an **elite, zero-friction 3D WebGL environment** — a cinematic, space-grade interactive journey that the visitor physically traverses. Every scroll, every shader, every easing curve is engineered to anchor the mindset into the nervous system, not just the cortex.
-
-| Property | Implementation |
-| :--- | :--- |
-| **Engine** | Three.js + WebGL2 + custom hand-tuned GLSL shaders |
-| **Motion** | GSAP + ScrollTrigger + Lenis smooth scroll |
-| **Performance** | Hardware-tier detection, dynamic resolution scaling, 60fps floor |
-| **Aesthetic** | Void Black `#000000` × Luxury Gold `#D4AF37` — no third state |
-| **Architecture** | Five-stage render pipeline, frame budget ≤ 16.67ms |
-| **Closure** | The 3D Earth focuses to Cairo, EG — the empire's launchpad |
-
-> Full technical specification in [`ENGINE.md`](./ENGINE.md). The README you are reading is the philosophy. The engine doc is the proof.
-
----
-
-## 🧭 Who This Is For
-
-| Operator Type | Fit |
-| :--- | :---: |
-| Serious trader engineering positive expectancy | ✅ |
-| Founder compounding identity → capital → empire | ✅ |
-| High-performer rewriting their cognitive defaults | ✅ |
-| Operator using AI as personal multiplier, not toy | ✅ |
-| Anyone treating their digital surface as a weapon | ✅ |
-| Tourist | ❌ |
-| Motivational consumer | ❌ |
-| Anyone seeking permission | ❌ |
-
----
-
-## 📡 Contact
-
-| Channel | Purpose |
-| :--- | :--- |
-| `ops@urlifeisup.com` | Engagements · serious operators only |
-| `studio@urlifeisup.com` | Studio collaborations |
-| `press@urlifeisup.com` | Media |
-
-> Inquiries that begin with "I'm just curious" will not be returned. Inquiries that begin with a specification will.
-
----
-
-## 📜 License
-
-Proprietary. © 2026. All rights reserved.
-
-The philosophy, architecture, blueprints, color tokens, motion sequences, shader pairs, and operating doctrines housed in this repository and its companion engine are protected intellectual property. **No reuse, redistribution, derivative work, or training of generative models is permitted without written commercial agreement.**
-
----
-
-<div align="center">
-
-## 🜂 The Creed
-
-> **Identity precedes outcome.**
-> **Speed of decision is the alpha.**
-> **Risk is the only currency.**
-> **Compounding is sacred.**
-> **Average is the enemy.**
-> **Sovereignty is the destination.**
->
-> The work is not to want more.
-> The work is to become the operator for whom more is the inevitable output.
->
-> **Void is the discipline. Gold is the signal. Cairo is the launchpad.**
-> **And the only acceptable identity is unstoppable.**
-
----
-
-### **UR LIFE IS UP**
-
-*The operating system of the operator who refuses average.*
-
-[Declaration](#-the-declaration) · [Verdict](#-the-verdict) · [Code](#-the-operators-code) · [Movements](#-the-four-movements) · [Origin](#-the-origin) · [Creed](#-the-creed)
-
-</div>
+No `.env` is required. With no Supabase credentials the site runs in
+**degraded mode**: everything renders, scrolls and animates; only the
+authenticated flows report that they are unavailable. A development-only
+banner names the missing variables.
+
+To enable the backend:
+
+```bash
+cp .env.example .env.local   # then fill in VITE_SUPABASE_URL and ..._ANON_KEY
+```
+
+## Commands
+
+| command | what it does |
+|---|---|
+| `npm run dev` | Vite dev server, bound to `0.0.0.0` |
+| `npm run build` | production build; **fails** on an inline `<style>` over 2 kB or a blown size budget |
+| `npm run preview` | serve `dist/` |
+| `npm test` | 181 specs (unit, flow, contract, accessibility) |
+| `npm run test:watch` | the same, in watch mode |
+| `npm run test:coverage` | coverage with enforced per-file thresholds |
+| `npm run lint` / `lint:fix` | ESLint flat config |
+| `npm run format` / `format:check` | Prettier |
+| `npm run measure` | raw/gzip/brotli report for `dist/`, split by critical path |
+| `npm run measure:baseline` | before/after vs. the committed pre-upgrade build; **exits 1 if the critical path grew** |
+| `npm run bench` | field simulation + Canvas2D draw-call benchmark |
+| `npm run icons` | regenerate all PWA icons and the OG cover from code |
+| `npm run verify` | lint + test + build + measure |
+| `npm run cap:sync` / `cap:ios` / `cap:android` | Capacitor native shells |
+
+## Project layout
+
+```
+index.html              the single document — no inline script, no large inline style
+src/
+  main.js               the only module entry point
+  app/
+    boot.js             one ordered, idempotent startup sequence
+    i18n.js             sole owner of lang/dir; allow-list sanitiser for translations
+    modal.js            dialog stack: focus trap, focus restore, inert, ESC, scroll lock
+    account.js          ALL backend wiring — dynamically imported, never on first paint
+    errors.js           global error reporting + per-step guard()
+    network.js          online/offline, degraded-mode notice
+    debug-overlay.js    ?debug=1 live field stats
+  lib/
+    env.js              the single reader of import.meta.env
+    supabase.js         the single Supabase client (lazy) + degraded-mode stub
+    logger.js           level-aware structured logging with token redaction
+  motion/
+    prefs.js            device tier, reduced motion, pointer capability
+    reveal.js           one IntersectionObserver for every reveal
+    scroll-fx.js        one passive scroll listener → --scroll-progress, parallax
+    pointer-fx.js       one delegated, rAF-batched pointer handler
+    countup.js          number animation
+  visual/
+    sim.js              DOM-free particle simulation (Float32Array, spatial hash)
+    renderer-webgl.js   dependency-free WebGL2, 2 draw calls
+    renderer-2d.js      Canvas2D sprite-blit fallback
+    field.js            backend selection, frame governor, lifecycle
+  styles/               legacy.css (frozen) + motion/components/a11y/index
+  auth.js ideas.js dashboard.js settings.js ...  feature modules, all lazy
+public/                 icons, manifest.webmanifest, sw.js, robots.txt, sitemap.xml
+scripts/                icon generation, bundle measurement, benchmark
+tests/                  unit · flows · contracts · a11y
+docs/                   ARCHITECTURE.md · VERIFICATION.md · MIGRATIONS.md
+archive/                superseded code and documents, kept for provenance
+.baseline/dist/         the verbatim pre-upgrade build, for falsifiable comparisons
+```
+
+## Architecture in one paragraph
+
+`index.html` loads exactly one module. `boot.js` runs a fixed sequence — error
+reporting, network, i18n, dialogs, scroll/reveal/count-up, pointer effects,
+ambient field — with each step wrapped so that a failure disables only that
+subsystem. Nothing that touches the backend is in that graph: `account.js` and
+the 51 kB Supabase client are imported on a magic-link callback, on the first
+sign of CTA intent (with the click replayed once the real handler exists), or
+when the browser goes idle, whichever comes first. The full reconstruction,
+including Mermaid diagrams, the data model and a testable behavioural spec, is
+in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+
+## Invariants
+
+These are the rules that keep the codebase from regressing. Each one is
+enforced mechanically, not by convention.
+
+| Rule | Enforced by |
+|---|---|
+| One module entry point | contract test |
+| No executable inline `<script>` | contract test + CSP without `unsafe-inline` |
+| No inline `<style>` over 2 kB | Vite plugin — **build fails** |
+| Critical path ≤ 24 kB gz HTML, ≤ 170 kB gz total | Vite plugin — **build fails** |
+| Critical path never larger than the baseline | `measure:baseline` in CI |
+| One Supabase client | global-keyed singleton + ESLint import ban |
+| One owner of `lang`/`dir` | `i18n.js`; flow test |
+| `console.*` only in `logger.js` | ESLint |
+| No non-literal `innerHTML` | ESLint (one documented exemption, in the sanitiser) |
+| Nothing imports `archive/` | ESLint |
+| Every runtime dependency is actually imported | contract test |
+| Zero axe violations | a11y suite in CI |
+
+## Accessibility
+
+Zero axe-core violations in five page states (English, Arabic/RTL, and each of
+the three dialogs). Full keyboard support: skip link, focus trap with restore,
+`inert` background, Escape closing only the topmost dialog, `role="alert"`
+error slots wired to their fields with `aria-invalid` and `aria-describedby`.
+`prefers-reduced-motion` is honoured in both CSS and JS — under it, the ambient
+field does not start at all and a pure-CSS gradient is shown instead.
+
+Known gaps (no browser available in the build environment): colour contrast,
+real screen-reader announcement quality, and RTL visual layout are unverified.
+They are listed with resolution steps in
+[`docs/VERIFICATION.md`](docs/VERIFICATION.md) § Limits.
+
+## Performance
+
+| | baseline | now |
+|---|---:|---:|
+| critical path, gzip | 128.7 kB | **49.8 kB** (−61.3 %) |
+| critical path, files | 7 | **3** |
+| simulation, 80 particles, identical params | 0.0405 ms/frame | **0.0108 ms/frame** |
+| Canvas2D state-changing calls / frame | 585 | **90** |
+
+Re-derive any of these with `npm run measure:baseline` and `npm run bench`.
+
+## Browser support
+
+Requires `IntersectionObserver`, CSS custom properties, ES2022 modules and
+`:focus-visible` — Chrome/Edge 111+, Firefox 113+, Safari 16.4+. WebGL2 is
+optional; without it the field falls back to Canvas2D, and without that to a
+static CSS gradient. Without JavaScript the page still renders its content:
+`html` ships with `class="no-js"` and the reveal animations are opt-in.
+
+## Security notes
+
+- All credentials are `VITE_`-prefixed and therefore **public by construction**.
+  Security rests on Postgres row-level security, which `nexus-schema.sql`
+  both `ENABLE`s and `FORCE`s on `public.profiles`.
+- The CSP forbids inline script, `object-src`, framing, and cross-origin form
+  posts, and allows exactly one third-party frame origin (Cal.com).
+- Supabase error text is never shown to users verbatim.
+- The logger redacts anything shaped like a JWT, a Supabase key or a bearer
+  token, and any value under a key matching `token|key|secret|password|authorization`.
+
+## License
+
+Proprietary — all rights reserved. Third-party dependencies retain their own
+licenses; see `node_modules/*/LICENSE`. All brand imagery in `public/icons/` is
+generated from code in `scripts/generate-icons.mjs`; no third-party artwork is
+vendored.

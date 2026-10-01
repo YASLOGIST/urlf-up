@@ -1,5 +1,5 @@
 node_modules/
-dist/
+/dist/
 .DS_Store
 
 # Environment — never commit real credentials
@@ -15,3 +15,12 @@ ios/App/App/public/
 android/app/src/main/assets/public/
 android/.gradle/
 android/app/build/
+
+# Test coverage output
+coverage/
+
+# NOTE: the ignore above is `/dist/` — anchored to the repository root — on
+# purpose. `.baseline/dist/` IS committed: it is the verbatim pre-upgrade
+# build that every performance claim is measured against, and that
+# `npm run measure:baseline` and CI compare the current build to.
+# ~550 kB of text, and deleting it would make the claims unfalsifiable.

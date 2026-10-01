@@ -1,4 +1,5 @@
-import { supabase } from './lib/supabaseClient'
+import { logger } from './lib/logger.js'
+import { supabase } from './lib/supabase.js'
 import { safeName } from './sanitize.js'
 import { rankMatches } from './matchingEngine.js'
 import { icon } from './icons.js'
@@ -33,7 +34,10 @@ function el(tag, attrs = {}, text) {
 function _setCache(key, data) {
   try {
     sessionStorage.setItem(key, JSON.stringify({ data, ts: Date.now() }))
-  } catch {}
+  } catch {
+    /* Private mode / quota exceeded. The cache is an optimisation; losing a
+       write must never surface to the user. */
+  }
 }
 
 function _getCache(key, ttl = 60000) {
@@ -51,7 +55,9 @@ function _clearCache(prefix) {
   try {
     const keys = Object.keys(sessionStorage).filter(k => k.startsWith(prefix))
     keys.forEach(k => sessionStorage.removeItem(k))
-  } catch {}
+  } catch {
+    /* Storage unavailable — nothing to purge. */
+  }
 }
 
 // ── SVG Viability Ring (pure SVG, no library) ─────────────────────────────
@@ -287,7 +293,7 @@ function _renderError(err, retryFn) {
 
   host.appendChild(wrap)
   host.hidden = false
-  console.error('[dashboard]', err)
+  logger.error('dashboard', 'render failed', err)
 }
 
 function _hideError() {
@@ -724,7 +730,7 @@ export async function initDashboard(session) {
   }
 
   // Fetch AI Recommendations in parallel
-  _loadAIMatches(session).then(_renderAIMatches).catch(err => console.error('AI Matching Error:', err))
+  _loadAIMatches(session).then(_renderAIMatches).catch(err => logger.error('dashboard', 'AI matching failed', err))
 
   _setupRealtime(session)
   _setupIntersectionObserver(session, role)

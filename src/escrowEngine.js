@@ -1,3 +1,4 @@
+import { logger } from './lib/logger.js';
 /**
  * Escrow Engine
  * Simulates a trust protocol state machine for deals.
@@ -35,7 +36,7 @@ export class EscrowEngine {
       return true;
     }
     
-    console.error(`Invalid escrow transition from ${this.state} to ${newState}`);
+    logger.error('escrow', 'invalid state transition', { from: this.state, to: newState });
     return false;
   }
   

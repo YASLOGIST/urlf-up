@@ -1,4 +1,4 @@
-import { EscrowEngine, EscrowState } from '../escrowEngine.js';
+import { EscrowEngine } from '../escrowEngine.js';
 import { icon } from '../icons.js';
 import { safeName } from '../sanitize.js';
 

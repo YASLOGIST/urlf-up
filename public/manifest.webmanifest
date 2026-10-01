@@ -1,0 +1,43 @@
+{
+  "name": "UrLife — Where Minds Meet",
+  "short_name": "UrLife",
+  "id": "/",
+  "start_url": "./?source=pwa",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
+  "orientation": "any",
+  "background_color": "#0B0B0B",
+  "theme_color": "#0B0B0B",
+  "dir": "auto",
+  "lang": "en",
+  "categories": ["business", "productivity", "social"],
+  "description": "A project generation engine: ambitious ideas meet the right people, get filtered by AI, and become real businesses. Zero financial barriers, 100% merit-based.",
+  "icons": [
+    { "src": "icons/icon-48.png", "sizes": "48x48", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-64.png", "sizes": "64x64", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-96.png", "sizes": "96x96", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-128.png", "sizes": "128x128", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-256.png", "sizes": "256x256", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-384.png", "sizes": "384x384", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Submit an idea",
+      "short_name": "Submit",
+      "url": "./?action=submit",
+      "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Request a meeting",
+      "short_name": "Meeting",
+      "url": "./?action=meeting",
+      "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
+    }
+  ],
+  "prefer_related_applications": false
+}

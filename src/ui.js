@@ -1,14 +1,37 @@
-import { icon } from './icons'
+import { icon } from './icons.js'
 
 /**
  * Display an error in a named slot element.
+ *
  * Uses textContent — never innerHTML — to prevent XSS.
+ *
+ * Accessibility upgrade (WCAG 3.3.1 Error Identification / 4.1.3 Status
+ * Messages): previously this only toggled `hidden`, so a screen-reader user
+ * who submitted an invalid form heard nothing at all. The slot is now a live
+ * region, the offending fields are marked `aria-invalid`, and focus moves to
+ * the first invalid control.
+ *
+ * @param {string} slotId   id of the message container
+ * @param {string} message  plain text shown to the user
+ * @param {{field?: string, focus?: boolean}} [opts] optional field to flag
  */
-export function showError(slotId, message) {
+export function showError(slotId, message, opts = {}) {
   const slot = document.getElementById(slotId)
   if (!slot) return
   slot.textContent = message
   slot.hidden = false
+  slot.setAttribute('role', 'alert')
+  slot.setAttribute('aria-live', 'assertive')
+
+  const field = opts.field ? document.getElementById(opts.field) : null
+  if (field) {
+    field.setAttribute('aria-invalid', 'true')
+    const describedBy = (field.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean)
+    if (!describedBy.includes(slotId)) {
+      field.setAttribute('aria-describedby', [...describedBy, slotId].join(' '))
+    }
+    if (opts.focus !== false) field.focus({ preventScroll: false })
+  }
 }
 
 export function clearError(slotId) {
@@ -16,6 +39,10 @@ export function clearError(slotId) {
   if (!slot) return
   slot.textContent = ''
   slot.hidden = true
+  // Drop every aria-invalid flag that pointed at this slot.
+  document.querySelectorAll(`[aria-describedby~="${slotId}"]`).forEach(field => {
+    field.removeAttribute('aria-invalid')
+  })
 }
 
 /**
@@ -69,7 +96,9 @@ export function showToast(msgOrOpts, typeArg = 'success') {
     try {
       const iconEl = icon(iconName, { size: 16, className: 'toast-icon' })
       toast.appendChild(iconEl)
-    } catch {}
+    } catch {
+      /* An unknown icon name must never suppress the message itself. */
+    }
   }
 
   const msgEl = document.createElement('span')
@@ -126,25 +155,18 @@ export function debounce(fn, ms) {
   }
 }
 
-export function openModal(id) {
-  const modal = document.getElementById(id)
-  if (!modal) return
-  modal.setAttribute('aria-hidden', 'false')
-  modal.classList.add('modal--open')
-  document.body.style.overflow = 'hidden'
-  requestAnimationFrame(() => {
-    const first = modal.querySelector('input, select, textarea')
-    if (first) first.focus()
-  })
-}
-
-export function closeModal(id) {
-  const modal = document.getElementById(id)
-  if (!modal) return
-  modal.setAttribute('aria-hidden', 'true')
-  modal.classList.remove('modal--open')
-  document.body.style.overflow = ''
-}
+/**
+ * Overlay helpers — thin wrappers around the single modal controller in
+ * src/app/modal.js.
+ *
+ * They used to be a second, independent implementation: `openModal()` here
+ * added `.modal--open`, locked body scroll and focused the first input, but
+ * had no focus trap, no focus restore, no inert background and no stack. Two
+ * controllers meant `document.body.style.overflow` could be unlocked by one
+ * while the other still had a dialog open. Delegating keeps the old import
+ * sites working while there is exactly one state machine.
+ */
+export { openModal, closeModal } from './app/modal.js'
 
 /**
  * Build an idea card using only createElement + textContent.

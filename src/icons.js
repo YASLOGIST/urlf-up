@@ -1,3 +1,4 @@
+import { logger } from './lib/logger.js'
 // SVG icon factory with true 3D specular emboss filters.
 // injectSprite() auto-runs on DOMContentLoaded. icon() returns SVGElement — no innerHTML ever.
 
@@ -245,16 +246,14 @@ export function icon(name, { size = 24, className = '', material } = {}) {
   const data = ICONS[name]
   if (!data) {
     if (!_warnedIcons.has(name)) {
-      console.warn(`[icons] unknown icon: "${name}", using fallback`)
+      logger.warn('icons', 'unknown icon, using fallback', { name })
       _warnedIcons.add(name)
     }
     return icon('dot-gold', { size, className })
   }
 
   const mat = material || (GOLD_NAMES.has(name) ? 'gold' : 'ruby')
-  const gradId = mat === 'gold' ? 'grad-gold-metal' : 'grad-ruby-3d'
   const filterId = mat === 'gold' ? 'fx-gold-3d' : 'fx-ruby-3d'
-  const strokeColor = mat === 'gold' ? 'url(#grad-gold-metal)' : 'url(#grad-ruby-3d)'
 
   const svg = _makeEl('svg', {
     viewBox: data.viewBox || '0 0 24 24',

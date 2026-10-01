@@ -52,7 +52,7 @@ async function main() {
     // 6. Generate Magic Link (this also creates the auth.users identity if it doesn't exist)
     const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
       type: 'magiclink',
-      email: email,
+      email,
       options: {
         data: {
           full_name: name,
