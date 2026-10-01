@@ -14,7 +14,14 @@
   <link rel="alternate" hreflang="ar" href="https://urlifeisup.com/?lang=ar">
   <link rel="alternate" hreflang="x-default" href="https://urlifeisup.com/">
 
-  <!-- ══════════ Open Graph / Twitter ══════════ -->
+  <!-- ══════════ Open Graph / Twitter ══════════
+       og:image pointed at `og-cover.svg`. No crawler that matters renders
+       SVG — Facebook, LinkedIn, Slack, WhatsApp, Discord and X all drop it —
+       so every share of this site unfurled with no image at all. It is now a
+       1200×630 animated GIF whose FIRST FRAME is a complete poster, because
+       that frame is exactly what the clients that do not animate will show.
+       A true-colour PNG of the same frame is declared after it as a fallback.
+       Both are generated from code by `npm run og`; neither is hand-drawn. -->
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="UrLife">
   <meta property="og:locale" content="en_US">
@@ -23,13 +30,23 @@
   <meta property="og:description"
     content="A project generation engine. Ambitious ideas meet the right people, get filtered by AI, and become real businesses.">
   <meta property="og:url" content="https://urlifeisup.com/">
-  <meta property="og:image" content="https://urlifeisup.com/og-cover.svg">
-  <meta property="og:image:alt" content="UR LF ✘ UP — Where Minds Meet">
+  <meta property="og:image" content="https://urlifeisup.com/og-image-animated.gif">
+  <meta property="og:image:type" content="image/gif">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt"
+    content="UR LF ✘ UP — Where Minds Meet. Visionary, Builder and Enabler converging on one mark.">
+  <meta property="og:image" content="https://urlifeisup.com/og-cover.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="UrLife — Where Minds Meet">
   <meta name="twitter:description"
     content="A project generation engine. Ambitious ideas meet the right people, get filtered by AI, and become real businesses.">
-  <meta name="twitter:image" content="https://urlifeisup.com/og-cover.svg">
+  <meta name="twitter:image" content="https://urlifeisup.com/og-image-animated.gif">
+  <meta name="twitter:image:alt"
+    content="UR LF ✘ UP — Where Minds Meet. Visionary, Builder and Enabler converging on one mark.">
 
   <!-- ══════════ PWA ══════════ -->
   <link rel="manifest" href="./manifest.webmanifest">
@@ -97,6 +114,8 @@
     "name": "UrLife",
     "alternateName": "UR LF ✘ UP",
     "url": "https://urlifeisup.com/",
+    "logo": "https://urlifeisup.com/icons/icon-512.png",
+    "image": "https://urlifeisup.com/og-cover.png",
     "description": "A project generation engine where ambitious ideas meet the right people, get filtered by AI, and become real businesses.",
     "email": "ops@urlifeisup.com",
     "knowsLanguage": ["en", "ar"]

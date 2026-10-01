@@ -176,6 +176,128 @@ describe('PWA assets', () => {
   });
 });
 
+/**
+ * Open Graph is the highest-leverage conversion surface the product has, and
+ * it was silently broken: `og:image` pointed at an SVG, which Facebook,
+ * LinkedIn, Slack, WhatsApp, Discord and X all refuse to render. These
+ * assertions make that class of defect impossible to reintroduce — including
+ * a structural walk of the generated GIF, which doubles as a test of the
+ * encoder in `scripts/lib/gif.mjs`.
+ */
+describe('Open Graph card', () => {
+  /** Content values of every `<meta>` with this property, in document order. */
+  const metaAll = (prop, attr = 'property') =>
+    [...markup.matchAll(new RegExp(`<meta\\s+${attr}="${prop}"\\s+content="([^"]*)"`, 'g'))].map((m) => m[1]);
+
+  const images = [...metaAll('og:image'), ...metaAll('twitter:image', 'name')];
+
+  it('declares at least one og:image and one twitter:image', () => {
+    expect(metaAll('og:image').length).toBeGreaterThanOrEqual(1);
+    expect(metaAll('twitter:image', 'name').length).toBe(1);
+  });
+
+  it('never serves SVG to a crawler — no major unfurler renders it', () => {
+    for (const src of images) expect(src, src).not.toMatch(/\.svg(\?|$)/i);
+  });
+
+  it('leads with the animated GIF, and every declared image exists in public/', () => {
+    expect(metaAll('og:image')[0]).toMatch(/\/og-image-animated\.gif$/);
+    for (const src of images) {
+      const file = resolve(ROOT, 'public', new URL(src).pathname.replace(/^\//, ''));
+      expect(existsSync(file), src).toBe(true);
+    }
+  });
+
+  it('declares the 1.91:1 dimensions every unfurler lays out against', () => {
+    expect(metaAll('og:image:width')).toEqual(['1200', '1200']);
+    expect(metaAll('og:image:height')).toEqual(['630', '630']);
+    expect(metaAll('og:image:type')).toEqual(['image/gif', 'image/png']);
+  });
+
+  it('gives the card alternative text', () => {
+    expect(metaAll('og:image:alt')[0].length).toBeGreaterThan(20);
+    expect(metaAll('twitter:image:alt', 'name')[0].length).toBeGreaterThan(20);
+  });
+
+  /**
+   * Walks the GIF block by block. A malformed sub-block chain, a wrong canvas
+   * size or a missing loop extension all fail here rather than in someone's
+   * Slack channel.
+   */
+  const gif = readFileSync(resolve(ROOT, 'public/og-image-animated.gif'));
+
+  function walkGIF(buf) {
+    expect(buf.subarray(0, 6).toString('ascii')).toBe('GIF89a');
+    const width = buf.readUInt16LE(6);
+    const height = buf.readUInt16LE(8);
+    const packed = buf[10];
+    let p = 13;
+    if (packed & 0x80) p += 3 * 2 ** ((packed & 7) + 1);
+
+    const skipSubBlocks = () => {
+      for (;;) {
+        const len = buf[p++];
+        if (!len) return;
+        p += len;
+      }
+    };
+
+    let frames = 0;
+    let loops = null;
+    let delay = null;
+    for (;;) {
+      const marker = buf[p++];
+      if (marker === 0x3b) break; // trailer
+      if (marker === 0x21) {
+        const label = buf[p++];
+        if (label === 0xf9) {
+          delay ??= buf.readUInt16LE(p + 2);
+        } else if (label === 0xff && buf.subarray(p + 1, p + 12).toString('ascii') === 'NETSCAPE2.0') {
+          loops = buf.readUInt16LE(p + 15);
+        }
+        skipSubBlocks();
+      } else if (marker === 0x2c) {
+        frames++;
+        const lp = buf[p + 8];
+        p += 9;
+        if (lp & 0x80) p += 3 * 2 ** ((lp & 7) + 1);
+        p += 1; // LZW minimum code size
+        skipSubBlocks();
+      } else {
+        throw new Error(`unknown block 0x${marker.toString(16)} at ${p - 1}`);
+      }
+    }
+    return { width, height, frames, loops, delay, consumed: p };
+  }
+
+  const info = walkGIF(gif);
+
+  it('is a structurally complete GIF89a that ends exactly at its trailer', () => {
+    expect(info.consumed).toBe(gif.length);
+  });
+
+  it('is 1200×630, multi-frame, and loops forever', () => {
+    expect([info.width, info.height]).toEqual([1200, 630]);
+    expect(info.frames).toBeGreaterThanOrEqual(24);
+    expect(info.loops).toBe(0);
+  });
+
+  it('uses a frame delay no browser will silently rewrite (≥ 4 cs)', () => {
+    expect(info.delay).toBeGreaterThanOrEqual(4);
+  });
+
+  it('stays well inside the 5 MB ceiling crawlers enforce', () => {
+    expect(gif.length).toBeLessThan(2 * 1024 * 1024);
+  });
+
+  it('ships a true-colour still of the same card at the same size', () => {
+    const png = readFileSync(resolve(ROOT, 'public/og-cover.png'));
+    expect(png.subarray(1, 4).toString('ascii')).toBe('PNG');
+    expect(png.readUInt32BE(16)).toBe(1200);
+    expect(png.readUInt32BE(20)).toBe(630);
+  });
+});
+
 describe('service worker', () => {
   const sw = readFileSync(resolve(ROOT, 'public/sw.js'), 'utf8');
 
