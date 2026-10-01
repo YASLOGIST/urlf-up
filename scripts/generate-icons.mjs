@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * generate-icons.mjs — produces every PWA / favicon asset from code.
  *
@@ -16,75 +15,27 @@
  * dependencies: a tiny supersampled SDF rasteriser plus Node's own `zlib` to
  * emit valid PNGs.
  *
+ * The PNG encoder and the palette live in `scripts/lib/` because
+ * `generate-og.mjs` needs both, and two copies of a brand colour is how a
+ * brand drifts. The Open Graph card is no longer produced here — see
+ * `npm run og`.
+ *
  * Usage:  node scripts/generate-icons.mjs
- * Output: public/icons/*.png, public/icons/favicon.svg, public/og-cover.svg
+ * Output: public/icons/*.png, public/icons/favicon.svg
  */
 
-import { deflateSync } from 'node:zlib';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { RGB } from './lib/brand.mjs';
+import { encodePNG } from './lib/png.mjs';
+
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = resolve(ROOT, 'public/icons');
 
-/* ── brand tokens (single source of truth, mirrors src/styles/legacy.css) ── */
-const OBSIDIAN = [0x0b, 0x0b, 0x0b];
-const GOLD = [0xd4, 0xaf, 0x37];
-const GOLD_BRIGHT = [0xf4, 0xd7, 0x7a];
-const FIRE = [0xff, 0x1e, 0x00];
-
-/* ── PNG encoder ─────────────────────────────────────────────────────────── */
-
-function crc32(buf) {
-  let c;
-  const table = crc32.table ?? (crc32.table = buildTable());
-  let crc = 0xffffffff;
-  for (let i = 0; i < buf.length; i++) {
-    crc = table[(crc ^ buf[i]) & 0xff] ^ (crc >>> 8);
-  }
-  return (crc ^ 0xffffffff) >>> 0;
-
-  function buildTable() {
-    const t = new Uint32Array(256);
-    for (let n = 0; n < 256; n++) {
-      c = n;
-      for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
-      t[n] = c >>> 0;
-    }
-    return t;
-  }
-}
-
-function chunk(type, data) {
-  const len = Buffer.alloc(4);
-  len.writeUInt32BE(data.length, 0);
-  const body = Buffer.concat([Buffer.from(type, 'ascii'), data]);
-  const crc = Buffer.alloc(4);
-  crc.writeUInt32BE(crc32(body), 0);
-  return Buffer.concat([len, body, crc]);
-}
-
-/** @param {Uint8Array} rgba  width*height*4 */
-function encodePNG(rgba, width, height) {
-  const stride = width * 4;
-  const raw = Buffer.alloc((stride + 1) * height);
-  for (let y = 0; y < height; y++) {
-    raw[y * (stride + 1)] = 0; // filter: none
-    Buffer.from(rgba.buffer, rgba.byteOffset + y * stride, stride).copy(raw, y * (stride + 1) + 1);
-  }
-  const ihdr = Buffer.alloc(13);
-  ihdr.writeUInt32BE(width, 0);
-  ihdr.writeUInt32BE(height, 4);
-  ihdr[8] = 8; // bit depth
-  ihdr[9] = 6; // colour type: RGBA
-  return Buffer.concat([
-    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
-    chunk('IHDR', ihdr),
-    chunk('IDAT', deflateSync(raw, { level: 9 })),
-    chunk('IEND', Buffer.alloc(0)),
-  ]);
-}
+/* ── brand tokens (single source of truth: scripts/lib/brand.mjs) ── */
+const { obsidian: OBSIDIAN, gold: GOLD, goldBright: GOLD_BRIGHT, ember: FIRE } = RGB;
 
 /* ── signed distance helpers (all in normalised 0..1 space) ──────────────── */
 
@@ -204,44 +155,6 @@ const FAVICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"
 </svg>
 `;
 
-const OG_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="UrLife — Where Minds Meet">
-  <defs>
-    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#F4D77A"/><stop offset="1" stop-color="#B8941F"/>
-    </linearGradient>
-    <radialGradient id="glow" cx="18%" cy="12%" r="70%">
-      <stop offset="0" stop-color="#D4AF37" stop-opacity="0.22"/>
-      <stop offset="1" stop-color="#D4AF37" stop-opacity="0"/>
-    </radialGradient>
-    <radialGradient id="glow2" cx="88%" cy="88%" r="60%">
-      <stop offset="0" stop-color="#FF1E00" stop-opacity="0.14"/>
-      <stop offset="1" stop-color="#FF1E00" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-  <rect width="1200" height="630" fill="#0B0B0B"/>
-  <rect width="1200" height="630" fill="url(#glow)"/>
-  <rect width="1200" height="630" fill="url(#glow2)"/>
-  <g stroke="#D4AF37" stroke-opacity="0.26" stroke-width="1">
-    <path d="M120 470 L250 388 L372 452 L505 360 L640 430"/>
-    <path d="M250 388 L300 268 L452 232 L505 360"/>
-    <path d="M640 430 L770 348 L905 404 L1040 320"/>
-  </g>
-  <g fill="#F4D77A">
-    <circle cx="120" cy="470" r="4"/><circle cx="250" cy="388" r="5"/><circle cx="372" cy="452" r="3.5"/>
-    <circle cx="505" cy="360" r="5"/><circle cx="640" cy="430" r="4"/><circle cx="300" cy="268" r="3.5"/>
-    <circle cx="452" cy="232" r="4"/><circle cx="770" cy="348" r="4.5"/><circle cx="905" cy="404" r="3.5"/>
-    <circle cx="1040" cy="320" r="4"/>
-  </g>
-  <text x="88" y="214" font-family="Inter, Segoe UI, system-ui, sans-serif" font-size="40" font-weight="600"
-        letter-spacing="10" fill="#D4AF37">UR LF &#10008; UP</text>
-  <text x="84" y="330" font-family="Inter, Segoe UI, system-ui, sans-serif" font-size="92" font-weight="700"
-        fill="#F5F5F5">Where Minds Meet</text>
-  <text x="88" y="392" font-family="Inter, Segoe UI, system-ui, sans-serif" font-size="30" font-weight="400"
-        fill="#9A9A9A">A project generation engine. Zero financial barriers. 100% merit-based.</text>
-  <rect x="88" y="440" width="150" height="5" rx="2.5" fill="url(#gold)"/>
-</svg>
-`;
-
 /* ── main ────────────────────────────────────────────────────────────────── */
 
 mkdirSync(OUT, { recursive: true });
@@ -259,7 +172,6 @@ for (const size of [192, 512]) {
   write(resolve(OUT, `maskable-${size}.png`), renderIcon(size, true));
 }
 write(resolve(OUT, 'favicon.svg'), Buffer.from(FAVICON_SVG, 'utf8'));
-write(resolve(ROOT, 'public/og-cover.svg'), Buffer.from(OG_SVG, 'utf8'));
 
 const total = written.reduce((sum, [, n]) => sum + n, 0);
 for (const [path, n] of written) console.log(`${String(n).padStart(8)}  ${path}`);

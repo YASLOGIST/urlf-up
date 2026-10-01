@@ -162,11 +162,30 @@ erDiagram
 - `user_role_type` is a Postgres enum with exactly three values. `src/validators.js`
   exports `ROLE_TYPES` as the single client-side mirror of that enum, and a unit
   test asserts nothing else is accepted.
-- Row-level security is `ENABLE`d **and** `FORCE`d on `public.profiles`.
-- Six indexes exist, including GIN/trigram indexes supporting skill search.
-- **UNKNOWN:** the exact RLS policy bodies for `ideas` are not in the repository;
-  only `profiles` policies are. Cheapest resolution: `supabase db dump --schema public`
-  against the live project, or `select * from pg_policies` in the SQL editor.
+- Re-counted against the committed file: **3 tables** (`profiles`, `ideas`,
+  `idea_interests`), **3 enums**, **4 views**, **17 indexes** (including GIN and
+  trigram indexes supporting skill and name search), **11 policies** and
+  **8 triggers**.
+- Row-level security is `ENABLE`d **and** `FORCE`d on all three tables — an
+  earlier revision of this document claimed the `ideas` policies were absent
+  from the repository. They are present (`ideas_select_public`,
+  `ideas_select_own`, `ideas_insert_own`, `ideas_update_own`).
+- **CONFIRMED DEFECT — client/schema drift.** The console does not speak this
+  schema:
+
+  | Client reads/writes | Schema defines | Site of the call |
+  | --- | --- | --- |
+  | `ideas.user_id` | `ideas.author_id` | `src/ideas.js`, `src/dashboard.js` |
+  | `ideas.problem_solved` | `ideas.problem_statement` | `src/ideas.js`, `src/dashboard.js` |
+  | `ideas.viability_score` | *(absent)* | `src/dashboard.js` |
+  | view `v_top_matches` | *(absent)* | `src/dashboard.js` |
+  | table `matches` | *(absent)* | `src/dashboard.js` |
+
+  Either the committed schema or the client is stale; both cannot be right.
+  Cheapest resolution (≈30 s, no deploy):
+  `select table_name, column_name from information_schema.columns where table_name in ('ideas','matches')`
+  plus `select viewname from pg_views where schemaname='public'` in the Supabase
+  SQL editor. Then correct whichever side lost.
 
 ---
 

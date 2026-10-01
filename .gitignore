@@ -19,6 +19,11 @@ android/app/build/
 # Test coverage output
 coverage/
 
+# npm's content-addressed cache. A handful of these blobs were committed by
+# accident; `npm ci --cache .npm-cache` grows the directory to ~58 MB. It is
+# pure machine-local build residue — never part of the source tree.
+.npm-cache/
+
 # NOTE: the ignore above is `/dist/` — anchored to the repository root — on
 # purpose. `.baseline/dist/` IS committed: it is the verbatim pre-upgrade
 # build that every performance claim is measured against, and that
