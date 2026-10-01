@@ -120,7 +120,7 @@ state. Each is enforced by a test, a lint rule, or a build plugin.
 | No inline `<style>` over 2 kB | `noInlineStyleBlocks` plugin in `vite.config.js` (fails the build) |
 | Exactly one Supabase client | `src/lib/supabase.js` global-keyed singleton; ESLint bans importing `supabaseClient*` |
 | Exactly one owner of `lang`/`dir` | `src/app/i18n.js`; flow test asserts both change together |
-| Exactly one IntersectionObserver for reveal | boot flow test counts observer instances |
+| No element is observed by two IntersectionObservers | boot flow test maps every observed node to its watchers |
 | `console.*` only inside the logger | ESLint `no-console` with a single-file exemption |
 | No non-literal `innerHTML` | ESLint `no-restricted-syntax` (one documented exemption: the sanitiser's own inert `<template>` parse) |
 | Nothing imports `archive/` | ESLint `no-restricted-imports` |
@@ -235,8 +235,8 @@ the spec that enforces it.
 
 ### 7.6 Motion and the ambient field
 
-21. One `IntersectionObserver` drives all reveals; each element is unobserved
-    after it fires once.
+21. One `IntersectionObserver` drives all reveals — no element is ever watched
+    by two of them — and each element is unobserved after it fires once.
 22. Under `prefers-reduced-motion`, everything is revealed immediately and no
     continuous loop starts.
 23. Scroll writes a single custom property `--scroll-progress` and mirrors it to

@@ -107,6 +107,92 @@ describe('env', () => {
   });
 });
 
+describe('device tier', () => {
+  /**
+   * `deviceTier()` reads the hardware probe at call time, so each case can
+   * override it. These assertions are the reason tests/setup.js is allowed
+   * to pin the probe: the mapping is covered here, explicitly, instead of
+   * being implied by whatever machine happens to run the suite.
+   */
+  function applyHardware({ cores, memory, saveData, effectiveType, reducedMotion = false }) {
+    Object.defineProperty(navigator, 'hardwareConcurrency', { value: cores, configurable: true });
+    Object.defineProperty(navigator, 'deviceMemory', { value: memory, configurable: true });
+    Object.defineProperty(navigator, 'connection', {
+      value: { saveData: Boolean(saveData), effectiveType },
+      configurable: true,
+    });
+    window.matchMedia = (q) => ({
+      media: q,
+      matches: /prefers-reduced-motion/.test(q) ? reducedMotion : /pointer:\s*fine|hover:\s*hover/.test(q),
+      addEventListener() {},
+      removeEventListener() {},
+    });
+  }
+
+  const realMatchMedia = window.matchMedia;
+
+  afterEach(() => {
+    window.matchMedia = realMatchMedia;
+    delete navigator.connection;
+    Object.defineProperty(navigator, 'hardwareConcurrency', { value: 8, configurable: true });
+    Object.defineProperty(navigator, 'deviceMemory', { value: 8, configurable: true });
+  });
+
+  /**
+   * prefs.js evaluates its media queries once at module scope — which is the
+   * right thing for a hot path — so the stubs must be installed BEFORE the
+   * module is imported, not after.
+   */
+  async function tierFor(hardware) {
+    vi.resetModules();
+    applyHardware(hardware);
+    const prefs = await import('../../src/motion/prefs.js');
+    return prefs.deviceTier();
+  }
+
+  it('is "high" on a capable desktop', async () => {
+    expect(await tierFor({ cores: 8, memory: 8 })).toBe('high');
+  });
+
+  it('is "mid" on a 4-core / 4 GB machine', async () => {
+    expect(await tierFor({ cores: 4, memory: 8 })).toBe('mid');
+    expect(await tierFor({ cores: 8, memory: 4 })).toBe('mid');
+  });
+
+  it('is "low" on a 2-core / 2 GB machine', async () => {
+    expect(await tierFor({ cores: 2, memory: 8 })).toBe('low');
+    expect(await tierFor({ cores: 8, memory: 2 })).toBe('low');
+  });
+
+  it('is "low" on a 2g connection regardless of CPU', async () => {
+    expect(await tierFor({ cores: 16, memory: 16, effectiveType: '2g' })).toBe('low');
+    expect(await tierFor({ cores: 16, memory: 16, effectiveType: 'slow-2g' })).toBe('low');
+  });
+
+  it('is "off" when the user asked for reduced motion', async () => {
+    expect(await tierFor({ cores: 16, memory: 16, reducedMotion: true })).toBe('off');
+  });
+
+  it('is "off" when the user opted into Save-Data', async () => {
+    expect(await tierFor({ cores: 16, memory: 16, saveData: true })).toBe('off');
+  });
+
+  it('assumes a capable device when the browser reports nothing', async () => {
+    // Safari exposes neither deviceMemory nor a Network Information API.
+    // Refusing to animate there would be the wrong default, so the absence
+    // of data must not be read as "weak hardware".
+    expect(await tierFor({ cores: undefined, memory: undefined })).toBe('high');
+  });
+
+  it('caps the device pixel ratio by tier', async () => {
+    const { maxPixelRatio } = await import('../../src/motion/prefs.js');
+    expect(maxPixelRatio('high')).toBe(2);
+    expect(maxPixelRatio('mid')).toBe(1.5);
+    expect(maxPixelRatio('low')).toBe(1);
+    expect(maxPixelRatio('off')).toBe(1);
+  });
+});
+
 describe('validators', () => {
   it('accepts well-formed email addresses', () => {
     for (const ok of ['a@b.co', 'first.last+tag@sub.domain.org']) {

@@ -17,7 +17,7 @@ npm ci
 
 npm run lint            # ESLint flat config, 0 errors expected
 npm run format:check    # Prettier, 0 differences expected
-npm run test            # 181 specs across 9 files
+npm run test            # 189 specs across 9 files
 npm run test:coverage   # coverage + per-file thresholds
 npm run build           # fails on inline-style or size-budget violations
 npm run measure         # size report for dist/
@@ -181,13 +181,13 @@ and not only in JS; a visible `:focus-visible` ring exists.
 
 ## 6. Test suite
 
-`npm run test` — **181 specs, 9 files, all passing.**
+`npm run test` — **189 specs, 9 files, all passing.**
 
 | file | specs | covers |
 |---|---:|---|
 | `tests/contracts/document.test.js` | 29 | document structure, CSP, manifest, service worker, robots/sitemap, dependency hygiene |
 | `tests/unit/sim.test.js` | 9 | determinism, bounds, dt clamp, link cap, **grid ≡ brute force** |
-| `tests/unit/lib.test.js` | 35 | logger + redaction, env, validators, sanitize, degraded-mode client |
+| `tests/unit/lib.test.js` | 43 | logger + redaction, env, **device-tier mapping**, validators, sanitize, degraded-mode client |
 | `tests/flows/i18n.test.js` | 14 | EN⇄AR switching, persistence, `renderRichText` XSS |
 | `tests/flows/modal.test.js` | 15 | focus trap/restore, inert, ESC stacking, scroll lock |
 | `tests/flows/auth-and-ideas.test.js` | 13 | sign-in, registration, magic link, idea submission, role gate |
@@ -206,9 +206,10 @@ page — is invisible to fixture-based tests.
 
 | scope | statements | branches | functions |
 |---|---:|---:|---:|
-| whole `src/` | 59.5 % | 76.3 % | 53.4 % |
+| whole `src/` | 60.6 % | 77.7 % | 54.4 % |
 | `src/app/` | 74.5 % | 76.7 % | 78.6 % |
-| `src/motion/` | 90.2 % | 67.5 % | 69.8 % |
+| `src/motion/` | 91.5 % | 77.2 % | 72.1 % |
+| `src/visual/` | 82.6 % | 76.7 % | 60.5 % |
 | `src/lib/` | 82.1 % | 83.7 % | 63.5 % |
 
 Per-file thresholds are enforced in `vitest.config.js` and fail CI. They are
@@ -236,6 +237,25 @@ encoding of the real state.
 CI runs with **no Supabase credentials**, which means every run also proves
 degraded mode still builds, boots and passes its tests.
 
+### Host independence
+
+`deviceTier()` reads `navigator.hardwareConcurrency`, and jsdom reports that
+as `os.cpus().length`. Two specs therefore passed on the 2-core development
+sandbox and **failed on the 4-core GitHub runner** — a defect in the tests, not
+in the code, caught by the first CI run on this branch.
+
+Fixed at the root: `tests/setup.js` pins the hardware probe to a deterministic
+"capable desktop", specs that care about a tier inject one explicitly via
+`initField({ tier })` / `initPointerFx({ tier })`, and the tier *mapping* is now
+covered by 8 dedicated unit tests that override the probe per case. The
+observer assertion was also rewritten — counting observers globally was the
+wrong invariant, since count-up and the field legitimately own one each; it now
+asserts that no reveal element is observed twice and that exactly one observer
+serves all of them, which is the actual bug that existed.
+
+Verified by running the full suite against simulated 1-, 2-, 4- and 16-core
+hosts: 189/189 in every case.
+
 ---
 
 ## 8. Limits of this verification
@@ -262,11 +282,11 @@ These are real gaps, stated rather than papered over.
 | Critical-path payload | 128.7 kB gz, 7 files | **49.8 kB gz, 3 files** |
 | Module entry points | 8 | **1** |
 | Supabase clients at runtime | 2 (racing refresh timers) | **1** |
-| Automated tests | 0 | **181** |
+| Automated tests | 0 | **189** |
 | axe violations | not measured; ≥5 real defects present | **0 in 5 page states** |
 | CSP | `script-src 'unsafe-inline'`, no `frame-src` (booking iframe blocked) | hardened, 6 directives, booking works |
 | Service worker | 2 lines, cache-poisoning hazard | versioned, strategy-based, offline fallback |
 | Unused runtime dependencies | 7 (react, react-dom, three, @react-three ×2, gsap, lenis) | **0**, enforced by a test |
 | Simulation cost @ equal params | 0.0405 ms/frame | **0.0108 ms/frame** |
 | Canvas state-changing calls/frame | 585 | **90** |
-| CI | none | lint · format · 181 tests · axe · coverage thresholds · size budget · bench · audit |
+| CI | none | lint · format · 189 tests · axe · coverage thresholds · size budget · bench · audit |

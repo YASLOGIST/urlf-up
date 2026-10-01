@@ -8,7 +8,7 @@ Vanilla ES modules. No UI framework. Two runtime dependencies.
 
 ```
 critical path   49.8 kB gzip  ·  3 files
-tests           181 specs     ·  axe: 0 violations in 5 page states
+tests           189 specs     ·  axe: 0 violations in 5 page states
 build           Vite 6        ·  fails on inline styles or a blown size budget
 ```
 
@@ -44,7 +44,7 @@ cp .env.example .env.local   # then fill in VITE_SUPABASE_URL and ..._ANON_KEY
 | `npm run dev` | Vite dev server, bound to `0.0.0.0` |
 | `npm run build` | production build; **fails** on an inline `<style>` over 2 kB or a blown size budget |
 | `npm run preview` | serve `dist/` |
-| `npm test` | 181 specs (unit, flow, contract, accessibility) |
+| `npm test` | 189 specs (unit, flow, contract, accessibility) |
 | `npm run test:watch` | the same, in watch mode |
 | `npm run test:coverage` | coverage with enforced per-file thresholds |
 | `npm run lint` / `lint:fix` | ESLint flat config |

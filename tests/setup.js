@@ -115,6 +115,27 @@ if (!HTMLCanvasElement.prototype.getContext.__patched) {
   HTMLCanvasElement.prototype.getContext = patched;
 }
 
+/* ── Hardware probe ──────────────────────────────────────────────────────
+ * jsdom reports `navigator.hardwareConcurrency` as `os.cpus().length`, so
+ * `deviceTier()` returns a DIFFERENT tier depending on the machine running
+ * the suite: 'low' on a 2-core sandbox, 'mid' on a 4-core GitHub runner,
+ * 'high' on a developer laptop. That made several specs pass locally and
+ * fail in CI for reasons that had nothing to do with the code.
+ *
+ * The probe is therefore pinned to a deterministic "capable desktop", and
+ * the tier MAPPING itself is tested explicitly in tests/unit/lib.test.js by
+ * overriding these values per-case. Specs that care about a specific tier
+ * inject one via `initField({ tier })` / `initPointerFx({ tier })` rather
+ * than relying on the host. */
+Object.defineProperty(globalThis.navigator, 'hardwareConcurrency', {
+  value: 8,
+  configurable: true,
+});
+Object.defineProperty(globalThis.navigator, 'deviceMemory', {
+  value: 8,
+  configurable: true,
+});
+
 /* ── misc ────────────────────────────────────────────────────────────────── */
 if (!Element.prototype.scrollIntoView) Element.prototype.scrollIntoView = () => {};
 if (!globalThis.performance?.now) globalThis.performance = { now: () => Date.now() };

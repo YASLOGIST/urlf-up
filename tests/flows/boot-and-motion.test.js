@@ -84,10 +84,32 @@ describe('boot sequence', () => {
     expect(seen[0]).toHaveProperty('field');
   });
 
-  it('creates ONE IntersectionObserver for reveal, not four', async () => {
+  /**
+   * The original defect was four IntersectionObservers all watching the SAME
+   * `[data-reveal]` nodes, because four modules each built their own. Counting
+   * observers globally is the wrong assertion — count-up and the field both
+   * legitimately own one. The real invariant is that no element is observed
+   * twice.
+   */
+  it('observes each reveal element exactly once, never by competing observers', async () => {
     await freshBoot();
-    // reveal + the field's visibility observer are the only two permitted.
-    expect(globalThis.__IO_INSTANCES__.length).toBeLessThanOrEqual(2);
+
+    const watchers = new Map();
+    for (const io of globalThis.__IO_INSTANCES__) {
+      for (const el of io.elements) watchers.set(el, (watchers.get(el) ?? 0) + 1);
+    }
+
+    const revealNodes = [...document.querySelectorAll('[data-reveal]')];
+    expect(revealNodes.length).toBeGreaterThan(10);
+
+    const doubleObserved = revealNodes.filter((el) => (watchers.get(el) ?? 0) > 1);
+    expect(doubleObserved.map((el) => el.outerHTML.slice(0, 80))).toEqual([]);
+
+    // One observer instance serves every reveal node.
+    const revealObservers = globalThis.__IO_INSTANCES__.filter((io) =>
+      revealNodes.some((el) => io.elements.has(el))
+    );
+    expect(revealObservers).toHaveLength(1);
   });
 
   it('survives a subsystem that throws — guard() isolates failures', async () => {
@@ -300,11 +322,13 @@ describe('ambient field', () => {
 
   it('refuses to run at all on a low-tier device', async () => {
     const { initField } = await import('../../src/visual/field.js');
-    // jsdom reports hardwareConcurrency: 2, which is a genuine low-tier signal.
-    const handle = initField();
+    // Injected rather than inferred: the host's CPU count must not decide
+    // whether this spec is testing the low tier.
+    const handle = initField({ tier: 'low' });
     expect(handle.mode).toBe('none');
     expect(handle.reason).toMatch(/tier/);
     expect(document.getElementById('field-canvas').hidden).toBe(true);
+    expect(document.documentElement.classList.contains('field-static')).toBe(true);
   });
 
   it('falls back from WebGL2 to Canvas2D when no WebGL context is available', async () => {
