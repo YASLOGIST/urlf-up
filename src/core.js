@@ -1,3 +1,4 @@
+import { logger } from './lib/logger.js';
 /**
  * YAS CORE — Global Interaction Engine
  * Zero dead clicks. Zero double-fires. Full telemetry.
@@ -8,9 +9,7 @@ const TELEMETRY = (typeof window !== 'undefined' && window.__nexus_track)
   ? window.__nexus_track
   : (event, payload) => {
       // No-op fallback. Wire to PostHog / Plausible later.
-      if (location.hostname === 'localhost') {
-        console.debug('[YAS:telemetry]', event, payload);
-      }
+      logger.debug('telemetry', event, payload);
     };
 
 const ACTION_DEBOUNCE_MS = 350;
@@ -131,14 +130,13 @@ function handleClick(e) {
       ts: Date.now(),
     });
 
-    // Dev-mode log to surface unimplemented modules
-    if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-      console.warn(
-        `%c[YAS CORE] Orphan click: "${label}" — ` +
-        `wire this button to a module via data-action.`,
-        'color: #D4AF37; font-weight: 600;'
-      );
-    }
+    // Surfaces unimplemented modules. The logger decides whether this is
+    // visible (debug in development, suppressed in production) instead of the
+    // call site sniffing location.hostname.
+    logger.warn('core', 'orphan click — wire this control to a module', {
+      label,
+      id: target.id || null,
+    });
   }
 }
 
@@ -171,12 +169,7 @@ function boot() {
   });
 
   TELEMETRY('core_online', { ts: Date.now() });
-  if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-    console.log(
-      '%c[YAS CORE] ⚡ Global Interaction Engine Online',
-      'color: #D4AF37; font-weight: 700; font-size: 12px;'
-    );
-  }
+  logger.debug('core', 'global interaction engine online');
 }
 
 if (document.readyState === 'loading') {

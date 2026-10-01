@@ -1,13 +1,12 @@
-import { supabase } from './lib/supabaseClient'
-import { getCachedProfile } from './auth'
-import { showToast, showError, clearError, setLoading } from './ui'
+import { logger } from './lib/logger.js'
+import { supabase } from './lib/supabase.js'
+import { showToast, showError, clearError, setLoading } from './ui.js'
 import {
-  parseAndDedupeSkills,
   isValidFullName,
   isValidRoleType,
   isValidSkillsList,
-} from './validators'
-import { icon } from './icons'
+} from './validators.js'
+import { icon } from './icons.js'
 import { promoteCursorTo, restoreCursorRoot } from './cursor.js'
 import { makeChipInput } from './chip-input.js'
 import { initAvatarZone } from './avatar.js'
@@ -234,7 +233,7 @@ async function _handleSubmit(e) {
     }
 
   } catch (err) {
-    console.error('[settings] update:', err.message)
+    logger.error('settings', 'update failed', err)
     showError('settings-error', 'Failed to save changes. Please try again.')
   } finally {
     setLoading(submitBtn, false)
@@ -253,7 +252,10 @@ function _retryPendingIdea() {
     }
     sessionStorage.removeItem('nexus_pending_idea')
     window.dispatchEvent(new CustomEvent('nexus:retry-pending-idea', { detail: { fields } }))
-  } catch {}
+  } catch {
+    /* A malformed draft from an older build is discarded silently; the user
+       simply sees an empty form rather than an error they cannot act on. */
+  }
 }
 
 // ── Wire the modal ─────────────────────────────────────────────────────────

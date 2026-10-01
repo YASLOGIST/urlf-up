@@ -1,5 +1,6 @@
-import { supabase } from './lib/supabaseClient'
-import { showError, clearError, setLoading, debounce } from './ui'
+import { logger } from './lib/logger.js'
+import { supabase } from './lib/supabase.js'
+import { showError, clearError, setLoading, debounce } from './ui.js'
 import {
   isValidEmail,
   isValidPassword,
@@ -7,7 +8,7 @@ import {
   isValidRoleType,
   parseAndDedupeSkills,
   isValidSkillsList,
-} from './validators'
+} from './validators.js'
 
 let _authSubscription = null
 let _cachedProfile = null
@@ -39,7 +40,7 @@ async function _upsertProfileFromMeta(user) {
     },
     { onConflict: 'id', ignoreDuplicates: true }
   )
-  if (error) console.error('[auth] profile upsert failed:', error.message)
+  if (error) logger.error('auth', 'profile upsert failed', error)
   return _fetchAndCacheProfile(user.id)
 }
 
@@ -105,11 +106,11 @@ export const handleSignIn = debounce(async (email, password, onSuccess) => {
 
   // Client-side validation before any network call
   if (!isValidEmail(email.trim())) {
-    showError('login-error', 'Please enter a valid email address.')
+    showError('login-error', 'Please enter a valid email address.', { field: 'login-email' })
     return
   }
   if (!password) {
-    showError('login-error', 'Password is required.')
+    showError('login-error', 'Password is required.', { field: 'login-password' })
     return
   }
 
@@ -120,7 +121,7 @@ export const handleSignIn = debounce(async (email, password, onSuccess) => {
       password,
     })
     if (error) {
-      console.error('[auth] signIn:', error.message)
+      logger.error('auth', 'signIn failed', error)
       showError('login-error', 'Incorrect email or password. Please try again.')
       return
     }
@@ -135,7 +136,7 @@ export const handleMagicLinkSignIn = debounce(async (email, onSuccess) => {
   clearError('login-error')
 
   if (!isValidEmail(email.trim())) {
-    showError('login-error', 'Please enter a valid email address.')
+    showError('login-error', 'Please enter a valid email address.', { field: 'login-email' })
     return
   }
 
@@ -148,7 +149,7 @@ export const handleMagicLinkSignIn = debounce(async (email, onSuccess) => {
       }
     })
     if (error) {
-      console.error('[auth] magicLink:', error.message)
+      logger.error('auth', 'magic link failed', error)
       showError('login-error', 'Failed to send magic link. Please try again.')
       return
     }
@@ -167,28 +168,30 @@ export const handleSignUp = debounce(
     const skills = parseAndDedupeSkills(skillsRaw)
 
     if (!isValidFullName(fullName)) {
-      showError('register-error', 'Full name must be 2–120 characters.')
+      showError('register-error', 'Full name must be 2–120 characters.', { field: 'register-name' })
       return
     }
     if (!isValidEmail(email.trim())) {
-      showError('register-error', 'Please enter a valid email address.')
+      showError('register-error', 'Please enter a valid email address.', { field: 'register-email' })
       return
     }
     if (!isValidPassword(password)) {
       showError(
         'register-error',
-        'Password must be at least 8 characters and include at least one letter and one number.'
+        'Password must be at least 8 characters and include at least one letter and one number.',
+        { field: 'register-password' }
       )
       return
     }
     if (!isValidRoleType(roleType)) {
-      showError('register-error', 'Please select a role.')
+      showError('register-error', 'Please select a role.', { field: 'register-role' })
       return
     }
     if (!isValidSkillsList(skills)) {
       showError(
         'register-error',
-        'Please enter at least one skill (comma-separated, max 50).'
+        'Please enter at least one skill (comma-separated, max 50).',
+        { field: 'register-skills' }
       )
       return
     }
@@ -208,7 +211,7 @@ export const handleSignUp = debounce(
       })
 
       if (error) {
-        console.error('[auth] signUp:', error.message)
+        logger.error('auth', 'signUp failed', error)
         showError(
           'register-error',
           'Registration failed. This email may already be in use.'
@@ -231,7 +234,7 @@ export const handleSignUp = debounce(
       })
 
       if (profileErr) {
-        console.error('[auth] profile insert:', profileErr.message)
+        logger.error('auth', 'profile insert failed', profileErr)
         // Rollback: sign out to prevent an orphan auth user with no profile
         await supabase.auth.signOut()
         showError(

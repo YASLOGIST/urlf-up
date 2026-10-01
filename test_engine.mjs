@@ -1,7 +1,8 @@
 // 1. THE ENGINE (V1 - Strict)
 function calculateMatch(visionary, capital) {
   if (capital.availableFunds < visionary.requiredCapital) return { isMatch: false, matchScore: 0, synergies: [] };
-  let score = 0, synergies = [];
+  let score = 0;
+  const synergies = [];
   if (capital.preferredIndustries.includes(visionary.industry)) { score += 40; synergies.push("Industry"); }
   const req = visionary.requiredSkills || [], off = capital.skills || [];
   if (req.length > 0) {

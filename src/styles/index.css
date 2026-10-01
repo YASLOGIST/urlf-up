@@ -1,0 +1,14 @@
+/* ===========================================================================
+ * index.css — the single CSS entry point.
+ *
+ * Order matters and is intentional:
+ *   1. legacy.css     the extracted historical stylesheet (do not extend)
+ *   2. motion.css     durations / easings / reveal primitives
+ *   3. components.css new surfaces + the z-index scale
+ *   4. a11y.css       accessibility corrections, last so they win
+ * =========================================================================== */
+
+@import "./legacy.css";
+@import "./motion.css";
+@import "./components.css";
+@import "./a11y.css";

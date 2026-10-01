@@ -1,4 +1,5 @@
-import { supabase } from './lib/supabaseClient'
+import { logger } from './lib/logger.js'
+import { supabase } from './lib/supabase.js'
 import {
   showError,
   clearError,
@@ -7,16 +8,16 @@ import {
   closeModal,
   buildIdeaCard,
   debounce,
-} from './ui'
+} from './ui.js'
 import {
   parseAndDedupeSkills,
   isValidIdeaTitle,
   isValidIndustry,
   isValidProblemSolved,
   isValidRequiredSkills,
-} from './validators'
-import { getCachedProfile } from './auth'
-import { openSettings } from './settings'
+} from './validators.js'
+import { getCachedProfile } from './auth.js'
+import { openSettings } from './settings.js'
 
 export const handleIdeaSubmit = debounce(async (fields, session) => {
   const btn = document.getElementById('idea-submit')
@@ -27,22 +28,23 @@ export const handleIdeaSubmit = debounce(async (fields, session) => {
 
   // Input validation
   if (!isValidIdeaTitle(title)) {
-    showError('idea-error', 'Idea title must be 5–200 characters.')
+    showError('idea-error', 'Idea title must be 5–200 characters.', { field: 'idea-title' })
     return
   }
   if (!isValidIndustry(industry)) {
-    showError('idea-error', 'Industry must be 2–80 characters.')
+    showError('idea-error', 'Industry must be 2–80 characters.', { field: 'idea-industry' })
     return
   }
   if (!isValidProblemSolved(problem)) {
     showError(
       'idea-error',
-      'Problem description must be at least 20 characters (max 5000).'
+      'Problem description must be at least 20 characters (max 5000).',
+      { field: 'idea-problem' }
     )
     return
   }
   if (!isValidRequiredSkills(requiredSkills)) {
-    showError('idea-error', 'Required skills list cannot exceed 30 items.')
+    showError('idea-error', 'Required skills list cannot exceed 30 items.', { field: 'idea-skills' })
     return
   }
 
@@ -58,7 +60,10 @@ export const handleIdeaSubmit = debounce(async (fields, session) => {
         required_skills: requiredSkills,
         ts: Date.now(),
       }))
-    } catch {}
+    } catch {
+      /* Draft persistence is best-effort; a storage failure must not block
+         the submission the user already completed. */
+    }
     // Close idea modal before showing toast
     closeModal('idea-modal')
     // Toast with keyboard-focused CTA (auto-focused by showToast)
@@ -94,7 +99,7 @@ export const handleIdeaSubmit = debounce(async (fields, session) => {
       .single()
 
     if (error) {
-      console.error('[ideas] insert:', error.message)
+      logger.error('ideas', 'insert failed', error)
       showError('idea-error', 'Failed to submit your idea. Please try again.')
       return
     }
@@ -140,7 +145,7 @@ export async function loadUserIdeas(userId) {
     .limit(10)
 
   if (error) {
-    console.error('[ideas] load:', error.message)
+    logger.error('ideas', 'load failed', error)
     return
   }
   if (!data || data.length === 0) return

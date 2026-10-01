@@ -1,0 +1,15 @@
+{
+  "name": "UR LF ✘ UP ™",
+  "short_name": "UR LF ✘ UP ™",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#02040a",
+  "theme_color": "#193982",
+  "icons": [
+    {
+      "src": "https://via.placeholder.com/512/02040a/c8942a?text=UL",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

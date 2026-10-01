@@ -1,0 +1,23 @@
+# robots.txt — UrLife
+# Added 2026-10. The site previously shipped no robots.txt and no sitemap, so
+# crawlers had no canonical entry point and no crawl guidance at all.
+
+User-agent: *
+Allow: /
+Disallow: /dashboard.html
+Disallow: /submit-idea.html
+
+# Training-data crawlers. The repository LICENSE is proprietary and explicitly
+# forbids model training on this material, so the intent is declared here too.
+User-agent: GPTBot
+Disallow: /
+User-agent: CCBot
+Disallow: /
+User-agent: Google-Extended
+Disallow: /
+User-agent: anthropic-ai
+Disallow: /
+User-agent: ClaudeBot
+Disallow: /
+
+Sitemap: https://urlifeisup.com/sitemap.xml

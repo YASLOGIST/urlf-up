@@ -1,7 +1,6 @@
-import { showToast } from './ui'
+import { showToast } from './ui.js'
 
 export function makeChipInput(container, {
-  name = 'chips',
   max = 30,
   normalize = s => s.trim().toLowerCase(),
 } = {}) {

@@ -1,0 +1,202 @@
+/* ===========================================================================
+ * components.css — new surfaces introduced by the 2026-10 upgrade.
+ *
+ * Replaces the old "parachute" <style> block that used to sit at the bottom of
+ * index.html. That block did three destructive things:
+ *   1. `html, body, * { cursor: default !important }`  → killed cursor.js
+ *      outright and overrode every `cursor: pointer` affordance on the page.
+ *   2. `canvas { z-index: -1 !important }`             → pushed the backdrop
+ *      behind the root stacking context, where it is invisible.
+ *   3. `a, button, .btn { z-index: 9999 !important }`  → put every control in
+ *      the same stacking tier as the modals, so a "hidden" nav button could
+ *      still paint on top of an open dialog.
+ *
+ * The fix is an explicit, documented z-index scale instead of an arms race.
+ * =========================================================================== */
+
+:root {
+  /* ── Z-INDEX SCALE — the only place layers are decided ─────────────────── */
+  --z-backdrop: 0; /* #field-canvas */
+  --z-content: 1; /* .page-wrap    */
+  --z-nav: 100; /* sticky nav    */
+  --z-progress: 9000; /* scroll bar    */
+  --z-overlay: 9500; /* modals        */
+  --z-toast: 9800; /* toasts        */
+  --z-cursor: 10000; /* custom cursor */
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+ * Ambient field canvas (src/visual/field.js)
+ * ─────────────────────────────────────────────────────────────────────────── */
+#field-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-backdrop);
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 900ms var(--mo-standard, ease);
+  /* Paint containment: the canvas can never invalidate anything outside itself */
+  contain: strict;
+}
+#field-canvas[data-ready] {
+  opacity: 1;
+}
+
+/* Static fallback painted by CSS for: no-WebGL, no-JS, reduced-motion,
+   save-data, and devices that fail the hardware probe. Costs 0 frames. */
+.field-fallback {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-backdrop);
+  pointer-events: none;
+  background:
+    radial-gradient(900px 620px at 18% 8%, rgba(212, 175, 55, 0.1), transparent 60%),
+    radial-gradient(760px 560px at 86% 22%, rgba(255, 56, 32, 0.055), transparent 62%),
+    radial-gradient(1100px 800px at 50% 110%, rgba(212, 175, 55, 0.07), transparent 65%);
+}
+html.has-field .field-fallback {
+  display: none;
+}
+/* Set by field.js whenever the live backdrop is refused (reduced motion,
+   save-data, low tier, no canvas context). Guarantees the static gradient is
+   the only backdrop layer and that the canvas occupies no stacking slot. */
+html.field-static #field-canvas {
+  display: none !important;
+}
+
+.page-wrap {
+  position: relative;
+  z-index: var(--z-content);
+}
+nav {
+  z-index: var(--z-nav);
+}
+.modal-overlay {
+  z-index: var(--z-overlay);
+}
+#toast-container {
+  z-index: var(--z-toast);
+}
+#cur,
+#cur-ring {
+  z-index: var(--z-cursor);
+  pointer-events: none;
+}
+
+/* Restore the affordances the parachute block destroyed. */
+:where(a[href], button:not(:disabled), [role="button"], label[for], summary) {
+  cursor: pointer;
+}
+:where(button:disabled, [aria-disabled="true"]) {
+  cursor: not-allowed;
+}
+html.has-custom-cursor :where(a[href], button, [role="button"]) {
+  cursor: none;
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+ * Connection / degraded-mode banner. Shown when the backend is not configured
+ * so the operator sees *why* sign-in is unavailable instead of a dead button.
+ * ─────────────────────────────────────────────────────────────────────────── */
+.env-banner {
+  position: fixed;
+  inset: auto 16px 16px 16px;
+  z-index: var(--z-toast);
+  margin-inline: auto;
+  max-width: 560px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 180, 80, 0.3);
+  background: rgba(32, 22, 6, 0.92);
+  backdrop-filter: blur(10px);
+  color: #ffd79a;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.env-banner code {
+  font-family: var(--font-mono, monospace);
+  color: #ffe9c2;
+}
+.env-banner button {
+  margin-inline-start: auto;
+  flex: none;
+  background: none;
+  border: 0;
+  color: inherit;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+ * Lazy image / media: reserve the box before the bytes land (CLS = 0).
+ * ─────────────────────────────────────────────────────────────────────────── */
+img,
+video,
+iframe {
+  max-width: 100%;
+}
+img[width][height] {
+  height: auto;
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+ * RTL corrections. legacy.css is written with physical properties in several
+ * places; these flip the ones that are visible in the Arabic locale.
+ * ─────────────────────────────────────────────────────────────────────────── */
+[dir="rtl"] .hero-tag,
+[dir="rtl"] .sec-chip {
+  flex-direction: row-reverse;
+}
+[dir="rtl"] .modal-close {
+  right: auto;
+  left: 16px;
+}
+[dir="rtl"] .toast {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+[dir="rtl"] blockquote,
+[dir="rtl"] .manifesto p {
+  border-left: 0;
+  border-right: 2px solid var(--gold, #d4af37);
+  padding-left: 0;
+  padding-right: 20px;
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+ * Language switcher — the markup carries aria-pressed; make that visible.
+ * ─────────────────────────────────────────────────────────────────────────── */
+.lang-btn[aria-pressed="true"] {
+  color: var(--gold-bright, #f4d77a);
+  border-color: rgba(212, 175, 55, 0.55);
+  background: rgba(212, 175, 55, 0.12);
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+ * Offline indicator driven by src/app/network.js
+ * ─────────────────────────────────────────────────────────────────────────── */
+html[data-offline="true"] .requires-network {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Reading-progress landmark
+   The bar itself is position:fixed, so this <header> has no in-flow children
+   and already collapses to zero height. It exists only so the progressbar
+   belongs to a landmark (axe `region`). Deliberately NOT `display: contents`,
+   which has a history of dropping the element from the accessibility tree.
+   ────────────────────────────────────────────────────────────────────────── */
+.progress-header {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
