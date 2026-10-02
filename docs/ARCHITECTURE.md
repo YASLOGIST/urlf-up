@@ -26,23 +26,23 @@ visual effect costs the first paint, it has failed its purpose.
 
 ## 3. Stack fingerprint
 
-| Layer | Technology | Confidence |
-|---|---|---|
-| Build | Vite 6, `appType: 'mpa'`, single HTML input | CONFIRMED (`vite.config.js`) |
-| Language | ES2022 modules, no TypeScript in the app graph | CONFIRMED |
-| UI | Hand-written DOM, zero UI framework | CONFIRMED |
-| Styling | Plain CSS, custom properties, no preprocessor, no Tailwind build | CONFIRMED (Tailwind utility class *names* appear in markup but no Tailwind is installed — they are inert) |
-| Backend | Supabase (Postgres + GoTrue + Realtime + Storage), browser-direct | CONFIRMED |
-| Auth | Email+password and magic link, PKCE, `storageKey: 'urlife-auth'` | CONFIRMED |
-| Scheduling | Cal.com iframe embed | CONFIRMED |
-| Native shell | Capacitor 7 (`android/`, `ios/`, `capacitor.config.ts`) | CONFIRMED, not exercised in this pass |
-| Hosting | Static; any CDN. No server-side code of any kind | CONFIRMED |
-| 3D / WebGL | Dependency-free WebGL2, written in-repo | CONFIRMED (`src/visual/renderer-webgl.js`) |
+| Layer        | Technology                                                        | Confidence                                                                                                |
+| ------------ | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Build        | Vite 6, `appType: 'mpa'`, single HTML input                       | CONFIRMED (`vite.config.js`)                                                                              |
+| Language     | ES2022 modules, no TypeScript in the app graph                    | CONFIRMED                                                                                                 |
+| UI           | Hand-written DOM, zero UI framework                               | CONFIRMED                                                                                                 |
+| Styling      | Plain CSS, custom properties, no preprocessor, no Tailwind build  | CONFIRMED (Tailwind utility class _names_ appear in markup but no Tailwind is installed — they are inert) |
+| Backend      | Supabase (Postgres + GoTrue + Realtime + Storage), browser-direct | CONFIRMED                                                                                                 |
+| Auth         | Email+password and magic link, PKCE, `storageKey: 'urlife-auth'`  | CONFIRMED                                                                                                 |
+| Scheduling   | Cal.com iframe embed                                              | CONFIRMED                                                                                                 |
+| Native shell | Capacitor 7 (`android/`, `ios/`, `capacitor.config.ts`)           | CONFIRMED, not exercised in this pass                                                                     |
+| Hosting      | Static; any CDN. No server-side code of any kind                  | CONFIRMED                                                                                                 |
+| 3D / WebGL   | Dependency-free WebGL2, written in-repo                           | CONFIRMED (`src/visual/renderer-webgl.js`)                                                                |
 
 **Removed during this upgrade, with evidence:** `react`, `react-dom`,
 `@react-three/fiber`, `@react-three/drei`, `three`, `gsap`, `lenis`. None of
 them were imported by any module reachable from the entry point. A contract
-test (`tests/contracts/document.test.js` → *dependency hygiene*) now fails the
+test (`tests/contracts/document.test.js` → _dependency hygiene_) now fails the
 build if any runtime dependency is declared but never imported.
 
 ## 4. Visual-layer decision
@@ -53,7 +53,7 @@ committed to a dark luxe aesthetic with gold accents.
 **But it must cost nothing on the critical path**, so the effect is implemented
 as a dependency-free WebGL2/Canvas2D constellation field with a pure-CSS static
 fallback and a hardware-tier budget — not by reviving a 600 kB 3D stack. Since
-the 2026-10 upgrade the field is also *narrative*: it is depth-graded, it
+the 2026-10 upgrade the field is also _narrative_: it is depth-graded, it
 wakes around the pointer, it dollies with scroll, and it stages rendezvous
 events — the brand promise performed by the backdrop itself.
 
@@ -82,6 +82,7 @@ graph TD
       IDEAS["ideas.js"]
       DASH["dashboard.js"]
       SETTINGS["settings.js"]
+      STR["app/strings.js<br/>EN/AR console dictionary<br/>t() + tCount() CLDR plurals"]
       SB["lib/supabase.js<br/>one client, lazy"]
     end
 
@@ -116,18 +117,18 @@ graph TD
 These are the invariants that keep the system from regressing to its previous
 state. Each is enforced by a test, a lint rule, or a build plugin.
 
-| Rule | Enforced by |
-|---|---|
-| Exactly one module entry point | `tests/contracts/document.test.js` |
-| No executable inline `<script>` | contract test + CSP without `unsafe-inline` |
-| No inline `<style>` over 2 kB | `noInlineStyleBlocks` plugin in `vite.config.js` (fails the build) |
-| Exactly one Supabase client | `src/lib/supabase.js` global-keyed singleton; ESLint bans importing `supabaseClient*` |
-| Exactly one owner of `lang`/`dir` | `src/app/i18n.js`; flow test asserts both change together |
-| No element is observed by two IntersectionObservers | boot flow test maps every observed node to its watchers |
-| `console.*` only inside the logger | ESLint `no-console` with a single-file exemption |
-| No non-literal `innerHTML` | ESLint `no-restricted-syntax` (one documented exemption: the sanitiser's own inert `<template>` parse) |
-| Nothing imports `archive/` | ESLint `no-restricted-imports` |
-| Gzipped HTML ≤ 24 kB, total ≤ 170 kB | `sizeBudget` plugin in `vite.config.js` (fails the build) |
+| Rule                                                | Enforced by                                                                                            |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Exactly one module entry point                      | `tests/contracts/document.test.js`                                                                     |
+| No executable inline `<script>`                     | contract test + CSP without `unsafe-inline`                                                            |
+| No inline `<style>` over 2 kB                       | `noInlineStyleBlocks` plugin in `vite.config.js` (fails the build)                                     |
+| Exactly one Supabase client                         | `src/lib/supabase.js` global-keyed singleton; ESLint bans importing `supabaseClient*`                  |
+| Exactly one owner of `lang`/`dir`                   | `src/app/i18n.js`; flow test asserts both change together                                              |
+| No element is observed by two IntersectionObservers | boot flow test maps every observed node to its watchers                                                |
+| `console.*` only inside the logger                  | ESLint `no-console` with a single-file exemption                                                       |
+| No non-literal `innerHTML`                          | ESLint `no-restricted-syntax` (one documented exemption: the sanitiser's own inert `<template>` parse) |
+| Nothing imports `archive/`                          | ESLint `no-restricted-imports`                                                                         |
+| Gzipped HTML ≤ 24 kB, total ≤ 170 kB                | `sizeBudget` plugin in `vite.config.js` (fails the build)                                              |
 
 ---
 
@@ -204,7 +205,7 @@ the spec that enforces it.
 ### 7.2 Language
 
 6. Every translatable node carries both `data-en` and `data-ar`; there are
-   >100 of them.
+   > 100 of them.
 7. Clicking **AR** replaces the text of all of them, sets `lang="ar"`,
    `dir="rtl"`, swaps `<title>` and `meta[name=description]`, and flips
    `aria-pressed` on both buttons. Clicking **EN** reverses all of it.
@@ -232,7 +233,7 @@ the spec that enforces it.
     `aria-invalid` on the field, links them with `aria-describedby`, and focuses
     the field.
 15. Supabase error text is never shown verbatim; `Invalid login credentials: user 4b21 not found`
-    surfaces as *"Incorrect email or password."* (`flows/auth-and-ideas.test.js`)
+    surfaces as _"Incorrect email or password."_ (`flows/auth-and-ideas.test.js`)
 16. Registration rejects any `role_type` outside the enum.
 17. A magic-link callback (`#access_token`, `?code=`, `?token_hash=`,
     `?type=magiclink`) loads the account module **eagerly**, because the token
@@ -243,7 +244,7 @@ the spec that enforces it.
 18. Title 5–200, industry 2–80, problem ≥20 chars, skills capped at 20 entries,
     all validated client-side with field-level error reporting.
 19. A non-Visionary is not silently rejected: the draft is written to
-    `sessionStorage['nexus_pending_idea']` and a toast offers *"Switch to Visionary"*.
+    `sessionStorage['nexus_pending_idea']` and a toast offers _"Switch to Visionary"_.
 20. On success the idea is inserted and rendered into `#ideas-feed-list`, with
     every field written through `textContent` — never parsed as markup.
 
@@ -264,7 +265,7 @@ the spec that enforces it.
     view, and removes every listener it added on `destroy()`.
 27. An EMA frame-time governor sheds up to three density steps (×0.7, floor 24
     particles) if the measured frame cost exceeds 125 % of the 60 fps budget.
-28. On every tier that runs, the field stages the brand story: a *rendezvous*
+28. On every tier that runs, the field stages the brand story: a _rendezvous_
     every 4–8 s (≤ 3 concurrent on high, ≤ 2 on mid) — two particles ease
     together, contact ignites an ember-gold flare, and a ripple ring expands
     from the meeting point. State is bounded typed arrays; the scheduler is
@@ -438,34 +439,34 @@ sequenceDiagram
 
 ## 9. Evidence table
 
-| # | Claim | Confidence | Evidence |
-|---|---|---|---|
-| 1 | Zero UI framework reaches the browser | CONFIDENT | `package.json` dependencies = 2; dependency-hygiene contract test |
-| 2 | Supabase is off the critical path | CONFIDENT | `measure-bundle` — `vendor-supabase` is not referenced by `index.html` |
-| 3 | One Supabase client at runtime | CONFIDENT | single global key; duplicate `supabaseClient.ts` deleted; ESLint ban |
-| 4 | Translations cover the whole page | CONFIDENT | 161 nodes mutated per switch, asserted |
-| 5 | Dialogs are keyboard-complete | CONFIDENT | 15 modal specs + axe pass inside each dialog |
-| 6 | Field falls back correctly without WebGL | CONFIDENT | the test environment returns `null` for WebGL, so the fallback chain is genuinely exercised |
-| 7 | Grid neighbour search ≡ brute force | CONFIDENT | `unit/sim.test.js` compares pair-for-pair across 3 densities × 25 frames — still true with the rendezvous layer active (`unit/rendezvous.test.js`) |
-| 8 | Critical path −58.1 % gzip | CONFIDENT | `npm run measure:baseline` against the committed pre-upgrade build |
-| 9 | Simulation 3.1× cheaper at equal parameters | CONFIDENT | `npm run bench`, min-to-min of 9×600 frames (2026-10 re-measurement on this runner) |
-| 10 | Zero axe violations in 5 page states | CONFIDENT | `tests/a11y/axe.test.js` |
-| 10a | Rendezvous meetings converge, flare and ripple | CONFIDENT | `unit/rendezvous.test.js` — spawn/contact distance, flare peak + decay, ripple growth/expiry, determinism |
-| 10b | The story layer costs ~0 CPU | CONFIDENT | `npm run bench` rendezvous row: meetings at max cadence measure within run noise of a plain field |
-| 10c | WebGL path obeys its budget | CONFIDENT | `unit/renderer-webgl.test.js` mock-GL contract: exactly 2 draw calls incl. rings, 5×24-byte attribute layout, additive blend, create/delete parity |
-| 10d | Canvas2D path obeys its budget | CONFIDENT | `unit/renderer-2d.test.js` recording context: ≤ 6 band strokes + ≤ 3 ring strokes, ember blit only while flaring |
-| 10e | GL shaders compile on real drivers | UNKNOWN | sources are structurally validated (ES 3.00, stage-matched) but no GPU/browser was reachable here — see `docs/VERIFICATION.md` §Limits |
-| 11 | RLS protects `profiles` | PROBABLE | `nexus-schema.sql` enables and forces RLS; policy bodies not executed here |
-| 12 | `ideas` has equivalent RLS | UNKNOWN | not present in the repository — see §6 |
-| 13 | Real-device FPS of the field | UNKNOWN | no browser available in this environment — see `docs/VERIFICATION.md` §Limits |
-| 14 | Capacitor shells still build | UNKNOWN | requires Xcode/Android SDK; unchanged by this work |
+| #   | Claim                                          | Confidence | Evidence                                                                                                                                           |
+| --- | ---------------------------------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Zero UI framework reaches the browser          | CONFIDENT  | `package.json` dependencies = 2; dependency-hygiene contract test                                                                                  |
+| 2   | Supabase is off the critical path              | CONFIDENT  | `measure-bundle` — `vendor-supabase` is not referenced by `index.html`                                                                             |
+| 3   | One Supabase client at runtime                 | CONFIDENT  | single global key; duplicate `supabaseClient.ts` deleted; ESLint ban                                                                               |
+| 4   | Translations cover the whole page              | CONFIDENT  | 161 nodes mutated per switch, asserted                                                                                                             |
+| 5   | Dialogs are keyboard-complete                  | CONFIDENT  | 15 modal specs + axe pass inside each dialog                                                                                                       |
+| 6   | Field falls back correctly without WebGL       | CONFIDENT  | the test environment returns `null` for WebGL, so the fallback chain is genuinely exercised                                                        |
+| 7   | Grid neighbour search ≡ brute force            | CONFIDENT  | `unit/sim.test.js` compares pair-for-pair across 3 densities × 25 frames — still true with the rendezvous layer active (`unit/rendezvous.test.js`) |
+| 8   | Critical path −58.1 % gzip                     | CONFIDENT  | `npm run measure:baseline` against the committed pre-upgrade build                                                                                 |
+| 9   | Simulation 3.1× cheaper at equal parameters    | CONFIDENT  | `npm run bench`, min-to-min of 9×600 frames (2026-10 re-measurement on this runner)                                                                |
+| 10  | Zero axe violations in 5 page states           | CONFIDENT  | `tests/a11y/axe.test.js`                                                                                                                           |
+| 10a | Rendezvous meetings converge, flare and ripple | CONFIDENT  | `unit/rendezvous.test.js` — spawn/contact distance, flare peak + decay, ripple growth/expiry, determinism                                          |
+| 10b | The story layer costs ~0 CPU                   | CONFIDENT  | `npm run bench` rendezvous row: meetings at max cadence measure within run noise of a plain field                                                  |
+| 10c | WebGL path obeys its budget                    | CONFIDENT  | `unit/renderer-webgl.test.js` mock-GL contract: exactly 2 draw calls incl. rings, 5×24-byte attribute layout, additive blend, create/delete parity |
+| 10d | Canvas2D path obeys its budget                 | CONFIDENT  | `unit/renderer-2d.test.js` recording context: ≤ 6 band strokes + ≤ 3 ring strokes, ember blit only while flaring                                   |
+| 10e | GL shaders compile on real drivers             | UNKNOWN    | sources are structurally validated (ES 3.00, stage-matched) but no GPU/browser was reachable here — see `docs/VERIFICATION.md` §Limits             |
+| 11  | RLS protects `profiles`                        | PROBABLE   | `nexus-schema.sql` enables and forces RLS; policy bodies not executed here                                                                         |
+| 12  | `ideas` has equivalent RLS                     | UNKNOWN    | not present in the repository — see §6                                                                                                             |
+| 13  | Real-device FPS of the field                   | UNKNOWN    | no browser available in this environment — see `docs/VERIFICATION.md` §Limits                                                                      |
+| 14  | Capacitor shells still build                   | UNKNOWN    | requires Xcode/Android SDK; unchanged by this work                                                                                                 |
 
 ## 10. Unknowns and the cheapest way to resolve each
 
-| Unknown | Cheapest resolution |
-|---|---|
-| `ideas` RLS policies | `select * from pg_policies where tablename='ideas'` in the Supabase SQL editor (30 s) |
-| Real-browser FPS, LCP, CLS | `npx lighthouse http://localhost:4173 --preset=desktop` after `npm run preview`, on any machine with Chrome |
-| Whether the Cal.com link is current | One HTTP HEAD on `VITE_CAL_LINK` |
-| Whether the native shells still compile | `npm run cap:sync && npx cap open ios` on a Mac with Xcode |
-| Production CSP violations | Deploy with `Content-Security-Policy-Report-Only` and a report endpoint for 24 h |
+| Unknown                                 | Cheapest resolution                                                                                         |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `ideas` RLS policies                    | `select * from pg_policies where tablename='ideas'` in the Supabase SQL editor (30 s)                       |
+| Real-browser FPS, LCP, CLS              | `npx lighthouse http://localhost:4173 --preset=desktop` after `npm run preview`, on any machine with Chrome |
+| Whether the Cal.com link is current     | One HTTP HEAD on `VITE_CAL_LINK`                                                                            |
+| Whether the native shells still compile | `npm run cap:sync && npx cap open ios` on a Mac with Xcode                                                  |
+| Production CSP violations               | Deploy with `Content-Security-Policy-Report-Only` and a report endpoint for 24 h                            |

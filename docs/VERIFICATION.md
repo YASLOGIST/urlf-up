@@ -17,7 +17,7 @@ npm ci
 
 npm run lint            # ESLint flat config, 0 errors expected
 npm run format:check    # Prettier, 0 differences expected
-npm run test            # 252 specs across 14 files
+npm run test            # 270 specs across 15 files
 npm run test:coverage   # coverage + per-file thresholds
 npm run build           # fails on inline-style or size-budget violations
 npm run measure         # size report for dist/
@@ -235,7 +235,7 @@ and not only in JS; a visible `:focus-visible` ring exists.
 
 ## 6. Test suite
 
-`npm run test` — **252 specs, 14 files, all passing.**
+`npm run test` — **270 specs, 15 files, all passing.**
 
 | file                                  | specs | covers                                                                                                               |
 | ------------------------------------- | ----: | -------------------------------------------------------------------------------------------------------------------- |
@@ -285,13 +285,14 @@ encoding of the real state.
 
 ## 7. Quality gates in CI
 
-`.github/workflows/ci.yml`, three jobs:
+`.github/workflows/ci.yml`, four jobs:
 
-| job                  | steps                                                                                                                                             |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **quality**          | `npm ci` → lint → format check → full test suite (includes axe) → coverage + thresholds → upload coverage                                         |
-| **build**            | `npm ci` → build (inline-style guard + size budget) → `measure` → `measure:baseline` (fails if the critical path grew) → `bench` → upload `dist/` |
-| **dependency-audit** | `npm run audit` — high/critical advisories across all locked dependencies                                                                         |
+| job                  | steps                                                                                                                                                                                   |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **quality**          | `npm ci` → lint → format check → full test suite (includes axe) → coverage + thresholds → upload coverage                                                                               |
+| **build**            | `npm ci` → build (inline-style guard + size budget) → `measure` → `audit:contrast` (WCAG AA, 223/223) → `measure:baseline` (fails if the critical path grew) → `bench` → upload `dist/` |
+| **dependency-audit** | `npm run audit` — high/critical advisories across all locked dependencies                                                                                                               |
+| **link-liveness**    | `npm run check:links` — every external href answers 200 (currently red on purpose: the Cal.com booking link is dead — Known gap #4)                                                     |
 
 CI runs with **no Supabase credentials**, which means every run also proves
 degraded mode still builds, boots and passes its tests.
@@ -337,16 +338,16 @@ These are real gaps, stated rather than papered over.
 
 ## 9. Summary
 
-| dimension                         | baseline                                                              | final                                                                               |
-| --------------------------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| Critical-path payload             | 128.7 kB gz, 7 files                                                  | **51.4 kB gz, 3 files**                                                             |
-| Module entry points               | 8                                                                     | **1**                                                                               |
-| Supabase clients at runtime       | 2 (racing refresh timers)                                             | **1**                                                                               |
-| Automated tests                   | 0                                                                     | **252**                                                                             |
-| axe violations                    | not measured; ≥5 real defects present                                 | **0 in 5 page states**                                                              |
-| CSP                               | `script-src 'unsafe-inline'`, no `frame-src` (booking iframe blocked) | hardened, 6 directives, booking works                                               |
-| Service worker                    | 2 lines, cache-poisoning hazard                                       | versioned, strategy-based, offline fallback                                         |
-| Unused runtime dependencies       | 7 (react, react-dom, three, @react-three ×2, gsap, lenis)             | **0**, enforced by a test                                                           |
-| Simulation cost @ equal params    | 0.0405 ms/frame                                                       | **0.0108 ms/frame**                                                                 |
-| Canvas state-changing calls/frame | 585                                                                   | **90**                                                                              |
-| CI                                | none                                                                  | lint · format · 252 tests · axe · coverage thresholds · size budget · bench · audit |
+| dimension                         | baseline                                                              | final                                                                                                                           |
+| --------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Critical-path payload             | 128.7 kB gz, 7 files                                                  | **51.4 kB gz, 3 files**                                                                                                         |
+| Module entry points               | 8                                                                     | **1**                                                                                                                           |
+| Supabase clients at runtime       | 2 (racing refresh timers)                                             | **1**                                                                                                                           |
+| Automated tests                   | 0                                                                     | **270**                                                                                                                         |
+| axe violations                    | not measured; ≥5 real defects present                                 | **0 in 5 page states**                                                                                                          |
+| CSP                               | `script-src 'unsafe-inline'`, no `frame-src` (booking iframe blocked) | hardened, 6 directives, booking works                                                                                           |
+| Service worker                    | 2 lines, cache-poisoning hazard                                       | versioned, strategy-based, offline fallback                                                                                     |
+| Unused runtime dependencies       | 7 (react, react-dom, three, @react-three ×2, gsap, lenis)             | **0**, enforced by a test                                                                                                       |
+| Simulation cost @ equal params    | 0.0405 ms/frame                                                       | **0.0108 ms/frame**                                                                                                             |
+| Canvas state-changing calls/frame | 585                                                                   | **90**                                                                                                                          |
+| CI                                | none                                                                  | lint · format · 270 tests · axe · coverage thresholds · size budget · contrast audit · bench · dependency audit · link liveness |
