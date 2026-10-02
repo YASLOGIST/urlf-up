@@ -6,6 +6,11 @@
  * and the older capital-pool shape that early prototypes used. It never throws
  * on sparse data: missing fields reduce confidence instead of breaking the
  * conversion path.
+ *
+ * Every axis result carries a human `note` (English, used by the CLI report)
+ * plus a stable `noteKey` (+ `noteParams`) so the UI can render the same note
+ * in the active language — see src/app/strings.js. `noteParams` values that
+ * start with `role.` are i18n keys, not literals.
  */
 
 const DEFAULT_WEIGHTS = Object.freeze({
@@ -158,6 +163,7 @@ function scoreSkills(idea, candidate) {
       matched: [],
       missing: [],
       note: 'Idea has not declared required skills yet.',
+      noteKey: 'match.skills.ideaEmpty',
     };
   }
   if (!offered.length) {
@@ -167,6 +173,7 @@ function scoreSkills(idea, candidate) {
       matched: [],
       missing: required,
       note: 'Candidate profile has no skills yet.',
+      noteKey: 'match.skills.candidateEmpty',
     };
   }
 
@@ -190,6 +197,8 @@ function scoreSkills(idea, candidate) {
     note: matched.length
       ? `${matched.length}/${required.length} required skills covered.`
       : 'No strong skill overlap yet.',
+    noteKey: matched.length ? 'match.skills.covered' : 'match.skills.none',
+    noteParams: matched.length ? { matched: matched.length, required: required.length } : undefined,
   };
 }
 
@@ -203,6 +212,7 @@ function scoreIndustry(idea, candidate) {
       confidence: 0.35,
       matched: [],
       note: 'Industry preference is incomplete.',
+      noteKey: 'match.industry.incomplete',
     };
   }
 
@@ -220,6 +230,8 @@ function scoreIndustry(idea, candidate) {
     confidence: 0.85,
     matched: best.score >= 55 ? [best.industry] : [],
     note: best.score >= 55 ? `Industry aligns with ${best.industry}.` : 'Industry is outside declared interests.',
+    noteKey: best.score >= 55 ? 'match.industry.aligns' : 'match.industry.outside',
+    noteParams: best.score >= 55 ? { industry: best.industry } : undefined,
   };
 }
 
@@ -227,15 +239,15 @@ function scoreRole(idea, candidate) {
   const candidateRole = roleOf(candidate);
   const sourceRole = roleOf(idea) || 'visionary';
   if (!candidateRole) {
-    return { raw: 58, confidence: 0.3, note: 'Candidate role is missing.' };
+    return { raw: 58, confidence: 0.3, note: 'Candidate role is missing.', noteKey: 'match.role.missing' };
   }
   if (COMPLEMENTARY_ROLES[sourceRole]?.has(candidateRole)) {
-    return { raw: candidateRole === 'builder' ? 96 : 90, confidence: 1, note: `${candidateRole} complements ${sourceRole}.` };
+    return { raw: candidateRole === 'builder' ? 96 : 90, confidence: 1, note: `${candidateRole} complements ${sourceRole}.`, noteKey: 'match.role.complements', noteParams: { candidate: `role.${candidateRole}`, source: `role.${sourceRole}` } };
   }
   if (candidateRole === sourceRole) {
-    return { raw: 24, confidence: 0.95, note: `${candidateRole} is not the primary counterpart for this flow.` };
+    return { raw: 24, confidence: 0.95, note: `${candidateRole} is not the primary counterpart for this flow.`, noteKey: 'match.role.same', noteParams: { candidate: `role.${candidateRole}` } };
   }
-  return { raw: 62, confidence: 0.55, note: 'Role fit is plausible but not explicit.' };
+  return { raw: 62, confidence: 0.55, note: 'Role fit is plausible but not explicit.', noteKey: 'match.role.plausible' };
 }
 
 function scoreCapital(idea, candidate) {
@@ -249,6 +261,7 @@ function scoreCapital(idea, candidate) {
       raw: candidateRole === 'enabler' ? 72 : 58,
       confidence: 0.25,
       note: 'Capital requirement is not declared.',
+      noteKey: 'match.capital.requirementMissing',
     };
   }
   if (available == null) {
@@ -256,27 +269,29 @@ function scoreCapital(idea, candidate) {
       raw: candidateRole === 'enabler' ? 60 : 38,
       confidence: 0.35,
       note: 'Available capital is not declared.',
+      noteKey: 'match.capital.availableMissing',
     };
   }
   if (available < required) {
-    return { raw: (available / required) * 45, confidence: 0.9, note: 'Below the requested capital floor.' };
+    return { raw: (available / required) * 45, confidence: 0.9, note: 'Below the requested capital floor.', noteKey: 'match.capital.belowFloor' };
   }
 
   const ceiling = Math.max(required + 1, ideal ?? required * 2.5);
   const scaled = 65 + (Math.min(available, ceiling) - required) * (35 / (ceiling - required));
-  return { raw: clamp(scaled), confidence: 0.95, note: 'Capital capacity clears the floor.' };
+  return { raw: clamp(scaled), confidence: 0.95, note: 'Capital capacity clears the floor.', noteKey: 'match.capital.clears' };
 }
 
 function scoreReputation(candidate) {
   const rep = numberFrom(candidate?.reputation);
   const verified = Boolean(candidate?.is_verified ?? candidate?.verified ?? candidate?.author_verified);
   if (rep == null && !verified) {
-    return { raw: 50, confidence: 0.25, note: 'No reputation signal yet.' };
+    return { raw: 50, confidence: 0.25, note: 'No reputation signal yet.', noteKey: 'match.trust.none' };
   }
   return {
     raw: clamp(45 + Math.min(rep ?? 0, 100) * 0.45 + (verified ? 10 : 0)),
     confidence: 0.8,
     note: verified ? 'Verified profile with reputation signal.' : 'Reputation signal present.',
+    noteKey: verified ? 'match.trust.verified' : 'match.trust.present',
   };
 }
 
@@ -297,6 +312,8 @@ function scoreDataQuality(idea, candidate) {
     raw: (filled / fields.length) * 100,
     confidence: 0.7,
     note: `${filled}/${fields.length} matching signals available.`,
+    noteKey: 'match.data.signals',
+    noteParams: { filled, total: fields.length },
   };
 }
 
@@ -372,7 +389,7 @@ export function calculateMatch(idea, candidate, options = {}) {
     synergies: synergyList(breakdown),
     reasons: Object.entries(breakdown)
       .sort((a, b) => weights[b[0]] - weights[a[0]])
-      .map(([axis, result]) => ({ axis, score: Math.round(result.raw), confidence: result.confidence, note: result.note })),
+      .map(([axis, result]) => ({ axis, score: Math.round(result.raw), confidence: result.confidence, note: result.note, noteKey: result.noteKey, noteParams: result.noteParams })),
     breakdown,
   };
 }

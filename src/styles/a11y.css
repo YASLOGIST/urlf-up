@@ -100,6 +100,51 @@
   --dim: rgba(245, 245, 245, 0.62);
 }
 
+/* ── 1.4.3 Contrast — measured corrections from scripts/audit-contrast.mjs.
+ *    Every value below was failing WCAG AA in the shipped bundle; numbers in
+ *    comments are the measured before → after ratios. Re-run the audit
+ *    (`npm run audit:contrast`) after touching any of these. ────────────── */
+
+/* Hero ghost word: 25% gold outline was ≈1.5:1 (large text needs 3:1) */
+.htitle .l3 {
+  -webkit-text-stroke: 1.5px rgba(200, 148, 42, 0.62);
+}
+
+/* Revenue list items: 50% white-blue was ≈4.3:1 at 12px (needs 4.5) */
+.rev-list li {
+  color: rgba(237, 241, 255, 0.68);
+}
+
+/* Revenue pills: full-saturation ember was ≈4.4:1 worst-stop at 11px */
+.rev-pill {
+  color: #ff6a56;
+}
+
+/* Footer brand statement: 32% white was ≈2.8:1 at 11px */
+footer .footer-brand,
+footer > p,
+.footer > p,
+footer .footer-tagline,
+footer .copyright,
+footer small {
+  color: rgba(245, 245, 245, 0.66);
+}
+
+/* Role card captions: 40% white was ≈3.8:1 at 10px */
+.role-card-desc {
+  color: rgba(245, 245, 245, 0.7);
+}
+
+/* Modal close glyph: 40% white was ≈3.8:1 at 20px */
+.glass-modal-close {
+  color: rgba(245, 245, 245, 0.7);
+}
+
+/* Avatar "+" placeholder: 40% gold was ≈2.0:1 at 32px (large text, 3:1) */
+.avatar-placeholder {
+  color: rgba(212, 175, 55, 0.8);
+}
+
 /* ── Custom cursor is pointer-dependent, never touch/keyboard ────────────── */
 #cur,
 #cur-ring {

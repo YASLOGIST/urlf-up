@@ -168,7 +168,7 @@
           <span style="color: #ef4444;">UP ™</span></span></a>
       <div class="nav-links">
         <a href="#how" data-en="How It Works" data-ar="كيف يعمل">How It Works</a>
-        <a href="#roles" data-en="Who It's For" data-ar="من هو لهم">Who It's For</a>
+        <a href="#roles" data-en="Who It's For" data-ar="لمن هذه المنصة">Who It's For</a>
         <a href="#meeting" data-en="Closed Meeting" data-ar="الاجتماع المغلق">Closed Meeting</a>
         <a href="#revenue" data-en="Revenue Model" data-ar="نموذج الربح">Revenue Model</a>
         <a href="#roadmap" data-en="Roadmap" data-ar="خارطة الطريق">Roadmap</a>
@@ -187,7 +187,7 @@
         <button id="nav-join-btn" type="button" data-en="Join Now" data-ar="انضم الآن">Join Now</button>
         <div id="nav-user-wrap" hidden="">
           <span id="nav-user-name"></span>
-          <button id="nav-settings-btn" class="nav-settings-btn" aria-label="Account Settings">
+          <button id="nav-settings-btn" class="nav-settings-btn" aria-label="Account Settings" data-i18n-aria="nav.settingsAria">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
               <circle cx="12" cy="12" r="3" />
@@ -195,7 +195,7 @@
                 d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
             </svg>
           </button>
-          <button id="nav-logout-btn">Sign Out</button>
+          <button id="nav-logout-btn" data-i18n="nav.signOut">Sign Out</button>
         </div>
         <button id="nav-meeting-btn" type="button" class="nav-cta" data-en="Request a Meeting"
           data-ar="اطلب اجتماعاً">Request a Meeting</button>
@@ -273,7 +273,7 @@
         <div class="nx-header">
           <div id="nx-title"></div>
           <div id="nx-user-role"></div>
-          <button id="nexus-refresh" type="button">↻ Refresh</button>
+          <button id="nexus-refresh" type="button" data-i18n="nav.refresh">↻ Refresh</button>
         </div>
         <div id="nx-ideas-panel" hidden="">
           <div id="nx-ideas-list"></div>
@@ -921,7 +921,7 @@
 
       <div class="roadmap reveal-scale in">
         <div class="rm">
-          <div class="rm-n">1</div>
+          <div class="rm-n" aria-hidden="true">1</div>
           <div class="rm-when" data-en="MONTH 1–2 — SEED" data-ar="الشهر 1–2 — البذرة">MONTH 1–2 — SEED</div>
           <h3 data-en="Prove the Concept" data-ar="إثبات المفهوم">Prove the Concept</h3>
           <p data-en="Simple form + spreadsheet + WhatsApp. First 20 ideas evaluated manually. Prove people are interested and matching works."
@@ -932,18 +932,19 @@
           </div>
         </div>
         <div class="rm">
-          <div class="rm-n">2</div>
+          <div class="rm-n" aria-hidden="true">2</div>
           <div class="rm-when" data-en="MONTH 3–6 — MVP" data-ar="الشهر 3–6 — MVP">MONTH 3–6 — MVP</div>
           <h3 data-en="Build the Core Platform" data-ar="بناء المنصة الأساسية">Build the Core Platform</h3>
-          <p data-en="Webflow site + Airtable database + GPT-4 evaluation + Calendly + Notion for active projects.  from day one."
+          <p data-en="Webflow site + Airtable database + GPT-4 evaluation + Calendly + Notion for active projects. Bilingual Arabic and English from day one."
             data-ar="موقع Webflow + قاعدة بيانات Airtable + تقييم GPT-4 + Calendly + Notion للمشاريع النشطة. عربي وإنجليزي من اليوم الأول.">
-            Webflow site + Airtable database + GPT-4 evaluation + Calendly + Notion for active projects. from day one.
+            Webflow site + Airtable database + GPT-4 evaluation + Calendly + Notion for active projects. Bilingual
+            Arabic and English from day one.
           </p>
           <div class="rm-kpi" data-en="Goal: 200 members + 5 active projects" data-ar="هدف: 200 عضو + 5 مشاريع نشطة">
             Goal: 200 members + 5 active projects</div>
         </div>
         <div class="rm">
-          <div class="rm-n">3</div>
+          <div class="rm-n" aria-hidden="true">3</div>
           <div class="rm-when" data-en="MONTH 7–14 — GROWTH" data-ar="الشهر 7–14 — النمو">MONTH 7–14 — GROWTH</div>
           <h3 data-en="Scale the Community" data-ar="توسيع المجتمع">Scale the Community</h3>
           <p data-en="Full platform (Next.js), AI Matching, Enabler Fund, media presence across Arab world and globally. First exit or revenue from a successful project."
@@ -954,7 +955,7 @@
             data-ar="هدف: 2,000+ عضو + أول $100K حصص">Goal: 2,000+ members + first $100K equity</div>
         </div>
         <div class="rm">
-          <div class="rm-n">4</div>
+          <div class="rm-n" aria-hidden="true">4</div>
           <div class="rm-when" data-en="YEAR 2+ — EMPIRE" data-ar="السنة 2+ — الإمبراطورية">YEAR 2+ — EMPIRE</div>
           <h3 data-en="UrLife Global" data-ar="UrLife عالمي">UrLife Global</h3>
           <p data-en="Corporate partnerships, Annual Summit, official UrLife Fund, expansion to MENA, Europe &amp; beyond. The YCombinator for the Arab world and Emerging Markets."
@@ -969,7 +970,7 @@
 
     <!-- ══════════ MANIFESTO ══════════ -->
     <div class="manifesto reveal in">
-      <div class="manifesto-watermark">URLIFE</div>
+      <div class="manifesto-watermark" aria-hidden="true">URLIFE</div>
       <blockquote>
         <span
           data-en="&quot;The difference between an idea that dies&lt;br&gt;and one that &lt;span class=&quot;g&quot;&gt;builds an empire&lt;/span&gt;&lt;br&gt;is not money —&lt;br&gt;it is &lt;span class=&quot;e&quot;&gt;who you meet.&lt;/span&gt;&quot;"
@@ -1302,8 +1303,9 @@
 
     <!-- ══════════ IDEAS FEED ══════════ -->
     <section id="ideas-feed-section" hidden="">
-      <span class="sec-chip">Your Submitted Ideas</span>
-      <h2 class="sec-title">Launched <span class="g">Ideas</span></h2>
+      <span class="sec-chip" data-en="Your Submitted Ideas" data-ar="أفكارك المُقدَّمة">Your Submitted Ideas</span>
+      <h2 class="sec-title" data-en="Launched &lt;span class='g'&gt;Ideas&lt;/span&gt;"
+        data-ar="أفكار &lt;span class='g'&gt;انطلقت&lt;/span&gt;">Launched <span class="g">Ideas</span></h2>
       <div id="ideas-feed-list"></div>
     </section>
 
@@ -1333,7 +1335,7 @@
           </svg>
           <span data-en="Book a Closed Meeting" data-ar="احجز اجتماعاً مغلقاً">Book a Closed Meeting</span>
         </div>
-        <button id="cal-modal-close" class="modal-close" type="button" data-modal-close aria-label="Close">✕</button>
+        <button id="cal-modal-close" class="modal-close" type="button" data-modal-close aria-label="Close" data-i18n-aria="ui.close">✕</button>
       </div>
       <div class="cal-modal-frame-wrap">
         <div id="cal-modal-spinner" class="cal-modal-spinner" aria-hidden="true">
@@ -1350,9 +1352,9 @@
   <!-- ══════════ AUTH MODAL ══════════ -->
   <div id="auth-modal" class="modal-overlay" aria-hidden="true">
     <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
-      <button id="auth-modal-close" class="modal-close" type="button" data-modal-close aria-label="Close">✕</button>
+      <button id="auth-modal-close" class="modal-close" type="button" data-modal-close aria-label="Close" data-i18n-aria="ui.close">✕</button>
       <div class="modal-tabs" role="tablist">
-        <button id="auth-tab-login" class="modal-tab modal-tab--active" role="tab" aria-selected="true">Sign In</button>
+        <button id="auth-tab-login" class="modal-tab modal-tab--active" role="tab" aria-selected="true" data-i18n="auth.signIn">Sign In</button>
         <button id="auth-tab-register" class="modal-tab" type="button" role="tab" aria-selected="false"
           aria-controls="auth-panel-register" data-en="Join Now" data-ar="انضم الآن">Join Now</button>
       </div>
@@ -1362,12 +1364,12 @@
         <h2 class="modal-title" id="auth-modal-title" data-en="Welcome Back" data-ar="أهلاً بعودتك">Welcome Back</h2>
         <form id="login-form" novalidate="" autocomplete="on">
           <div class="field-group">
-            <label for="login-email">Email</label>
+            <label for="login-email" data-i18n="auth.email">Email</label>
             <input type="email" id="login-email" name="email" autocomplete="email" placeholder="you@example.com"
-              required="">
+              required="" data-i18n-placeholder="auth.emailPh">
           </div>
           <div class="field-group">
-            <label for="login-password">Password</label>
+            <label for="login-password" data-i18n="auth.password">Password</label>
             <input type="password" id="login-password" name="password" autocomplete="current-password"
               placeholder="••••••••" required="">
           </div>
@@ -1390,39 +1392,40 @@
           UrLife</h2>
         <form id="register-form" novalidate="" autocomplete="on">
           <div class="field-group">
-            <label for="register-name">Full Name</label>
+            <label for="register-name" data-i18n="auth.fullName">Full Name</label>
             <input type="text" id="register-name" name="fullName" autocomplete="name" maxlength="80"
-              placeholder="Your full name" required="">
+              placeholder="Your full name" required="" data-i18n-placeholder="auth.fullNamePh">
           </div>
           <div class="field-group">
-            <label for="register-email">Email</label>
+            <label for="register-email" data-i18n="auth.email">Email</label>
             <input type="email" id="register-email" name="email" autocomplete="email" placeholder="you@example.com"
-              required="">
+              required="" data-i18n-placeholder="auth.emailPh">
           </div>
           <div class="field-group">
-            <label for="register-password">Password</label>
+            <label for="register-password" data-i18n="auth.password">Password</label>
             <input type="password" id="register-password" name="password" autocomplete="new-password"
-              placeholder="Min 8 chars · letters + numbers" required="">
+              placeholder="Min 8 chars · letters + numbers" required="" data-i18n-placeholder="auth.passwordHintPh">
           </div>
           <div class="field-group">
-            <label for="register-role">Your Role</label>
+            <label for="register-role" data-i18n="auth.yourRole">Your Role</label>
             <select id="register-role" name="role" required="">
-              <option value="" disabled="" selected="">Select your role</option>
-              <option value="visionary">Visionary — I have an idea to build</option>
-              <option value="builder">Builder — I build things</option>
-              <option value="enabler">Enabler — I fund and enable</option>
+              <option value="" disabled="" selected="" data-i18n="auth.selectRole">Select your role</option>
+              <option value="visionary" data-i18n="auth.roleVisionary">Visionary — I have an idea to build</option>
+              <option value="builder" data-i18n="auth.roleBuilder">Builder — I build things</option>
+              <option value="enabler" data-i18n="auth.roleEnabler">Enabler — I fund and enable</option>
             </select>
           </div>
           <div class="field-group">
-            <label for="register-skills">Skills (comma-separated)</label>
+            <label for="register-skills" data-i18n="auth.skills">Skills (comma-separated)</label>
             <input type="text" id="register-skills" name="skills" autocomplete="off"
-              placeholder="e.g. design, react, marketing" required="">
+              placeholder="e.g. design, react, marketing" required="" data-i18n-placeholder="auth.skillsPh">
           </div>
           <div id="register-error" class="error-slot" role="alert" aria-live="assertive" hidden=""></div>
-          <button type="submit" id="register-submit" class="btn-primary" style="width:100%;margin-top:4px;">Create
+          <button type="submit" id="register-submit" class="btn-primary" style="width:100%;margin-top:4px;"
+            data-i18n="auth.createAccount">Create
             Account</button>
         </form>
-        <div id="register-confirm-msg" class="confirm-msg" hidden="">
+        <div id="register-confirm-msg" class="confirm-msg" hidden="" data-i18n="auth.confirmMsg">
           Check your inbox — we sent you a confirmation link. Once verified, sign in above.
         </div>
       </div>
@@ -1432,37 +1435,40 @@
   <!-- ══════════ IDEA MODAL ══════════ -->
   <div id="idea-modal" class="modal-overlay" aria-hidden="true">
     <div class="modal-card modal-card--wide" role="dialog" aria-modal="true" aria-labelledby="idea-modal-title">
-      <button id="idea-modal-close" class="modal-close" type="button" data-modal-close aria-label="Close">✕</button>
+      <button id="idea-modal-close" class="modal-close" type="button" data-modal-close aria-label="Close" data-i18n-aria="ui.close">✕</button>
 
       <div id="idea-role-gate" class="role-gate" hidden="">
-        <p>Only <strong>Visionaries</strong> can submit ideas.<br>Update your role in your profile to continue.</p>
+        <p data-i18n-rich="idea.roleGate">Only <strong>Visionaries</strong> can submit ideas.<br>Update your role in
+          your profile to continue.</p>
       </div>
 
       <div id="idea-form-wrap">
-        <h2 class="modal-title" id="idea-modal-title">Launch Your Idea</h2>
+        <h2 class="modal-title" id="idea-modal-title" data-i18n="idea.modalTitle">Launch Your Idea</h2>
         <form id="idea-form" novalidate="">
           <div class="field-group">
-            <label for="idea-title">Idea Title</label>
+            <label for="idea-title" data-i18n="idea.titleLabel">Idea Title</label>
             <input type="text" id="idea-title" name="title" maxlength="200" placeholder="What is your idea called?"
-              required="">
+              required="" data-i18n-placeholder="idea.titlePh">
           </div>
           <div class="field-group">
-            <label for="idea-industry">Industry</label>
+            <label for="idea-industry" data-i18n="idea.industryLabel">Industry</label>
             <input type="text" id="idea-industry" name="industry" maxlength="80"
-              placeholder="e.g. FinTech, Healthcare, EdTech" required="">
+              placeholder="e.g. FinTech, Healthcare, EdTech" required="" data-i18n-placeholder="idea.industryPh">
           </div>
           <div class="field-group">
-            <label for="idea-problem">Problem It Solves</label>
+            <label for="idea-problem" data-i18n="idea.problemLabel">Problem It Solves</label>
             <textarea id="idea-problem" name="problem" maxlength="5000"
-              placeholder="Describe the problem in detail (min 20 characters)..." required=""></textarea>
+              placeholder="Describe the problem in detail (min 20 characters)..." required=""
+              data-i18n-placeholder="idea.problemPh"></textarea>
           </div>
           <div class="field-group">
-            <label for="idea-skills">Skills Required (comma-separated, optional)</label>
+            <label for="idea-skills" data-i18n="idea.skillsLabel">Skills Required (comma-separated, optional)</label>
             <input type="text" id="idea-skills" name="skills" autocomplete="off"
-              placeholder="e.g. react, machine learning, finance">
+              placeholder="e.g. react, machine learning, finance" data-i18n-placeholder="idea.skillsPh">
           </div>
           <div id="idea-error" class="error-slot" role="alert" aria-live="assertive" hidden=""></div>
-          <button type="submit" id="idea-submit" class="btn-primary" style="width:100%;margin-top:4px;">Launch
+          <button type="submit" id="idea-submit" class="btn-primary" style="width:100%;margin-top:4px;"
+            data-i18n="idea.submit">Launch
             Idea</button>
         </form>
       </div>
@@ -1472,86 +1478,90 @@
   <!-- ══════════ SETTINGS MODAL ══════════ -->
   <dialog id="settings-modal" class="glass-modal" aria-labelledby="settings-modal-title">
     <div class="glass-modal-header">
-      <h2 class="glass-modal-title" id="settings-modal-title">Account Settings</h2>
-      <button id="settings-modal-close" class="glass-modal-close" aria-label="Close">✕</button>
+      <h2 class="glass-modal-title" id="settings-modal-title" data-i18n="settings.title">Account Settings</h2>
+      <button id="settings-modal-close" class="glass-modal-close" aria-label="Close" data-i18n-aria="ui.close">✕</button>
     </div>
     <form id="settings-form" novalidate="">
       <!-- Avatar zone -->
       <div id="settings-avatar-zone" class="avatar-zone" data-mode="empty">
-        <div class="avatar-circle" role="img" aria-label="Profile photo">
+        <div class="avatar-circle" role="img" aria-label="Profile photo" data-i18n-aria="settings.profilePhoto">
           <img class="avatar-img" alt="" hidden="">
           <span class="avatar-placeholder">+</span>
         </div>
         <div class="avatar-controls">
-          <button type="button" data-action="upload">Upload</button>
-          <button type="button" data-action="url">Paste URL</button>
-          <button type="button" data-action="remove" hidden="">Remove</button>
+          <button type="button" data-action="upload" data-i18n="settings.upload">Upload</button>
+          <button type="button" data-action="url" data-i18n="settings.pasteUrl">Paste URL</button>
+          <button type="button" data-action="remove" hidden="" data-i18n="settings.remove">Remove</button>
         </div>
         <input type="file" accept="image/png,image/jpeg,image/webp" hidden="" aria-hidden="true"
-          aria-label="Choose an avatar image file" data-avatar-file>
+          aria-label="Choose an avatar image file" data-avatar-file data-i18n-aria="settings.avatarFileAria">
         <input type="url" placeholder="https://…" hidden="" aria-hidden="true" aria-label="Avatar image URL"
+          data-i18n-aria="settings.avatarUrlAria"
           data-avatar-url
           style="width:100%;margin-block-start:6px;background:var(--lift,#111827);border:1px solid rgba(212,175,55,0.2);border-radius:var(--r,8px);padding:8px 12px;color:var(--ice-white,#f5f5f5);font-size:var(--fs-small);font-family:var(--font-body-en);">
       </div>
       <div class="field-group">
-        <label for="settings-name">Full Name</label>
-        <input type="text" id="settings-name" name="full_name" autocomplete="name" maxlength="80" placeholder="Your full name">
+        <label for="settings-name" data-i18n="auth.fullName">Full Name</label>
+        <input type="text" id="settings-name" name="full_name" autocomplete="name" maxlength="80"
+          placeholder="Your full name" data-i18n-placeholder="auth.fullNamePh">
       </div>
       <div class="field-group" style="margin-block-start:20px;">
-        <label>Your Role</label>
+        <label data-i18n="auth.yourRole">Your Role</label>
         <div class="role-picker">
           <label class="role-card-label" style="position:relative;">
             <input type="radio" name="role_type" value="visionary">
             <div class="role-card-inner">
               <div class="role-icon-wrap" id="role-icon-visionary"></div>
-              <div class="role-card-name">Visionary</div>
-              <div class="role-card-desc">Submit ideas</div>
+              <div class="role-card-name" data-i18n="role.visionary">Visionary</div>
+              <div class="role-card-desc" data-i18n="settings.roleVisionaryDesc">Submit ideas</div>
             </div>
           </label>
           <label class="role-card-label" style="position:relative;">
             <input type="radio" name="role_type" value="builder">
             <div class="role-card-inner">
               <div class="role-icon-wrap" id="role-icon-builder"></div>
-              <div class="role-card-name">Builder</div>
-              <div class="role-card-desc">Build products</div>
+              <div class="role-card-name" data-i18n="role.builder">Builder</div>
+              <div class="role-card-desc" data-i18n="settings.roleBuilderDesc">Build products</div>
             </div>
           </label>
           <label class="role-card-label" style="position:relative;">
             <input type="radio" name="role_type" value="enabler">
             <div class="role-card-inner">
               <div class="role-icon-wrap" id="role-icon-enabler"></div>
-              <div class="role-card-name">Enabler</div>
-              <div class="role-card-desc">Fund &amp; connect</div>
+              <div class="role-card-name" data-i18n="role.enabler">Enabler</div>
+              <div class="role-card-desc" data-i18n="settings.roleEnablerDesc">Fund &amp; connect</div>
             </div>
           </label>
         </div>
       </div>
       <div class="field-group" style="margin-block-start:20px;">
-        <label for="settings-skills-input">Skills</label>
+        <label for="settings-skills-input" data-i18n="settings.skills">Skills</label>
         <div class="skill-chips-field" id="settings-skill-chips-wrap">
           <div id="settings-skill-chips" data-chips=""></div>
-          <input type="text" id="settings-skills-input" placeholder="Type a skill, press Enter" autocomplete="off">
+          <input type="text" id="settings-skills-input" placeholder="Type a skill, press Enter" autocomplete="off"
+            data-i18n-placeholder="settings.skillsPh">
         </div>
       </div>
       <!-- Bio -->
       <div class="field-group bio-field" style="margin-block-start:16px;">
-        <label for="settings-bio">Bio</label>
+        <label for="settings-bio" data-i18n="settings.bio">Bio</label>
         <textarea id="settings-bio" name="bio" maxlength="160" rows="3"
-          placeholder="Who are you, in one breath?"></textarea>
+          placeholder="Who are you, in one breath?" data-i18n-placeholder="settings.bioPh"></textarea>
         <small class="char-counter" aria-live="polite"><span id="settings-bio-count">0</span> / 160</small>
       </div>
       <!-- Interests -->
       <div class="field-group" style="margin-block-start:16px;">
-        <label for="settings-interests-input">Interests</label>
+        <label for="settings-interests-input" data-i18n="settings.interests">Interests</label>
         <div class="skill-chips-field" id="settings-interest-chips-wrap">
           <div id="settings-interest-chips" data-chips=""></div>
-          <input type="text" id="settings-interests-input" placeholder="e.g. fintech, climate, web3" autocomplete="off">
+          <input type="text" id="settings-interests-input" placeholder="e.g. fintech, climate, web3" autocomplete="off"
+            data-i18n-placeholder="settings.interestsPh">
         </div>
       </div>
       <div id="settings-error" class="error-slot" role="alert" hidden=""></div>
       <div class="settings-actions">
-        <button type="button" id="settings-cancel" class="btn-ghost">Cancel</button>
-        <button type="submit" id="settings-submit" class="btn-gold">Save Changes</button>
+        <button type="button" id="settings-cancel" class="btn-ghost" data-i18n="settings.cancel">Cancel</button>
+        <button type="submit" id="settings-submit" class="btn-gold" data-i18n="settings.save">Save Changes</button>
       </div>
     </form>
   </dialog>

@@ -1,4 +1,5 @@
 import { showToast } from './ui.js'
+import { t } from './app/strings.js'
 
 export function makeChipInput(container, {
   max = 30,
@@ -36,7 +37,7 @@ export function makeChipInput(container, {
     if (!val) return
     if (chips.includes(val)) return
     if (chips.length >= max) {
-      showToast({ type: 'info', message: `Max ${max} reached` })
+      showToast({ type: 'info', message: t('chips.max', { max }) })
       return
     }
     chips.push(val)

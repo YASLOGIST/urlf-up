@@ -1,6 +1,7 @@
 import { logger } from './lib/logger.js'
 import { supabase } from './lib/supabase.js'
 import { showToast, showError, clearError, setLoading } from './ui.js'
+import { t } from './app/strings.js'
 import {
   MAX_SKILLS,
   isValidFullName,
@@ -120,7 +121,7 @@ export async function openSettings({
     .single()
 
   if (profileErr) {
-    showToast({ message: 'Failed to load profile. Please try again.', type: 'error' })
+    showToast({ message: t('settings.error.load'), type: 'error' })
     return
   }
 
@@ -170,17 +171,17 @@ async function _handleSubmit(e) {
   const avatar_url = _avatarDataUrl || null
 
   if (!isValidRoleType(roleType)) {
-    showError('settings-error', 'Please select a role.')
+    showError('settings-error', t('settings.error.role'))
     return
   }
 
   if (mode !== 'rapid-switch') {
     if (!isValidFullName(fullName)) {
-      showError('settings-error', 'Full name must be 2–80 characters.')
+      showError('settings-error', t('settings.error.name'))
       return
     }
     if (!isValidSkillsList(skills)) {
-      showError('settings-error', 'Please enter at least one skill (max 20).')
+      showError('settings-error', t('settings.error.skills'))
       return
     }
   }
@@ -220,9 +221,11 @@ async function _handleSubmit(e) {
       _dialog?.classList.remove('glass-modal--closing')
     }, 200)
 
+    const roleKey = `role.${roleType}`
+    const roleText = t(roleKey)
     const msg = roleType !== _fromRole
-      ? `You're a ${roleType.charAt(0).toUpperCase() + roleType.slice(1)} now`
-      : 'Profile updated'
+      ? t('settings.toast.roleChanged', { role: roleText !== roleKey ? roleText : roleType })
+      : t('settings.toast.updated')
     showToast({ message: msg, icon: roleType !== _fromRole ? 'check-seal' : null, type: 'success' })
 
     window.dispatchEvent(new CustomEvent('nexus:profile-updated', {
@@ -235,7 +238,7 @@ async function _handleSubmit(e) {
 
   } catch (err) {
     logger.error('settings', 'update failed', err)
-    showError('settings-error', 'Failed to save changes. Please try again.')
+    showError('settings-error', t('settings.error.save'))
   } finally {
     setLoading(submitBtn, false)
   }
