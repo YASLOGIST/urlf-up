@@ -61,7 +61,7 @@ fallback and a hardware-tier budget — not by reviving a 600 kB 3D stack.
 ```mermaid
 graph TD
   subgraph Browser["Browser — static origin"]
-    HTML["index.html<br/>single document, no inline script"]
+    HTML["index.html<br/>single document, no executable inline script"]
     MAIN["src/main.js<br/>the only module entry"]
 
     subgraph Boot["src/app/boot.js — one ordered sequence"]
@@ -196,7 +196,7 @@ the spec that enforces it.
 
 ### 7.1 First paint and boot
 
-1. The document loads exactly one module (`/src/main.js`) and no inline script.
+1. The document loads exactly one module (`/src/main.js`) and no executable inline script.
    (`contracts/document.test.js`)
 2. `boot()` runs its steps in a fixed order; each step is wrapped so a thrown
    error disables only that subsystem. (`flows/boot-and-motion.test.js`)

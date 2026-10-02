@@ -7,6 +7,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, existsSync } from 'node:fs';
 import { execSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readIndexHtml, duplicateIds } from '../helpers/page.js';
@@ -121,8 +122,24 @@ describe('Content-Security-Policy', () => {
     expect(csp.get('frame-src').join(' ')).toMatch(/cal\.com/);
   });
 
-  it('no longer permits inline script execution', () => {
-    expect(csp.get('script-src')).toEqual(["'self'"]);
+  it('does not permit arbitrary inline script execution', () => {
+    const scriptSrc = csp.get('script-src');
+    expect(scriptSrc).toContain("'self'");
+    expect(scriptSrc).not.toContain("'unsafe-inline'");
+    expect(scriptSrc).not.toContain('*');
+  });
+
+  it('allows every inline JSON-LD data block only by an exact CSP hash', () => {
+    const scriptSrc = csp.get('script-src');
+    const dataBlocks = [...markup.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)].filter(([, attrs]) =>
+      /type="application\/ld\+json"/.test(attrs)
+    );
+
+    expect(dataBlocks.length).toBeGreaterThan(0);
+    for (const [, , body] of dataBlocks) {
+      const hash = `sha256-${createHash('sha256').update(body).digest('base64')}`;
+      expect(scriptSrc).toContain(`'${hash}'`);
+    }
   });
 
   it('locks down the dangerous defaults', () => {

@@ -22,10 +22,11 @@
     "measure": "node scripts/measure-bundle.mjs dist",
     "measure:baseline": "node scripts/measure-bundle.mjs .baseline/dist dist",
     "bench": "node scripts/bench-field.mjs",
+    "audit": "node scripts/audit-high.mjs",
     "icons": "node scripts/generate-icons.mjs",
     "og": "node scripts/generate-og.mjs",
     "brand": "npm run icons && npm run og",
-    "verify": "npm run lint && npm run test && npm run build && npm run measure",
+    "verify": "npm run lint && npm run test && npm run build && npm run measure && npm run audit",
     "cap:sync": "npm run build && npx cap sync",
     "cap:ios": "npm run build && npx cap sync ios && npx cap open ios",
     "cap:android": "npm run build && npx cap sync android && npx cap open android"

@@ -17,14 +17,15 @@ npm ci
 
 npm run lint            # ESLint flat config, 0 errors expected
 npm run format:check    # Prettier, 0 differences expected
-npm run test            # 189 specs across 9 files
+npm run test            # 210 specs across 10 files
 npm run test:coverage   # coverage + per-file thresholds
 npm run build           # fails on inline-style or size-budget violations
 npm run measure         # size report for dist/
 npm run measure:baseline # before/after table; exits 1 if the critical path grew
+npm run audit           # high/critical dependency advisory gate
 npm run bench           # field simulation + draw-call benchmark
 
-npm run verify          # lint + test + build + measure in one shot
+npm run verify          # lint + test + build + measure + audit in one shot
 ```
 
 ---
@@ -35,30 +36,30 @@ npm run verify          # lint + test + build + measure in one shot
 
 | metric | baseline | final | change |
 |---|---:|---:|---:|
-| **critical path, gzip** | **128.7 kB** | **49.8 kB** | **−61.3 %** |
-| critical path, brotli | 108.1 kB | 42.2 kB | −61.0 % |
-| critical path, raw | 522.5 kB | 202.8 kB | −61.2 % |
+| **critical path, gzip** | **128.7 kB** | **50.3 kB** | **−60.9 %** |
+| critical path, brotli | 108.1 kB | 42.6 kB | −60.6 % |
+| critical path, raw | 522.5 kB | 204.1 kB | −60.9 % |
 | critical path, files | 7 | 3 | −57.1 % |
-| all assets, gzip | 129.1 kB | 127.2 kB | −1.4 % |
-| all assets, raw | 523.1 kB | 475.5 kB | −9.1 % |
+| all assets, gzip | 129.1 kB | 127.7 kB | −1.1 % |
+| all assets, raw | 523.1 kB | 476.9 kB | −8.8 % |
 
 "Critical path" = `index.html` plus every asset it references with a `src`/`href`.
 Code reachable only through a dynamic `import()` is excluded because the browser
 does not block first paint on it.
 
-### Where the 78.9 kB went
+### Where the 78.4 kB went
 
 | baseline critical asset | gzip | disposition |
 |---|---:|---|
 | `assets/index-B2_xVcKm.js` | 78.1 kB | split: Supabase (51.1 kB gz) moved to `vendor-supabase`, loaded only by `app/account.js`; the rest split per-feature |
-| `index.html` | 39.7 kB | 22.1 kB — 5,761 lines → ~1,530; three inline `<script>` blocks and the inline `<style>` extracted |
+| `index.html` | 39.7 kB | 22.8 kB — 5,761 lines → ~1,530; three inline `<script>` blocks and the inline `<style>` extracted; JSON-LD allowed by a CSP hash |
 | `assets/icons-Bmy9g5KS.js` | 3.6 kB | off the critical path (lazy) |
 | `assets/settings-BcGIvyCb.js` | 3.0 kB | off the critical path (lazy) |
 | `assets/core-CNWC0QgM.js` | 2.3 kB | folded into `main` |
 | `assets/cursor-p9ZL9eAK.js` | 1.6 kB | off the critical path (fine-pointer only) |
 | `assets/manifest-9wO3NzbU.json` | 0.2 kB | replaced by `public/manifest.webmanifest` |
 
-Final critical path, in full: `index.html` 22.1 kB gz + `assets/main-*.js`
+Final critical path, in full: `index.html` 22.8 kB gz + `assets/main-*.js`
 14.3 kB gz + `assets/main-*.css` 13.2 kB gz.
 
 The "all assets" line barely moves, and that is the honest result: the same
@@ -163,7 +164,7 @@ and not only in JS; a visible `:focus-visible` ring exists.
 
 | Control | Baseline | Final | Verified by |
 |---|---|---|---|
-| CSP `script-src` | `'self' 'unsafe-inline'` | `'self'` | contract test |
+| CSP `script-src` | `'self' 'unsafe-inline'` | `'self'` plus exact JSON-LD hash, no `unsafe-inline` | contract test |
 | CSP `frame-src` | absent → Cal.com booking iframe **blocked by `default-src`** | `https://cal.com https://*.cal.com` | contract test |
 | CSP `object-src` / `base-uri` / `form-action` / `frame-ancestors` | absent | `'none'` / `'self'` / `'self'` / `'none'` | contract test |
 | Inline scripts | 3 blocks | 0 executable (only `ld+json`) | contract test |
@@ -175,18 +176,19 @@ and not only in JS; a visible `:focus-visible` ring exists.
 | Validator robustness | threw a `TypeError` on any non-string, aborting the submit handler before it could render an error | every predicate coerces and returns a boolean | 1 spec × 10 predicates × 9 hostile inputs |
 | Skills input | unbounded — a pasted document became a multi-thousand-element array sent to Postgres | capped at 20 entries, 40 chars each | 2 specs |
 
-`npm audit --omit=dev --audit-level=high` runs in CI as a separate job.
+`npm run audit` runs in CI as a separate job and fails on high/critical advisories across the complete lockfile.
 
 ---
 
 ## 6. Test suite
 
-`npm run test` — **189 specs, 9 files, all passing.**
+`npm run test` — **210 specs, 10 files, all passing.**
 
 | file | specs | covers |
 |---|---:|---|
-| `tests/contracts/document.test.js` | 29 | document structure, CSP, manifest, service worker, robots/sitemap, dependency hygiene |
+| `tests/contracts/document.test.js` | 40 | document structure, CSP, JSON-LD hash, manifest, service worker, robots/sitemap, dependency hygiene |
 | `tests/unit/sim.test.js` | 9 | determinism, bounds, dt clamp, link cap, **grid ≡ brute force** |
+| `tests/unit/compositor.test.js` | 10 | SDF/bloom compositor invariants for generated brand assets |
 | `tests/unit/lib.test.js` | 43 | logger + redaction, env, **device-tier mapping**, validators, sanitize, degraded-mode client |
 | `tests/flows/i18n.test.js` | 14 | EN⇄AR switching, persistence, `renderRichText` XSS |
 | `tests/flows/modal.test.js` | 15 | focus trap/restore, inert, ESC stacking, scroll lock |
@@ -232,7 +234,7 @@ encoding of the real state.
 |---|---|
 | **quality** | `npm ci` → lint → format check → full test suite (includes axe) → coverage + thresholds → upload coverage |
 | **build** | `npm ci` → build (inline-style guard + size budget) → `measure` → `measure:baseline` (fails if the critical path grew) → `bench` → upload `dist/` |
-| **dependency-audit** | `npm audit --omit=dev --audit-level=high` |
+| **dependency-audit** | `npm run audit` — high/critical advisories across all locked dependencies |
 
 CI runs with **no Supabase credentials**, which means every run also proves
 degraded mode still builds, boots and passes its tests.
@@ -253,8 +255,9 @@ wrong invariant, since count-up and the field legitimately own one each; it now
 asserts that no reveal element is observed twice and that exactly one observer
 serves all of them, which is the actual bug that existed.
 
-Verified by running the full suite against simulated 1-, 2-, 4- and 16-core
-hosts: 189/189 in every case.
+Earlier verification ran the then-full suite against simulated 1-, 2-, 4- and
+16-core hosts: 189/189 in every case. The current suite adds document/CSP
+coverage and remains deterministic under the same pinned hardware probe.
 
 ---
 
@@ -279,14 +282,14 @@ These are real gaps, stated rather than papered over.
 
 | dimension | baseline | final |
 |---|---|---|
-| Critical-path payload | 128.7 kB gz, 7 files | **49.8 kB gz, 3 files** |
+| Critical-path payload | 128.7 kB gz, 7 files | **50.3 kB gz, 3 files** |
 | Module entry points | 8 | **1** |
 | Supabase clients at runtime | 2 (racing refresh timers) | **1** |
-| Automated tests | 0 | **189** |
+| Automated tests | 0 | **210** |
 | axe violations | not measured; ≥5 real defects present | **0 in 5 page states** |
 | CSP | `script-src 'unsafe-inline'`, no `frame-src` (booking iframe blocked) | hardened, 6 directives, booking works |
 | Service worker | 2 lines, cache-poisoning hazard | versioned, strategy-based, offline fallback |
 | Unused runtime dependencies | 7 (react, react-dom, three, @react-three ×2, gsap, lenis) | **0**, enforced by a test |
 | Simulation cost @ equal params | 0.0405 ms/frame | **0.0108 ms/frame** |
 | Canvas state-changing calls/frame | 585 | **90** |
-| CI | none | lint · format · 189 tests · axe · coverage thresholds · size budget · bench · audit |
+| CI | none | lint · format · 210 tests · axe · coverage thresholds · size budget · bench · audit |
