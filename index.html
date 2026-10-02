@@ -72,8 +72,10 @@
                 relative URL on the page.
     form-action ADDED 'self'. Stops an injected form from exfiltrating to a
                 third-party origin.
-    script-src  'unsafe-inline' REMOVED. Every inline <script> has been moved
-                into the module graph, so nothing needs it any more.
+    script-src  'unsafe-inline' REMOVED. Executable scripts live in the
+                module graph; the single inline JSON-LD data block is allowed
+                only by its SHA-256 hash so CSP does not suppress structured
+                data for crawlers.
     style-src   'unsafe-inline' is retained: the design system sets inline
                 CSS custom properties (--tilt-x, --mag-x, --scroll-progress)
                 from JS, which CSP counts as inline style.
@@ -86,7 +88,7 @@
              object-src 'none';
              form-action 'self';
              frame-ancestors 'none';
-             script-src 'self';
+             script-src 'self' 'sha256-1mk8jjMyLpqJdMSeBqkHNIhPDE9P5sZngKdk2eO9FCo=';
              style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
              font-src 'self' https://fonts.gstatic.com;
              img-src 'self' data: blob: https:;

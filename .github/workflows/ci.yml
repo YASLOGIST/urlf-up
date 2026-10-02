@@ -104,5 +104,5 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
       - run: npm ci
-      - name: Fail on high or critical advisories in runtime dependencies
-        run: npm audit --omit=dev --audit-level=high
+      - name: Fail on high or critical advisories in all locked dependencies
+        run: npm run audit

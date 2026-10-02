@@ -11,8 +11,8 @@
 </p>
 
 <p>
-  <img alt="critical path 50.2 kB gzip" src="https://img.shields.io/badge/critical%20path-50.2%20kB%20gzip-D4AF37?style=flat-square&labelColor=0B0B0B">
-  <img alt="209 specs passing" src="https://img.shields.io/badge/specs-209%20passing-D4AF37?style=flat-square&labelColor=0B0B0B">
+  <img alt="critical path 50.3 kB gzip" src="https://img.shields.io/badge/critical%20path-50.3%20kB%20gzip-D4AF37?style=flat-square&labelColor=0B0B0B">
+  <img alt="210 specs passing" src="https://img.shields.io/badge/specs-210%20passing-D4AF37?style=flat-square&labelColor=0B0B0B">
   <img alt="axe 0 violations" src="https://img.shields.io/badge/axe--core-0%20violations-D4AF37?style=flat-square&labelColor=0B0B0B">
   <img alt="2 runtime dependencies" src="https://img.shields.io/badge/runtime%20deps-2-D4AF37?style=flat-square&labelColor=0B0B0B">
   <img alt="zero UI framework" src="https://img.shields.io/badge/UI%20framework-none-FF1E00?style=flat-square&labelColor=0B0B0B">
@@ -48,9 +48,9 @@ up into a claim.
 
 | Dimension                          |                                           Measured | Enforced at                                        |
 | :--------------------------------- | -------------------------------------------------: | :------------------------------------------------- |
-| Critical path, gzip                |                     **50.2 kB** across **3 files** | build fails above 24 kB HTML / 170 kB total        |
-| Reduction vs. pre-upgrade baseline |                   **−61.0 %** (128.7 kB → 50.2 kB) | `measure:baseline` exits 1 on regression           |
-| Automated specs                    |                            **209** across 10 files | CI, every push                                     |
+| Critical path, gzip                |                     **50.3 kB** across **3 files** | build fails above 24 kB HTML / 170 kB total        |
+| Reduction vs. pre-upgrade baseline |                   **−60.9 %** (128.7 kB → 50.3 kB) | `measure:baseline` exits 1 on regression           |
+| Automated specs                    |                            **210** across 10 files | CI, every push                                     |
 | Accessibility                      |     **0** axe-core violations in **5** page states | CI, every push                                     |
 | Runtime dependencies               | **2** (`@supabase/supabase-js`, `@capacitor/core`) | contract test proves each is imported              |
 | Simulation cost                    |    **0.0108 ms/frame** @ 80 particles (was 0.0405) | `npm run bench`                                    |
@@ -158,10 +158,10 @@ stacking document listeners — which is what makes HMR and the test suite safe.
 
 | Asset               |        gzip | Why it is here                                             |
 | :------------------ | ----------: | :--------------------------------------------------------- |
-| `index.html`        |     22.7 kB | the document, with all markup inlined and no inline script |
+| `index.html`        |     22.8 kB | the document, with all markup and no executable inline script |
 | `assets/main-*.js`  |     14.3 kB | boot, i18n, modals, motion, the field                      |
 | `assets/main-*.css` |     13.2 kB | the design system                                          |
-| **Total**           | **50.2 kB** | **3 requests**                                             |
+| **Total**           | **50.3 kB** | **3 requests**                                             |
 
 The 51.1 kB Supabase client sits in `vendor-supabase`, which `index.html` never
 references. It is fetched on a magic-link callback, on the first sign of CTA intent, or
@@ -298,7 +298,7 @@ graph LR
 | Control       | Implementation                                                                                                                                                        |
 | :------------ | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Authorisation | Postgres RLS, forced on all three tables. The client cannot bypass it.                                                                                                |
-| CSP           | `script-src 'self'` (no `unsafe-inline`), `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `frame-ancestors 'none'`, exactly one third-party `frame-src` |
+| CSP           | `script-src 'self'` plus exact JSON-LD hash (no `unsafe-inline`), `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `frame-ancestors 'none'`, exactly one third-party `frame-src` |
 | Error text    | Supabase messages are never shown verbatim; they are mapped to a fixed set                                                                                            |
 | Logging       | `logger.js` redacts anything shaped like a JWT, a Supabase key or a bearer token, plus any value under a key matching `token\|key\|secret\|password\|authorization`   |
 | Translations  | allow-list sanitiser: only `<strong> <em> <b> <i> <br> <span> <small> <u>` with `class` from a 4-value allow-list survive; `on*` attributes and `<script>` never do   |
@@ -695,7 +695,7 @@ idea is still — which is simultaneously the design decision and the compressio
 | Scheduling    | Cal.com iframe                                 | —           | The single allowed third-party frame origin.                                                                                               |
 | Visual layer  | Dependency-free WebGL2, written in-repo        | —           | Replaced `three` + `@react-three/*` + `gsap` + `lenis` (~600 kB) that **nothing imported**. 2 draw calls.                                  |
 | Native shells | Capacitor                                      | 7           | `android/`, `ios/`, `capacitor.config.ts`.                                                                                                 |
-| Tests         | Vitest + jsdom + axe-core                      | `^3.2`      | 209 specs: unit, flow, contract, accessibility.                                                                                            |
+| Tests         | Vitest + jsdom + axe-core                      | `^3.2`      | 210 specs: unit, flow, contract, accessibility.                                                                                            |
 | Lint / format | ESLint flat config + Prettier                  | `^9` / `^3` | Rules target the defect classes this codebase actually suffered, not style.                                                                |
 | Hosting       | Any static CDN                                 | —           | No server-side code of any kind.                                                                                                           |
 | Node          | ≥ 20.19                                        | —           | `engines` enforced.                                                                                                                        |
@@ -738,11 +738,11 @@ comparison stays falsifiable after the source changed.
 
 | Metric                | Baseline |         Now |           Δ |
 | :-------------------- | -------: | ----------: | ----------: |
-| Critical path, gzip   | 128.7 kB | **50.2 kB** | **−61.0 %** |
-| Critical path, brotli | 108.1 kB |     42.5 kB |     −60.7 % |
-| Critical path, raw    | 522.5 kB |    204.0 kB |     −61.0 % |
+| Critical path, gzip   | 128.7 kB | **50.3 kB** | **−60.9 %** |
+| Critical path, brotli | 108.1 kB |     42.6 kB |     −60.6 % |
+| Critical path, raw    | 522.5 kB |    204.1 kB |     −60.9 % |
 | Critical path, files  |        7 |       **3** |     −57.1 % |
-| All assets, gzip      | 129.1 kB |    127.6 kB |      −1.1 % |
+| All assets, gzip      | 129.1 kB |    127.7 kB |      −1.1 % |
 
 The "all assets" line barely moves, and that is the honest result: the same code still
 exists, it is simply no longer downloaded before first paint.
@@ -775,9 +775,9 @@ graph LR
   P["push / PR"] --> Q["quality"]
   P --> B["build"]
   P --> D["audit"]
-  Q --> Q1["eslint"] --> Q2["prettier --check"] --> Q3["209 specs<br/>unit · flow · contract · a11y"] --> Q4["coverage + per-file thresholds"]
+  Q --> Q1["eslint"] --> Q2["prettier --check"] --> Q3["210 specs<br/>unit · flow · contract · a11y"] --> Q4["coverage + per-file thresholds"]
   B --> B1["vite build<br/>fails on inline style or size budget"] --> B2["measure"] --> B3["measure:baseline<br/>exit 1 if the critical path grew"] --> B4["bench"]
-  D --> D1["npm audit --omit=dev --audit-level=high"]
+  D --> D1["npm run audit<br/>high/critical all deps"]
 ```
 
 | Gate                       | Threshold                 | On breach                                           |
@@ -787,7 +787,7 @@ graph LR
 | Total size                 | > 170 kB gzip             | build fails                                         |
 | Critical path vs. baseline | any growth                | CI exits 1                                          |
 | axe-core                   | any violation in 5 states | tests fail                                          |
-| Runtime advisories         | high or critical          | audit job fails                                     |
+| Locked dependency advisories | high or critical          | audit job fails                                     |
 
 ---
 
@@ -814,7 +814,7 @@ cp .env.example .env.local    # then fill VITE_SUPABASE_URL and VITE_SUPABASE_AN
 | `npm run dev`                                  | Vite dev server, bound to `0.0.0.0`                                                     |
 | `npm run build`                                | production build; **fails** on an inline `<style>` over 2 kB or a blown size budget     |
 | `npm run preview`                              | serve `dist/`                                                                           |
-| `npm test`                                     | 209 specs — unit, flow, contract, accessibility                                         |
+| `npm test`                                     | 210 specs — unit, flow, contract, accessibility                                         |
 | `npm run test:watch`                           | the same, in watch mode                                                                 |
 | `npm run test:coverage`                        | coverage with enforced per-file thresholds                                              |
 | `npm run lint` · `lint:fix`                    | ESLint flat config                                                                      |
@@ -825,7 +825,7 @@ cp .env.example .env.local    # then fill VITE_SUPABASE_URL and VITE_SUPABASE_AN
 | `npm run icons`                                | regenerate the 11 PWA / favicon assets from code                                        |
 | `npm run og`                                   | regenerate `og-image-animated.gif` + `og-cover.png`                                     |
 | `npm run brand`                                | icons + OG card, the complete identity set                                              |
-| `npm run verify`                               | lint + test + build + measure                                                           |
+| `npm run verify`                               | lint + test + build + measure + audit                                                   |
 | `npm run cap:sync` · `cap:ios` · `cap:android` | Capacitor native shells                                                                 |
 
 </details>
@@ -835,7 +835,7 @@ cp .env.example .env.local    # then fill VITE_SUPABASE_URL and VITE_SUPABASE_AN
 # 8 · Repository map
 
 ```
-index.html                 the single document — no inline script, no large inline style
+index.html                 the single document — no executable inline script, no large inline style
 src/
   main.js                  the only module entry point
   app/
@@ -870,7 +870,7 @@ scripts/
   measure-bundle.mjs       size report + baseline comparison
   bench-field.mjs          simulation and draw-call benchmark
 public/                    icons · manifest · sw.js · og-image-animated.gif · og-cover.png
-tests/                     unit · flows · contracts · a11y        (209 specs)
+tests/                     unit · flows · contracts · a11y        (210 specs)
   unit/compositor.test.js  bloom energy conservation · blur edge clamping · beam clamps
 docs/                      ARCHITECTURE.md · VERIFICATION.md · MIGRATIONS.md
 archive/                   superseded code and documents, kept for provenance
@@ -901,7 +901,7 @@ Listed rather than rounded off. Each one has the cheapest action that resolves i
 - **Credentials.** Everything `VITE_`-prefixed is public by construction. Security rests
   on Postgres RLS, which `nexus-schema.sql` both `ENABLE`s and `FORCE`s on all three
   tables. There is no secret the browser could leak that it was not already holding.
-- **CSP.** No inline script, `object-src 'none'`, no framing, no cross-origin form posts,
+- **CSP.** No arbitrary executable inline script, `object-src 'none'`, no framing, no cross-origin form posts,
   exactly one third-party frame origin.
 - **Error text.** Supabase messages are never shown to users verbatim.
 - **Logging.** The logger redacts JWT-shaped, key-shaped and bearer-shaped values and
