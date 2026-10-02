@@ -1,4 +1,5 @@
 import { showToast } from './ui.js'
+import { t } from './app/strings.js'
 
 const MAX_OUTPUT_BYTES = 1_000_000 // 1MB post-compression hard cap
 
@@ -70,7 +71,7 @@ export function initAvatarZone(zone, { onchange }) {
     const file = fileInput.files?.[0]
     if (!file) return
     if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
-      showToast({ type: 'error', message: 'Use PNG, JPEG, or WebP.' })
+      showToast({ type: 'error', message: t('avatar.error.format') })
       return
     }
     try {
@@ -78,7 +79,7 @@ export function initAvatarZone(zone, { onchange }) {
       _setPreview(dataUrl)
       onchange(dataUrl)
     } catch (err) {
-      showToast({ type: 'error', message: err.message || 'Upload failed.' })
+      showToast({ type: 'error', message: err.message || t('avatar.error.upload') })
     } finally {
       fileInput.value = ''
     }
@@ -96,7 +97,7 @@ export function initAvatarZone(zone, { onchange }) {
     const raw = urlInput.value.trim()
     if (!raw) return
     if (!/^https?:\/\//i.test(raw)) {
-      showToast({ type: 'error', message: 'URL must start with https://' })
+      showToast({ type: 'error', message: t('avatar.error.https') })
       return
     }
     try {
@@ -106,7 +107,7 @@ export function initAvatarZone(zone, { onchange }) {
       urlInput.hidden = true
       urlInput.value = ''
     } catch {
-      showToast({ type: 'error', message: 'Could not load image from that URL.' })
+      showToast({ type: 'error', message: t('avatar.error.load') })
     }
   })
 

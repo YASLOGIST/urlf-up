@@ -43,13 +43,17 @@ if ('serviceWorker' in navigator && import.meta.env.PROD && window.isSecureConte
         // Surface an update without forcing a reload on the user.
         reg.addEventListener('updatefound', () => {
           const next = reg.installing;
-          next?.addEventListener('statechange', () => {
+          next?.addEventListener('statechange', async () => {
             if (next.state === 'installed' && navigator.serviceWorker.controller) {
+              // The console dictionary is lazy; the notice is rare and async,
+              // so it is fetched only when it actually fires. If the chunk
+              // cannot load, the English copy below still shows.
+              const { t } = await import('./app/strings.js').catch(() => ({ t: (k, d) => d }));
               const message = document.createElement('span');
-              message.textContent = 'A new version of UrLife is ready.';
+              message.textContent = t('sw.update.msg', 'A new version of UrLife is ready.');
               const reload = document.createElement('button');
               reload.type = 'button';
-              reload.textContent = 'Update now';
+              reload.textContent = t('sw.update.reload', 'Update now');
               reload.addEventListener('click', () => window.location.reload(), { once: true });
               showNotice([message, reload], { id: 'app-update' });
               window.dispatchEvent(new CustomEvent('urlife:update-available'));

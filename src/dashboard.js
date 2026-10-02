@@ -1,6 +1,7 @@
 import { logger } from './lib/logger.js'
 import { supabase } from './lib/supabase.js'
 import { safeName } from './sanitize.js'
+import { t, tCount, localeShortDate } from './app/strings.js'
 import { ideaProblem, rankIdeasForProfile, rankMatches } from './matchingEngine.js'
 import { icon } from './icons.js'
 import { showToast } from './ui.js'
@@ -29,6 +30,8 @@ let _currentSession = null
 let _currentProfile = null
 let _authSubscription = null
 let _lastLoadId = 0
+/** Last rendered payload per role — lets a language flip re-render in place. */
+let _lastRender = null
 
 // ── Minimal createElement helper — no innerHTML ever ──────────────────────
 function el(tag, attrs = {}, text) {
@@ -60,27 +63,31 @@ function normaliseIdea(row) {
   }
 }
 
+/* Console copy is bilingual — every label resolves through the dictionary
+   in src/app/strings.js, so the dashboard follows the page language. */
+/** Translate `key`, falling back to `fallback` when the key is unknown. */
+function tr(key, fallback) {
+  const label = t(key)
+  return label !== key ? label : fallback
+}
+
 function statusLabel(status = '') {
-  return status.replace(/_/g, ' ') || 'pending'
+  const key = `status.${(status || 'pending').replace(/_/g, '')}`
+  const label = t(key)
+  return label !== key ? label : (status || 'pending').replace(/_/g, ' ')
 }
 
 function roleLabel(role = '') {
-  return role ? role.charAt(0).toUpperCase() + role.slice(1) : 'Member'
+  const key = `role.${role}`
+  const label = t(key)
+  if (label !== key) return label
+  return role ? role.charAt(0).toUpperCase() + role.slice(1) : t('role.member')
 }
 
 function reputationTier(profile = {}) {
-  if (profile.is_verified || profile.reputation >= 50) return 'Gold'
-  if (profile.reputation >= 20) return 'Silver'
-  return 'Bronze'
-}
-
-function shortDate(value) {
-  if (!value) return ''
-  try {
-    return new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric' }).format(new Date(value))
-  } catch {
-    return ''
-  }
+  if (profile.is_verified || profile.reputation >= 50) return 'gold'
+  if (profile.reputation >= 20) return 'silver'
+  return 'bronze'
 }
 
 // ── SWR cache ─────────────────────────────────────────────────────────────
@@ -182,6 +189,25 @@ function _buildSkillTags(skills = [], limit = 8) {
   return wrap
 }
 
+function _axisLabel(axis) {
+  const key = `match.axis.${axis}`
+  const label = t(key)
+  return label !== key ? label : axis
+}
+
+/** noteParams values that are themselves keys (role.*) resolve recursively. */
+function _noteText(reason) {
+  if (reason.noteKey) {
+    const params = {}
+    for (const [k, v] of Object.entries(reason.noteParams || {})) {
+      const resolved = t(v)
+      params[k] = resolved !== v ? resolved : v
+    }
+    return t(reason.noteKey, params)
+  }
+  return reason.note
+}
+
 function _buildReasonList(match) {
   const list = el('ul', { className: 'nx-reasons' })
   const reasons = (match.reasons || [])
@@ -189,8 +215,8 @@ function _buildReasonList(match) {
     .slice(0, 3)
   reasons.forEach(reason => {
     const item = el('li')
-    item.appendChild(el('strong', {}, `${reason.axis}: `))
-    item.appendChild(document.createTextNode(reason.note))
+    item.appendChild(el('strong', {}, `${_axisLabel(reason.axis)}: `))
+    item.appendChild(document.createTextNode(_noteText(reason)))
     list.appendChild(item)
   })
   return list
@@ -200,9 +226,9 @@ function _buildMatchMeter(match) {
   const meter = el('div', { className: 'nx-match-meter' })
   const score = el('div', { className: 'nx-match-meter-score' })
   score.appendChild(el('span', { className: 'nx-score-num' }, String(match.matchScore)))
-  score.appendChild(el('span', { className: 'nx-score-label' }, 'score'))
-  const tier = el('span', { className: 'nx-tier-badge' }, match.tier)
-  const confidence = el('span', { className: 'nx-confidence' }, `${Math.round(match.confidence * 100)}% confidence`)
+  score.appendChild(el('span', { className: 'nx-score-label' }, t('nx.score')))
+  const tier = el('span', { className: 'nx-tier-badge' }, tr(`match.tier.${match.tier}`, match.tier))
+  const confidence = el('span', { className: 'nx-confidence' }, t('nx.confidence', { value: Math.round(match.confidence * 100) }))
   meter.append(score, tier, confidence)
   return meter
 }
@@ -242,10 +268,10 @@ function _renderError(err, retryFn) {
   if (!host) return
   host.textContent = ''
   const wrap = el('div', { className: 'nx-error-state' })
-  wrap.appendChild(el('p', { className: 'nx-error-msg' }, 'Something went wrong. Check your connection and try again.'))
+  wrap.appendChild(el('p', { className: 'nx-error-msg' }, t('nx.error')))
 
   if (retryFn) {
-    const btn = el('button', { className: 'btn-accept', type: 'button' }, 'Retry')
+    const btn = el('button', { className: 'btn-accept', type: 'button' }, t('nx.retry'))
     btn.addEventListener('click', retryFn)
     wrap.appendChild(btn)
   }
@@ -263,12 +289,15 @@ function _renderEmptyState(role) {
   const t = el('div', { className: 'nx-empty-title' })
   const s = el('div', { className: 'nx-empty-sub' })
 
+  // Remember the empty state so a language flip re-renders it too.
+  _lastRender = { role, data: null }
+
   if (role === 'visionary') {
-    t.textContent = 'No ideas yet.'
-    s.textContent = 'Submit your first idea — the engine will find your team.'
+    t.textContent = t('nx.empty.visionary.title')
+    s.textContent = t('nx.empty.visionary.sub')
   } else {
-    t.textContent = 'No open ideas match yet.'
-    s.textContent = 'Add skills and interests in settings so the engine can rank better opportunities.'
+    t.textContent = t('nx.empty.operator.title')
+    s.textContent = t('nx.empty.operator.sub')
   }
 
   wrap.append(t, s)
@@ -398,7 +427,7 @@ async function _loadOperatorData(session, profile) {
 function _buildInterestCard(interest, profile, idea) {
   const card = el('div', { className: 'nx-card match-card match-card--candidate', dataset: { id: interest.id, status: interest.status } })
   const info = el('div', { className: 'nx-candidate-info' })
-  const name = el('span', { className: 'nx-candidate-name' }, safeName(profile?.full_name || 'Anonymous member'))
+  const name = el('span', { className: 'nx-candidate-name' }, safeName(profile?.full_name || t('nx.anonymous')))
   const role = el('span', { className: 'nx-chip' }, roleLabel(profile?.role_type || interest.role_at_time))
   info.append(name, role, createVerificationBadge(reputationTier(profile)))
 
@@ -409,15 +438,15 @@ function _buildInterestCard(interest, profile, idea) {
   statusWrap.appendChild(el('span', { className: `nx-status-badge nx-status--${interest.status}` }, statusLabel(interest.status)))
 
   if (interest.status === 'pending' || interest.status === 'acknowledged') {
-    const accept = el('button', { className: 'btn-accept', type: 'button' }, 'Accept')
-    const decline = el('button', { className: 'btn-pass', type: 'button' }, 'Decline')
+    const accept = el('button', { className: 'btn-accept', type: 'button' }, t('nx.accept'))
+    const decline = el('button', { className: 'btn-pass', type: 'button' }, t('nx.decline'))
     accept.addEventListener('click', () => _handleInterestStatus(interest.id, 'accepted', card))
     decline.addEventListener('click', () => _handleInterestStatus(interest.id, 'declined', card))
     statusWrap.append(accept, decline)
   } else if (interest.status === 'accepted') {
-    const deal = el('button', { className: 'btn-accept', type: 'button' }, 'Open Deal Room')
+    const deal = el('button', { className: 'btn-accept', type: 'button' }, t('nx.dealRoom'))
     deal.addEventListener('click', () => openDealRoom({ ...profile, ...interest, idea_title: idea.title }, () => {
-      showToast({ message: 'Closed meeting protocol locked.', icon: 'check-seal', type: 'success' })
+      showToast({ message: t('nx.toast.dealLocked'), icon: 'check-seal', type: 'success' })
     }))
     statusWrap.appendChild(deal)
   }
@@ -430,7 +459,7 @@ function _buildCandidateCard(match) {
   const profile = match.candidate
   const card = el('div', { className: 'nx-card match-card match-card--candidate nx-recommendation-card' })
   const info = el('div', { className: 'nx-candidate-info' })
-  const name = el('span', { className: 'nx-candidate-name' }, safeName(profile.full_name || profile.username || 'Recommended member'))
+  const name = el('span', { className: 'nx-candidate-name' }, safeName(profile.full_name || profile.username || t('nx.recommendedMember')))
   const role = el('span', { className: 'nx-chip' }, roleLabel(profile.role_type))
   info.append(name, role, createVerificationBadge(reputationTier(profile)))
   if (profile.skills?.length) info.appendChild(_buildSkillTags(profile.skills, 5))
@@ -442,37 +471,37 @@ function _buildVisionaryIdeaCard(idea, interests, interestProfiles, recommendati
   const card = el('article', { className: 'nx-card idea-card-nx' })
   const header = el('div', { className: 'nx-idea-header' })
   const meta = el('div', { className: 'nx-idea-meta' })
-  meta.appendChild(el('h3', { className: 'nx-idea-title' }, idea.title || 'Untitled'))
+  meta.appendChild(el('h3', { className: 'nx-idea-title' }, idea.title || t('nx.untitled')))
   const chips = el('div', { className: 'nx-chip-row' })
-  chips.appendChild(el('span', { className: 'nx-chip' }, idea.industry || 'Uncategorised'))
+  chips.appendChild(el('span', { className: 'nx-chip' }, idea.industry || t('nx.uncategorised')))
   chips.appendChild(el('span', { className: `nx-status-badge nx-status--${idea.status}` }, statusLabel(idea.status)))
-  if (idea.published_at || idea.created_at) chips.appendChild(el('span', { className: 'nx-muted-chip' }, shortDate(idea.published_at || idea.created_at)))
+  if (idea.published_at || idea.created_at) chips.appendChild(el('span', { className: 'nx-muted-chip' }, localeShortDate(idea.published_at || idea.created_at)))
   meta.appendChild(chips)
 
   const ringWrap = el('div', { className: 'nx-ring-wrap' })
-  ringWrap.appendChild(_buildScoreRing(_ideaReadinessScore(idea), 'Idea readiness'))
-  ringWrap.appendChild(el('div', { className: 'nx-ring-label' }, 'Readiness'))
+  ringWrap.appendChild(_buildScoreRing(_ideaReadinessScore(idea), t('nx.readinessAria')))
+  ringWrap.appendChild(el('div', { className: 'nx-ring-label' }, t('nx.readiness')))
 
   header.append(meta, ringWrap)
   card.appendChild(header)
   card.appendChild(el('p', { className: 'nx-idea-problem' }, ideaProblem(idea)))
   if (idea.required_skills?.length) card.appendChild(_buildSkillTags(idea.required_skills))
 
-  const interestSection = el('section', { className: 'nx-idea-matches', 'aria-label': `Interest for ${idea.title || 'idea'}` })
-  interestSection.appendChild(el('h4', { className: 'nx-matches-heading' }, `${interests.length} Incoming Interest${interests.length === 1 ? '' : 's'}`))
+  const interestSection = el('section', { className: 'nx-idea-matches', 'aria-label': t('nx.interestAria', { title: idea.title || t('nx.untitledIdea') }) })
+  interestSection.appendChild(el('h4', { className: 'nx-matches-heading' }, tCount('nx.incomingInterest', interests.length)))
   if (interests.length) {
     interests.forEach(interest => interestSection.appendChild(_buildInterestCard(interest, interestProfiles.get(interest.interested_user_id), idea)))
   } else {
-    interestSection.appendChild(el('p', { className: 'nx-no-matches' }, 'No one has raised a hand yet. Recommendations below show who to invite first.'))
+    interestSection.appendChild(el('p', { className: 'nx-no-matches' }, t('nx.noInterestYet')))
   }
   card.appendChild(interestSection)
 
-  const recSection = el('section', { className: 'nx-idea-matches', 'aria-label': `Recommended operators for ${idea.title || 'idea'}` })
-  recSection.appendChild(el('h4', { className: 'nx-matches-heading' }, 'Recommended operators'))
+  const recSection = el('section', { className: 'nx-idea-matches', 'aria-label': t('nx.recommendedOperatorsAria', { title: idea.title || t('nx.untitledIdea') }) })
+  recSection.appendChild(el('h4', { className: 'nx-matches-heading' }, t('nx.recommendedOperators')))
   if (recommendations.length) {
     recommendations.forEach(match => recSection.appendChild(_buildCandidateCard(match)))
   } else {
-    recSection.appendChild(el('p', { className: 'nx-no-matches' }, 'Add more required skills to improve recommendations.'))
+    recSection.appendChild(el('p', { className: 'nx-no-matches' }, t('nx.improveRecommendations')))
   }
   card.appendChild(recSection)
   return card
@@ -506,6 +535,7 @@ function _renderVisionary(data) {
   }
 
   panel.hidden = false
+  _lastRender = { role: 'visionary', data }
   _renderRecommendationSpotlight(data)
   _track('dashboard_view', { role: 'visionary', ideaCount: data.ideas.length })
 }
@@ -523,15 +553,15 @@ function _buildOpportunityCard(match, ownInterestByIdea) {
 
   const head = el('div', { className: 'nx-opportunity-head' })
   const titleWrap = el('div')
-  titleWrap.appendChild(el('h3', { className: 'nx-idea-title' }, idea.title || 'Untitled idea'))
-  const author = safeName(idea.author_name || 'Visionary')
-  titleWrap.appendChild(el('p', { className: 'nx-author-line' }, `${author}${idea.author_verified ? ' · verified' : ''}`))
+  titleWrap.appendChild(el('h3', { className: 'nx-idea-title' }, idea.title || t('nx.untitledIdea')))
+  const author = safeName(idea.author_name || t('role.visionary'))
+  titleWrap.appendChild(el('p', { className: 'nx-author-line' }, `${author}${idea.author_verified ? ` · ${t('nx.verified')}` : ''}`))
   head.append(titleWrap, _buildMatchMeter(match))
 
   const chips = el('div', { className: 'nx-chip-row' })
-  chips.appendChild(el('span', { className: 'nx-chip' }, idea.industry || 'Uncategorised'))
-  if (idea.interest_count) chips.appendChild(el('span', { className: 'nx-muted-chip' }, `${idea.interest_count} interested`))
-  if (idea.published_at || idea.created_at) chips.appendChild(el('span', { className: 'nx-muted-chip' }, shortDate(idea.published_at || idea.created_at)))
+  chips.appendChild(el('span', { className: 'nx-chip' }, idea.industry || t('nx.uncategorised')))
+  if (idea.interest_count) chips.appendChild(el('span', { className: 'nx-muted-chip' }, tCount('nx.interestedCount', idea.interest_count)))
+  if (idea.published_at || idea.created_at) chips.appendChild(el('span', { className: 'nx-muted-chip' }, localeShortDate(idea.published_at || idea.created_at)))
 
   body.append(head, chips, el('p', { className: 'nx-idea-problem' }, ideaProblem(idea)))
   if (idea.required_skills?.length) body.appendChild(_buildSkillTags(idea.required_skills))
@@ -539,16 +569,16 @@ function _buildOpportunityCard(match, ownInterestByIdea) {
 
   const actions = el('div', { className: 'nx-actions' })
   if (interest) {
-    actions.appendChild(el('span', { className: `nx-status-badge nx-status--${interest.status}` }, `Interest ${statusLabel(interest.status)}`))
+    actions.appendChild(el('span', { className: `nx-status-badge nx-status--${interest.status}` }, tr(`nx.interestBadge.${interest.status}`, `Interest ${statusLabel(interest.status)}`)))
     if (interest.status === 'pending' || interest.status === 'acknowledged') {
-      const withdraw = el('button', { className: 'btn-pass', type: 'button' }, 'Withdraw')
+      const withdraw = el('button', { className: 'btn-pass', type: 'button' }, t('nx.withdraw'))
       withdraw.addEventListener('click', () => _handleInterestStatus(interest.id, 'withdrawn', card))
       actions.appendChild(withdraw)
     }
   } else {
     const express = el('button', { className: 'btn-accept', type: 'button' })
     appendIcon(express, 'spark', { size: 14 })
-    express.appendChild(document.createTextNode("I'm interested"))
+    express.appendChild(document.createTextNode(t('nx.express')))
     express.addEventListener('click', () => _handleExpressInterest(match, card))
     actions.appendChild(express)
   }
@@ -576,6 +606,7 @@ function _renderBuilder(data) {
   })
 
   panel.hidden = false
+  _lastRender = { role: _currentProfile?.role_type || 'builder', data }
   _renderRecommendationSpotlight(data)
   _track('dashboard_view', { role: _currentProfile?.role_type || 'builder', matchCount: data.matches.length })
 }
@@ -598,11 +629,11 @@ function _renderRecommendationSpotlight(data) {
       panel.hidden = true
       return
     }
-    if (title) title.textContent = 'Best operator invitations'
-    if (sub) sub.textContent = 'Ranked from your required skills, industry and operator trust signals.'
+    if (title) title.textContent = t('nx.spotlight.visionary.title')
+    if (sub) sub.textContent = t('nx.spotlight.visionary.sub')
     top.slice(0, 3).forEach(({ idea, match }) => {
       const wrap = _buildCandidateCard(match)
-      wrap.prepend(el('div', { className: 'nx-muted-chip' }, `For: ${idea.title || 'Idea'}`))
+      wrap.prepend(el('div', { className: 'nx-muted-chip' }, t('nx.for', { title: idea.title || t('nx.untitledIdea') })))
       list.appendChild(wrap)
     })
   } else {
@@ -611,8 +642,8 @@ function _renderRecommendationSpotlight(data) {
       panel.hidden = true
       return
     }
-    if (title) title.textContent = 'Recommended next meetings'
-    if (sub) sub.textContent = 'Ranked by role fit, skills, industry interests and profile confidence.'
+    if (title) title.textContent = t('nx.spotlight.operator.title')
+    if (sub) sub.textContent = t('nx.spotlight.operator.sub')
     top.forEach(match => list.appendChild(_buildOpportunityCard(match, data.ownInterestByIdea)))
   }
   panel.hidden = false
@@ -633,13 +664,13 @@ async function _handleExpressInterest(match, card) {
     if (error) throw error
     _clearCache('nexus_')
     card.classList.add('match-card--accepted')
-    showToast({ message: 'Interest sent to the visionary.', icon: 'rocket', type: 'success' })
+    showToast({ message: t('nx.toast.interestSent'), icon: 'rocket', type: 'success' })
     _track('idea_interest_created', { ideaId: match.idea.id, score: match.matchScore })
     initDashboard(_currentSession)
   } catch (err) {
     logger.error('dashboard', 'interest insert failed', err)
     const duplicate = /duplicate|unique|already/i.test(err?.message || '') || err?.code === '23505'
-    showToast({ message: duplicate ? 'You already raised interest in this idea.' : 'Could not send interest. Please try again.', type: 'error' })
+    showToast({ message: duplicate ? t('nx.toast.interestDuplicate') : t('nx.toast.interestSendFailed'), type: 'error' })
     buttons.forEach(btn => { btn.disabled = false })
   }
 }
@@ -655,14 +686,14 @@ async function _handleInterestStatus(interestId, status, card) {
       .eq('id', interestId)
     if (error) throw error
     _clearCache('nexus_')
-    showToast({ message: `Interest ${statusLabel(status)}.`, type: status === 'declined' || status === 'withdrawn' ? 'info' : 'success' })
+    showToast({ message: tr(`nx.toast.interestStatus.${status}`, `Interest ${statusLabel(status)}.`), type: status === 'declined' || status === 'withdrawn' ? 'info' : 'success' })
     _track('idea_interest_status_changed', { interestId, status })
     if (_currentSession) initDashboard(_currentSession)
   } catch (err) {
     card.dataset.status = prevStatus
     card.querySelectorAll('button').forEach(btn => { btn.disabled = false })
     logger.error('dashboard', 'interest update failed', err)
-    showToast({ message: 'Could not update interest. Please try again.', type: 'error' })
+    showToast({ message: t('nx.toast.interestUpdateFailed'), type: 'error' })
   }
 }
 
@@ -708,11 +739,28 @@ function _setupIntersectionObserver(role) {
   _intersectionObs.observe(sentinel)
 }
 
+// ── Language change: re-render in place from the last payload ─────────────
+// The marketing document re-translates its own nodes on `urlife:langchange`;
+// the dashboard is rendered by this module, so it owns its own re-render.
+// No skeletons, no refetch — the data is already on screen, only the copy
+// changes.
+window.addEventListener('urlife:langchange', () => {
+  if (!_currentSession || !_lastRender) return
+  const { role, data } = _lastRender
+  _hideError()
+  _hideAllPanels()
+  _hideSkeletons()
+  if (data == null) _renderEmptyState(role)
+  else if (role === 'visionary') _renderVisionary(data)
+  else _renderBuilder(data)
+  _setHeader(_currentProfile || {})
+})
+
 // ── Dashboard header text ─────────────────────────────────────────────────
 function _setHeader(profile) {
   const titleEl = document.getElementById('nx-title')
   const roleEl = document.getElementById('nx-user-role')
-  if (titleEl) titleEl.textContent = `NEXUS — ${safeName(profile.full_name || 'Welcome')}`
+  if (titleEl) titleEl.textContent = t('nx.header', { name: safeName(profile.full_name || '') || t('nx.welcome') })
   if (roleEl) {
     roleEl.textContent = ''
     roleEl.appendChild(el('span', {}, roleLabel(profile.role_type || 'builder')))

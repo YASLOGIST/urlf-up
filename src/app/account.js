@@ -19,6 +19,7 @@ import { CAL_LINK, isBackendConfigured } from '../lib/env.js';
 import { getSupabase } from '../lib/supabase.js';
 import { showToast, clearError } from '../ui.js';
 import { safeName } from '../sanitize.js';
+import { t, initConsoleI18n } from './strings.js';
 
 let _session = null;
 let _ideasLoaded = false;
@@ -92,13 +93,13 @@ function openCalModal(trigger = null) {
       if (_calFrameLoaded || !spinner) return;
       spinner.replaceChildren();
       const p = document.createElement('p');
-      p.textContent = 'The booking calendar could not load here.';
+      p.textContent = t('cal.fallback.msg');
       const a = document.createElement('a');
       a.href = CAL_LINK;
       a.target = '_blank';
       a.rel = 'noopener noreferrer';
       a.className = 'btn-outline';
-      a.textContent = 'Open the calendar in a new tab';
+      a.textContent = t('cal.fallback.link');
       spinner.append(p, a);
       logger.warn('cal', 'embed did not load within 8s', { src: CAL_LINK });
     }, 8000);
@@ -190,7 +191,7 @@ async function wire() {
       }
       case 'nav-logout-btn':
         await auth.handleSignOut();
-        showToast('Signed out successfully.', 'info');
+        showToast(t('auth.toast.signedOut'), 'info');
         break;
       case 'auth-tab-login':
         switchAuthTab('login');
@@ -217,7 +218,7 @@ async function wire() {
       document.getElementById('login-password')?.value ?? '',
       () => {
         closeModal('auth-modal');
-        showToast('Welcome back!');
+        showToast(t('auth.toast.welcomeBack'));
       }
     );
   });
@@ -226,7 +227,7 @@ async function wire() {
     event.preventDefault();
     auth.handleMagicLinkSignIn(document.getElementById('login-email')?.value ?? '', () => {
       closeModal('auth-modal');
-      showToast('Magic link sent! Check your inbox.');
+      showToast(t('auth.toast.magicSent'));
     });
   });
 
@@ -243,7 +244,7 @@ async function wire() {
       },
       () => {
         closeModal('auth-modal');
-        showToast('Welcome to UrLife!');
+        showToast(t('auth.toast.welcome'));
       },
       () => {
         const confirmMsg = document.getElementById('register-confirm-msg');
@@ -288,6 +289,9 @@ export async function initAccount() {
     logger.info('account', 'backend unavailable — wiring UI in read-only mode');
   }
   await getSupabase(); // installs the single shared client before anything uses it
+  // Console-owned markup (dialogs, nav session buttons) is translated by KEY
+  // from the lazy dictionary — see src/app/strings.js for why it is not inline.
+  initConsoleI18n();
   await wire();
 
   // The Nexus dashboard self-subscribes to auth state on import, so it must

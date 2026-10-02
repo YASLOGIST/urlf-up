@@ -51,12 +51,19 @@ export function initNetworkStatus() {
     const offline = navigator.onLine === false;
     document.documentElement.dataset.offline = String(offline);
     if (offline) {
-      showNotice(
-        [textNode('You are offline. Cached content is shown; sign-in and submissions are paused.')],
-        {
-          id: 'offline',
-        }
-      );
+      // Show the notice synchronously so it can never be missed, then refine
+      // the copy through the lazy console dictionary (see src/app/strings.js)
+      // if the active language is Arabic. The chunk is usually SW-cached; if
+      // it cannot load, the English copy simply stays.
+      const node = textNode('You are offline. Cached content is shown; sign-in and submissions are paused.');
+      showNotice([node], {
+        id: 'offline',
+      });
+      import('./strings.js')
+        .then(({ t }) => {
+          node.textContent = t('net.offline');
+        })
+        .catch(() => {});
       logger.warn('network', 'offline');
     } else if (banner?.dataset.noticeId === 'offline') {
       banner.remove();

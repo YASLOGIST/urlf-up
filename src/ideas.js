@@ -17,6 +17,7 @@ import {
   isValidRequiredSkills,
 } from './validators.js'
 import { getCachedProfile } from './auth.js'
+import { t } from './app/strings.js'
 import { openSettings } from './settings.js'
 
 export const handleIdeaSubmit = debounce(async (fields, session) => {
@@ -28,23 +29,23 @@ export const handleIdeaSubmit = debounce(async (fields, session) => {
 
   // Input validation
   if (!isValidIdeaTitle(title)) {
-    showError('idea-error', 'Idea title must be 5–200 characters.', { field: 'idea-title' })
+    showError('idea-error', t('idea.error.title'), { field: 'idea-title' })
     return
   }
   if (!isValidIndustry(industry)) {
-    showError('idea-error', 'Industry must be 2–80 characters.', { field: 'idea-industry' })
+    showError('idea-error', t('idea.error.industry'), { field: 'idea-industry' })
     return
   }
   if (!isValidProblemSolved(problem)) {
     showError(
       'idea-error',
-      'Problem description must be at least 20 characters (max 5000).',
+      t('idea.error.problem'),
       { field: 'idea-problem' }
     )
     return
   }
   if (!isValidRequiredSkills(requiredSkills)) {
-    showError('idea-error', 'Required skills list cannot exceed 30 items.', { field: 'idea-skills' })
+    showError('idea-error', t('idea.error.skills'), { field: 'idea-skills' })
     return
   }
 
@@ -68,10 +69,10 @@ export const handleIdeaSubmit = debounce(async (fields, session) => {
     closeModal('idea-modal')
     // Toast with keyboard-focused CTA (auto-focused by showToast)
     showToast({
-      message: 'Only visionaries can submit ideas.',
+      message: t('idea.toast.visionaryOnly'),
       type: 'error',
       action: {
-        label: 'Switch to Visionary',
+        label: t('idea.action.switchToVisionary'),
         onClick: () => openSettings({
           prefocus: 'role_type',
           preset: { role_type: 'visionary' },
@@ -102,13 +103,13 @@ export const handleIdeaSubmit = debounce(async (fields, session) => {
 
     if (error) {
       logger.error('ideas', 'insert failed', error)
-      showError('idea-error', 'Failed to submit your idea. Please try again.')
+      showError('idea-error', t('idea.error.submitFailed'))
       return
     }
 
     // Optimistic success path
     closeModal('idea-modal')
-    showToast({ message: 'Idea launched', icon: 'rocket', type: 'success' })
+    showToast({ message: t('idea.toast.launched'), icon: 'rocket', type: 'success' })
     _appendIdeaCard(data)
     document.getElementById('idea-form')?.reset()
   } finally {

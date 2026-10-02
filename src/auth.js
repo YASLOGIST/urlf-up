@@ -1,6 +1,7 @@
 import { logger } from './lib/logger.js'
 import { supabase } from './lib/supabase.js'
 import { showError, clearError, setLoading, debounce } from './ui.js'
+import { t } from './app/strings.js'
 import {
   isValidEmail,
   isValidPassword,
@@ -130,11 +131,11 @@ export const handleSignIn = debounce(async (email, password, onSuccess) => {
 
   // Client-side validation before any network call
   if (!isValidEmail(email.trim())) {
-    showError('login-error', 'Please enter a valid email address.', { field: 'login-email' })
+    showError('login-error', t('auth.error.email'), { field: 'login-email' })
     return
   }
   if (!password) {
-    showError('login-error', 'Password is required.', { field: 'login-password' })
+    showError('login-error', t('auth.error.passwordRequired'), { field: 'login-password' })
     return
   }
 
@@ -146,7 +147,7 @@ export const handleSignIn = debounce(async (email, password, onSuccess) => {
     })
     if (error) {
       logger.error('auth', 'signIn failed', error)
-      showError('login-error', 'Incorrect email or password. Please try again.')
+      showError('login-error', t('auth.error.credentials'))
       return
     }
     onSuccess(data.session)
@@ -160,7 +161,7 @@ export const handleMagicLinkSignIn = debounce(async (email, onSuccess) => {
   clearError('login-error')
 
   if (!isValidEmail(email.trim())) {
-    showError('login-error', 'Please enter a valid email address.', { field: 'login-email' })
+    showError('login-error', t('auth.error.email'), { field: 'login-email' })
     return
   }
 
@@ -174,7 +175,7 @@ export const handleMagicLinkSignIn = debounce(async (email, onSuccess) => {
     })
     if (error) {
       logger.error('auth', 'magic link failed', error)
-      showError('login-error', 'Failed to send magic link. Please try again.')
+      showError('login-error', t('auth.error.magicLink'))
       return
     }
     if (onSuccess) onSuccess(data)
@@ -192,29 +193,29 @@ export const handleSignUp = debounce(
     const skills = parseAndDedupeSkills(skillsRaw)
 
     if (!isValidFullName(fullName)) {
-      showError('register-error', 'Full name must be 2–80 characters.', { field: 'register-name' })
+      showError('register-error', t('auth.error.name'), { field: 'register-name' })
       return
     }
     if (!isValidEmail(email.trim())) {
-      showError('register-error', 'Please enter a valid email address.', { field: 'register-email' })
+      showError('register-error', t('auth.error.email'), { field: 'register-email' })
       return
     }
     if (!isValidPassword(password)) {
       showError(
         'register-error',
-        'Password must be at least 8 characters and include at least one letter and one number.',
+        t('auth.error.passwordRule'),
         { field: 'register-password' }
       )
       return
     }
     if (!isValidRoleType(roleType)) {
-      showError('register-error', 'Please select a role.', { field: 'register-role' })
+      showError('register-error', t('auth.error.role'), { field: 'register-role' })
       return
     }
     if (!isValidSkillsList(skills)) {
       showError(
         'register-error',
-        'Please enter at least one skill (comma-separated, max 20).',
+        t('auth.error.skills'),
         { field: 'register-skills' }
       )
       return
@@ -240,7 +241,7 @@ export const handleSignUp = debounce(
         logger.error('auth', 'signUp failed', error)
         showError(
           'register-error',
-          'Registration failed. This email may already be in use.'
+          t('auth.error.registerFailed')
         )
         return
       }
@@ -271,7 +272,7 @@ export const handleSignUp = debounce(
         await supabase.auth.signOut()
         showError(
           'register-error',
-          'Account setup failed. Please try again.'
+          t('auth.error.accountSetup')
         )
         return
       }
