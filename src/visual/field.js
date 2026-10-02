@@ -8,6 +8,9 @@
  *      and sheds particle density before the page drops below the target.
  *   4. Never burn a frame the user cannot see: paused on tab hide, window
  *      blur, and when the canvas itself scrolls out of view.
+ *   5. Tell the story the page exists to tell: the field stages "rendezvous"
+ *      events (see sim.js) and dollies with scroll, so the backdrop reads as
+ *      a place where minds meet — not as wallpaper.
  *
  * ── Problems in the previous implementation (src/render.js) ────────────────
  *   - `getRenderer()` looked up `#canvas3d`, an element that does not exist in
@@ -30,6 +33,8 @@ import { logger } from '../lib/logger.js';
 
 /** Particle budget per tier. Chosen so link work stays ~linear on each class. */
 const DENSITY = { high: 130, mid: 80, low: 0, off: 0 };
+/** Concurrent rendezvous events per tier ("where minds meet"). */
+const MEETINGS = { high: 3, mid: 2, low: 0, off: 0 };
 const TARGET_FRAME_MS = 1000 / 60;
 /** Shed density when the rolling average exceeds this. 60 fps budget + 25%. */
 const DEGRADE_FRAME_MS = TARGET_FRAME_MS * 1.25;
@@ -77,6 +82,7 @@ export function initField(options = {}) {
     height: window.innerHeight,
     linkDistance: tier === 'high' ? 150 : 130,
     seed: 0x5eed1234,
+    maxMeetings: MEETINGS[tier] ?? 0,
   });
 
   // ── backend selection ─────────────────────────────────────────────────
@@ -107,6 +113,10 @@ export function initField(options = {}) {
     if (next) {
       renderer = next;
       sizeToViewport(replacement);
+      // The IntersectionObserver still watches the DETACHED element, so it
+      // would keep reporting "visible" forever. Hand it the replacement.
+      io?.unobserve(canvas);
+      io?.observe(replacement);
     }
   }
 
@@ -195,6 +205,21 @@ export function initField(options = {}) {
     });
   }
 
+  // Scroll parallax: as the reader descends the page the whole field eases
+  // upward, near layers travelling further than far ones (the sim applies
+  // the pan in world space, before the perspective divide). One passive
+  // listener, at most one write per frame — the sim does the easing.
+  let scrollRaf = 0;
+  function readScroll() {
+    scrollRaf = 0;
+    const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+    field.setScrollProgress((window.scrollY || 0) / max);
+  }
+  function onScroll() {
+    if (scrollRaf) return;
+    scrollRaf = requestAnimationFrame(readScroll);
+  }
+
   function onVisibility() {
     if (document.visibilityState === 'hidden') stop();
     else start();
@@ -233,12 +258,20 @@ export function initField(options = {}) {
 
   window.addEventListener('resize', onResize, { passive: true });
   window.addEventListener('orientationchange', onResize, { passive: true });
+  window.addEventListener('scroll', onScroll, { passive: true });
   document.addEventListener('visibilitychange', onVisibility);
 
   sizeToViewport();
+  readScroll(); // a deep link can land mid-page; start the camera where we are
   start();
 
-  logger.info('field', 'online', { backend: renderer.kind, tier, particles: count, dprCap });
+  logger.info('field', 'online', {
+    backend: renderer.kind,
+    tier,
+    particles: count,
+    dprCap,
+    meetings: MEETINGS[tier] ?? 0,
+  });
 
   return {
     mode: renderer.kind,
@@ -248,8 +281,10 @@ export function initField(options = {}) {
     destroy() {
       stop();
       io?.disconnect();
+      if (scrollRaf) cancelAnimationFrame(scrollRaf);
       window.removeEventListener('resize', onResize);
       window.removeEventListener('orientationchange', onResize);
+      window.removeEventListener('scroll', onScroll);
       document.removeEventListener('visibilitychange', onVisibility);
       if (pointerBound) {
         window.removeEventListener('pointermove', onPointerMove);
@@ -265,6 +300,10 @@ export function initField(options = {}) {
       avgFrameMs: Number(frameAvg.toFixed(2)),
       particles: field.count,
       links: field.linkCount,
+      meetings: field.meetingCount,
+      meetingsHeld: field.meetingsHeld,
+      ripples: field.rippleCount,
+      camY: Number(field.camY.toFixed(1)),
       degradations,
     }),
   };
