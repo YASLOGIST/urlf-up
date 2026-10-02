@@ -42,7 +42,7 @@ const DEPLOYMENT_ORIGIN = 'https://urlifeisup.com';
 function extractUrls(text) {
   const out = new Set();
   for (const match of text.matchAll(/https:\/\/[^\s"'<>);&,]+/g)) {
-    let url = match[0].replace(/[.,;:]+$/, '');
+    const url = match[0].replace(/[.,;:]+$/, '');
     // CSP directive hosts like https://*.cal.com are patterns, not URLs.
     if (url.includes('*')) continue;
     // Markup placeholder from the avatar URL example input.
