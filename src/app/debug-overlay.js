@@ -55,6 +55,9 @@ export function mountDebugOverlay(field) {
         `worst      ${worst.toFixed(1)} ms`,
         `particles  ${s.particles}`,
         `links      ${s.links}`,
+        `meetings   ${s.meetings ?? 0}${s.meetingsHeld ? ` (held ${s.meetingsHeld})` : ''}`,
+        `ripples    ${s.ripples ?? 0}`,
+        `camY       ${s.camY ?? 0}`,
         `degrades   ${s.degradations ?? 0}`,
       ].join('\n');
       worst = 0;

@@ -28,11 +28,31 @@
  *  - Depth ordering uses a counting sort over 32 depth buckets instead of a
  *    comparison sort.
  *  - Nothing is allocated inside `step()` after construction.
+ *
+ * ── The rendezvous layer (2026-10) ────────────────────────────────────────
+ * The brand promise is "Where Minds Meet", and the backdrop now performs it.
+ * Every few seconds the field stages a *rendezvous*: two nearby particles
+ * ease toward a shared point, touch, flare (a warm ember-gold bloom the
+ * renderers read from `flare[]`), and part. A soft ripple ring expands from
+ * the contact point and fades. Active state is bounded (a handful of slots),
+ * the arithmetic is a few dozen operations per frame, and the spawn schedule
+ * is driven by the same seeded PRNG family as the initial layout — a given
+ * seed still reproduces a given film, frame for frame.
  */
 
-/** @typedef {{count:number, width:number, height:number, linkDistance:number, speed:number, seed:number}} SimOptions */
+/** @typedef {{count:number, width:number, height:number, linkDistance:number, speed:number, seed:number, maxMeetings:number, meetingMinDelay:number, meetingMaxDelay:number}} SimOptions */
 
 const DEPTH_BUCKETS = 32;
+
+/** World-space pan applied to the whole field as the page scrolls (px). */
+const PARALLAX_RANGE = 130;
+/** Rendezvous timing, in 60 fps frames. */
+const MEETING_APPROACH = 150;
+const MEETING_COOLDOWN = 80;
+const RIPPLE_LIFETIME = 55;
+const RIPPLE_SLOTS = 6;
+/** How strongly a link brightens inside the pointer wake (screen-space). */
+const WAKE_RADIUS = 190;
 
 /** Deterministic PRNG so visual output is reproducible in tests/benchmarks. */
 function mulberry32(a) {
@@ -91,6 +111,48 @@ export class Field {
     this.linkB = new Uint16Array(this.maxLinks);
     this.linkAlpha = new Float32Array(this.maxLinks);
     this.linkCount = 0;
+
+    // ── Rendezvous state ("where minds meet") ─────────────────────────────
+    // Fixed slot count, typed arrays, zero allocation per frame. A slot is
+    // free when mtT[m] < 0; it walks 0 → 1 through the approach phase, holds
+    // through a short cooldown after contact, then is released.
+    this.maxMeetings = Math.max(0, opts.maxMeetings ?? 3);
+    this.mtA = new Uint16Array(this.maxMeetings);
+    this.mtB = new Uint16Array(this.maxMeetings);
+    this.mtT = new Float32Array(this.maxMeetings); // <0 = free, else 0..1 approach
+    this.mtX = new Float32Array(this.maxMeetings); // meeting point, world space
+    this.mtY = new Float32Array(this.maxMeetings);
+    this.mtZ = new Float32Array(this.maxMeetings);
+    this.mtHold = new Float32Array(this.maxMeetings); // post-contact cooldown
+    // Float32Array zero-fills; −1 is the "free slot" sentinel, so mark it.
+    this.mtT.fill(-1);
+    this.meetingCount = 0;
+    this.meetingsHeld = 0;
+
+    // Per-particle flare: 0 = quiet, 1 = at contact moment, decaying.
+    this.flare = new Float32Array(n);
+
+    // Contact ripples: world-space state (rippleW*) + the derived screen
+    // values (rippleX/Y/R/A) the renderers read. All rebuilt each step.
+    this.rippleWX = new Float32Array(RIPPLE_SLOTS);
+    this.rippleWY = new Float32Array(RIPPLE_SLOTS);
+    this.rippleWZ = new Float32Array(RIPPLE_SLOTS);
+    this.rippleT = new Float32Array(RIPPLE_SLOTS);
+    this.rippleX = new Float32Array(RIPPLE_SLOTS);
+    this.rippleY = new Float32Array(RIPPLE_SLOTS);
+    this.rippleR = new Float32Array(RIPPLE_SLOTS);
+    this.rippleA = new Float32Array(RIPPLE_SLOTS);
+    this.rippleCount = 0;
+
+    // Scroll parallax: camY is a world-space pan, smoothed toward a target.
+    this.camY = 0;
+    this._camTargetY = 0;
+
+    // Runtime PRNG for event staging — seeded, so runs stay reproducible.
+    this._rnd = mulberry32((opts.seed ?? 0x9e3779b9) ^ 0x51ed2701);
+    this._nextMeetingIn = 150 + this._rnd() * 150; // first event after ~3 s
+    this._meetingMinDelay = Math.max(1, opts.meetingMinDelay ?? 240);
+    this._meetingMaxDelay = Math.max(this._meetingMinDelay, opts.meetingMaxDelay ?? 480);
 
     // ── Depth order (counting sort buffers) ───────────────────────────────
     this.order = new Uint16Array(n);
@@ -160,7 +222,28 @@ export class Field {
       if (this.z[i] > this.depthFar || this.z[i] < this.depthNear) this.vz[i] = -this.vz[i];
     }
 
+    // ── rendezvous: stage, steer, flare ──────────────────────────────────
+    // Runs before projection so the frame the renderer sees is consistent.
+    if (this.maxMeetings > 0) this._updateMeetings(dt);
+
+    // Flare decay — a soft exponential so the bloom reads as a glow, not a
+    // flash. ~0.5 s half-life at 60 fps.
+    const fl = this.flare;
+    const decay = Math.pow(0.975, sp);
+    for (let i = 0; i < n; i++) {
+      if (fl[i] > 0.001) fl[i] *= decay;
+      else fl[i] = 0;
+    }
+
+    // ── camera: ease toward the scroll-driven target ─────────────────────
+    // Eased on wall-clock delta (not `sp`): even a de-facto frozen field
+    // (speed 0, or a degraded tab) must still track the reader's scroll.
+    this.camY += (this._camTargetY - this.camY) * Math.min(1, 0.06 * Math.min(3, Math.max(0.2, dt)));
+
     // ── project (perspective divide, once per particle) ───────────────────
+    // The world-space `camY` pan multiplies through the perspective scale,
+    // so NEAR particles travel further than far ones — real differential
+    // parallax, not a uniform screen shift.
     const fov = 520;
     const cx = this.width / 2;
     const cy = this.height / 2;
@@ -168,7 +251,7 @@ export class Field {
       const s = fov / (fov + this.z[i]);
       this.scale[i] = s;
       this.px[i] = this.x[i] * s + cx;
-      this.py[i] = this.y[i] * s + cy;
+      this.py[i] = (this.y[i] + this.camY) * s + cy;
     }
 
     // ── pointer repulsion (screen space, cheap, optional) ─────────────────
@@ -186,8 +269,180 @@ export class Field {
       }
     }
 
+    this._updateRipples(sp);
     this._sortByDepth();
     this._buildLinks();
+  }
+
+  /**
+   * Scroll-linked camera pan, 0 (top of page) → 1 (bottom). The field drifts
+   * *up* as the reader descends, near layers moving further than far ones —
+   * the page acquires depth without a single extra draw call.
+   * @param {number} p clamped externally or internally, both are safe
+   */
+  setScrollProgress(p) {
+    const clamped = p < 0 ? 0 : p > 1 ? 1 : p;
+    this._camTargetY = -clamped * PARALLAX_RANGE;
+  }
+
+  /**
+   * Rendezvous scheduler + per-slot steering. A slot's life:
+   *   free → (spawn) → approach t: 0 → 1 → contact (flare + ripple)
+   *        → hold cooldown → free again.
+   * The steering is a position lerp whose strength grows with t, so the
+   * approach visibly *accelerates* into the meeting — two particles deciding
+   * to meet, not two magnets snapping.
+   */
+  _updateMeetings(dt) {
+    const n = this.count;
+
+    // Schedule the next event.
+    this._nextMeetingIn -= dt;
+    if (this._nextMeetingIn <= 0 && this.meetingCount < this.maxMeetings) {
+      if (this._spawnMeeting()) this.meetingCount++;
+      // Retry shortly whether or not a partner was found.
+      this._nextMeetingIn = 30 + this._rnd() * 60;
+    }
+
+    for (let m = 0; m < this.maxMeetings; m++) {
+      const t = this.mtT[m];
+      if (t < 0) continue;
+      const a = this.mtA[m];
+      const b = this.mtB[m];
+
+      // The governor can shrink `count` under an active meeting; drop the
+      // slot rather than steering a particle that no longer renders.
+      if (a >= n || b >= n) {
+        this.mtT[m] = -1;
+        this.meetingCount--;
+        continue;
+      }
+
+      if (t < 1) {
+        // Approach phase — ease-in pull toward the shared point. The pull is
+        // deliberately NOT multiplied by dt: a stalled tab must not teleport
+        // anyone across the volume on resume. Slower frames simply take a
+        // touch longer to arrive, which is invisible at this scale.
+        const nt = Math.min(1, t + dt / MEETING_APPROACH);
+        const k = 0.03 + 0.09 * nt;
+        this.x[a] += (this.mtX[m] - this.x[a]) * k;
+        this.y[a] += (this.mtY[m] - this.y[a]) * k;
+        this.z[a] += (this.mtZ[m] - this.z[a]) * k;
+        this.x[b] += (this.mtX[m] - this.x[b]) * k;
+        this.y[b] += (this.mtY[m] - this.y[b]) * k;
+        this.z[b] += (this.mtZ[m] - this.z[b]) * k;
+        if (nt >= 1) {
+          // Contact: ignite both particles and stamp a ripple at the point.
+          this.flare[a] = 1;
+          this.flare[b] = 1;
+          this.meetingsHeld++;
+          this._spawnRipple(this.mtX[m], this.mtY[m], this.mtZ[m]);
+        }
+        this.mtT[m] = nt;
+      } else {
+        // Cooldown, then release the slot.
+        this.mtHold[m] -= dt;
+        if (this.mtHold[m] <= 0) {
+          this.mtT[m] = -1;
+          this.meetingCount--;
+        }
+      }
+    }
+  }
+
+  /**
+   * Pick a particle, then the nearest of a small random sample of candidates.
+   * Sampling keeps the spawn O(1)-ish and, seeded, reproducible.
+   * @returns {boolean} true if a meeting was staged
+   */
+  _spawnMeeting() {
+    const n = this.count;
+    if (n < 8) return false;
+    let slot = -1;
+    for (let m = 0; m < this.maxMeetings; m++) {
+      if (this.mtT[m] < 0) {
+        slot = m;
+        break;
+      }
+    }
+    if (slot < 0) return false;
+
+    const a = (this._rnd() * n) | 0;
+    let best = -1;
+    let bestD2 = Infinity;
+    for (let tries = 0; tries < 8; tries++) {
+      const c = (this._rnd() * n) | 0;
+      if (c === a) continue;
+      const dx = this.x[c] - this.x[a];
+      const dy = this.y[c] - this.y[a];
+      const d2 = dx * dx + dy * dy;
+      if (d2 < bestD2) {
+        bestD2 = d2;
+        best = c;
+      }
+    }
+    if (best < 0) return false;
+
+    // Meeting point: the pair's midpoint, pulled slightly toward the centre
+    // of the volume so events tend to happen on-stage, not at the edges.
+    const halfW = this.width * 0.7;
+    const halfH = this.height * 0.7;
+    let mx = (this.x[a] + this.x[best]) * 0.5;
+    let my = (this.y[a] + this.y[best]) * 0.5;
+    mx += (0 - mx) * 0.25;
+    my += (0 - my) * 0.25;
+    if (mx > halfW) mx = halfW;
+    else if (mx < -halfW) mx = -halfW;
+    if (my > halfH) my = halfH;
+    else if (my < -halfH) my = -halfH;
+
+    this.mtA[slot] = a;
+    this.mtB[slot] = best;
+    this.mtX[slot] = mx;
+    this.mtY[slot] = my;
+    this.mtZ[slot] = (this.z[a] + this.z[best]) * 0.5;
+    this.mtT[slot] = 0;
+    this.mtHold[slot] = MEETING_COOLDOWN;
+    return true;
+  }
+
+  /**
+   * Contact ripple. Stored in world space; screen position, radius and alpha
+   * are re-derived every step so the ring rides the same parallax and
+   * projection as everything else.
+   */
+  _spawnRipple(x, y, z) {
+    if (this.rippleCount >= RIPPLE_SLOTS) return;
+    const i = this.rippleCount++;
+    this.rippleWX[i] = x;
+    this.rippleWY[i] = y;
+    this.rippleWZ[i] = z;
+    this.rippleT[i] = 0;
+  }
+
+  _updateRipples(sp) {
+    const fov = 520;
+    const cx = this.width / 2;
+    const cy = this.height / 2;
+    let w = 0;
+    for (let i = 0; i < this.rippleCount; i++) {
+      const t = this.rippleT[i] + sp / RIPPLE_LIFETIME;
+      if (t >= 1) continue; // expired — dropped by the compaction below
+      const s = fov / (fov + this.rippleWZ[i]);
+      // Ease-out cubic: fast bloom, long fade.
+      const e = 1 - Math.pow(1 - t, 3);
+      // Compact survivors in place; renderers read the derived slots only.
+      this.rippleWX[w] = this.rippleWX[i];
+      this.rippleWY[w] = this.rippleWY[i];
+      this.rippleWZ[w] = this.rippleWZ[i];
+      this.rippleT[w] = t;
+      this.rippleX[w] = this.rippleWX[i] * s + cx;
+      this.rippleY[w] = (this.rippleWY[i] + this.camY) * s + cy;
+      this.rippleR[w] = (8 + e * 92) * s;
+      this.rippleA[w] = Math.pow(1 - t, 2) * 0.3;
+      w++;
+    }
+    this.rippleCount = w;
   }
 
   /** Counting sort, back-to-front, O(n + buckets). */
@@ -226,6 +481,11 @@ export class Field {
 
     const maxD = this.linkDistance;
     const maxD2 = maxD * maxD;
+    const wake = this.pointerStrength > 0;
+    const wakeR2 = WAKE_RADIUS * WAKE_RADIUS;
+    const ptrX = this.pointerX;
+    const ptrY = this.pointerY;
+    const ptrS = this.pointerStrength;
     let w = 0;
     const cols = this._cols;
     const rows = this._rows;
@@ -256,7 +516,21 @@ export class Field {
             const d = Math.sqrt(d2);
             this.linkA[w] = i;
             this.linkB[w] = j;
-            this.linkAlpha[w] = (1 - d / maxD) * 0.3 * ((this.scale[i] + this.scale[j]) * 0.5);
+            // Base: proximity × average perspective scale.
+            let alpha = (1 - d / maxD) * 0.3 * ((this.scale[i] + this.scale[j]) * 0.5);
+            // A meeting in progress warms the web around it.
+            const f = this.flare[i] + this.flare[j];
+            if (f > 0.001) alpha = Math.min(0.85, alpha + f * 0.35);
+            // Pointer wake — links wake up where the reader is looking.
+            if (wake) {
+              const mx = (this.px[i] + this.px[j]) * 0.5 - ptrX;
+              const my = (this.py[i] + this.py[j]) * 0.5 - ptrY;
+              const dp2 = mx * mx + my * my;
+              if (dp2 < wakeR2) {
+                alpha = Math.min(0.85, alpha * (1 + 1.6 * (1 - dp2 / wakeR2) * ptrS));
+              }
+            }
+            this.linkAlpha[w] = alpha;
             w++;
           }
         }
@@ -271,6 +545,10 @@ export class Field {
       particles: this.count,
       links: this.linkCount,
       cells: this._cols * this._rows,
+      meetings: this.meetingCount,
+      meetingsHeld: this.meetingsHeld,
+      ripples: this.rippleCount,
+      camY: Number(this.camY.toFixed(2)),
     };
   }
 }

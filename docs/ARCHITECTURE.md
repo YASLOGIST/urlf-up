@@ -52,7 +52,10 @@ capital; an inert flat page undercuts the pitch, and the original already
 committed to a dark luxe aesthetic with gold accents.
 **But it must cost nothing on the critical path**, so the effect is implemented
 as a dependency-free WebGL2/Canvas2D constellation field with a pure-CSS static
-fallback and a hardware-tier budget — not by reviving a 600 kB 3D stack.
+fallback and a hardware-tier budget — not by reviving a 600 kB 3D stack. Since
+the 2026-10 upgrade the field is also *narrative*: it is depth-graded, it
+wakes around the pointer, it dollies with scroll, and it stages rendezvous
+events — the brand promise performed by the backdrop itself.
 
 ---
 
@@ -261,6 +264,16 @@ the spec that enforces it.
     view, and removes every listener it added on `destroy()`.
 27. An EMA frame-time governor sheds up to three density steps (×0.7, floor 24
     particles) if the measured frame cost exceeds 125 % of the 60 fps budget.
+28. On every tier that runs, the field stages the brand story: a *rendezvous*
+    every 4–8 s (≤ 3 concurrent on high, ≤ 2 on mid) — two particles ease
+    together, contact ignites an ember-gold flare, and a ripple ring expands
+    from the meeting point. State is bounded typed arrays; the scheduler is
+    seeded, so runs stay reproducible.
+29. The camera pans in world space as the reader scrolls (±130 px, eased on
+    wall-clock delta), so near layers travel further than far ones — real
+    differential parallax for zero extra draw calls.
+30. A rendezvous whose particles are shed by the governor is dropped, never
+    steered; meetings never reference indices ≥ the live particle count.
 
 ### 7.7 Degraded mode
 
@@ -409,12 +422,14 @@ sequenceDiagram
     FD->>FD: dt = clamp(delta/16.67, 0, 3)
     FD->>SIM: step(dt)
     SIM->>SIM: integrate positions (Float32Array)
+    SIM->>SIM: rendezvous: steer ≤3 pairs, decay flare, project ripples
+    SIM->>SIM: ease camera toward scroll target (wall-clock)
     SIM->>SIM: rebuild spatial hash (cell = linkDistance)
-    SIM->>SIM: scan 9 neighbour cells → link list
+    SIM->>SIM: scan 9 neighbour cells → link list (+ flare/wake alpha)
     SIM->>SIM: counting sort into 32 depth buckets
     SIM-->>FD: linkCount
     FD->>R: draw()
-    R->>R: WebGL2: 2 draw calls · Canvas2D: 1 blit/particle + 6 link bands
+    R->>R: WebGL2: 2 draw calls (LINES: links+rings · POINTS) · Canvas2D: ≤6 bands + ≤3 rings + 1 blit/particle
     FD->>FD: governor(frameMs) — EMA, shed density if > 20.8 ms
     FD->>RAF: schedule next
 ```
@@ -431,10 +446,15 @@ sequenceDiagram
 | 4 | Translations cover the whole page | CONFIDENT | 161 nodes mutated per switch, asserted |
 | 5 | Dialogs are keyboard-complete | CONFIDENT | 15 modal specs + axe pass inside each dialog |
 | 6 | Field falls back correctly without WebGL | CONFIDENT | the test environment returns `null` for WebGL, so the fallback chain is genuinely exercised |
-| 7 | Grid neighbour search ≡ brute force | CONFIDENT | `unit/sim.test.js` compares pair-for-pair across 3 densities × 25 frames |
-| 8 | Critical path −61.3 % gzip | CONFIDENT | `npm run measure:baseline` against the committed pre-upgrade build |
-| 9 | Simulation 5.8× cheaper at equal parameters | CONFIDENT | `npm run bench`, median of 9×600 frames |
+| 7 | Grid neighbour search ≡ brute force | CONFIDENT | `unit/sim.test.js` compares pair-for-pair across 3 densities × 25 frames — still true with the rendezvous layer active (`unit/rendezvous.test.js`) |
+| 8 | Critical path −58.1 % gzip | CONFIDENT | `npm run measure:baseline` against the committed pre-upgrade build |
+| 9 | Simulation 3.1× cheaper at equal parameters | CONFIDENT | `npm run bench`, min-to-min of 9×600 frames (2026-10 re-measurement on this runner) |
 | 10 | Zero axe violations in 5 page states | CONFIDENT | `tests/a11y/axe.test.js` |
+| 10a | Rendezvous meetings converge, flare and ripple | CONFIDENT | `unit/rendezvous.test.js` — spawn/contact distance, flare peak + decay, ripple growth/expiry, determinism |
+| 10b | The story layer costs ~0 CPU | CONFIDENT | `npm run bench` rendezvous row: meetings at max cadence measure within run noise of a plain field |
+| 10c | WebGL path obeys its budget | CONFIDENT | `unit/renderer-webgl.test.js` mock-GL contract: exactly 2 draw calls incl. rings, 5×24-byte attribute layout, additive blend, create/delete parity |
+| 10d | Canvas2D path obeys its budget | CONFIDENT | `unit/renderer-2d.test.js` recording context: ≤ 6 band strokes + ≤ 3 ring strokes, ember blit only while flaring |
+| 10e | GL shaders compile on real drivers | UNKNOWN | sources are structurally validated (ES 3.00, stage-matched) but no GPU/browser was reachable here — see `docs/VERIFICATION.md` §Limits |
 | 11 | RLS protects `profiles` | PROBABLE | `nexus-schema.sql` enables and forces RLS; policy bodies not executed here |
 | 12 | `ideas` has equivalent RLS | UNKNOWN | not present in the repository — see §6 |
 | 13 | Real-device FPS of the field | UNKNOWN | no browser available in this environment — see `docs/VERIFICATION.md` §Limits |

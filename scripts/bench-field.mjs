@@ -133,6 +133,25 @@ const modern = time('modern  (80 particles, grid)  ', () => modern80.step(1), FR
 const modern130 = new Field({ count: 130, width: W, height: H, linkDistance: 150, seed: 0xc0ffee });
 const modernHi = time('modern  (130 particles, r=150 — shipping high tier)', () => modern130.step(1), FRAMES);
 
+// The rendezvous layer ("where minds meet"): meetings at maximum cadence,
+// which is deliberately WORSE than the shipping schedule (240–480 frame
+// spacing) so the number bounds the feature rather than flattering it.
+const modernRendezvous = new Field({
+  count: 130,
+  width: W,
+  height: H,
+  linkDistance: 150,
+  seed: 0xc0ffee,
+  maxMeetings: 3,
+  meetingMinDelay: 1,
+  meetingMaxDelay: 1,
+});
+const modernRv = time(
+  'modern  (130 particles + rendezvous at max cadence)',
+  () => modernRendezvous.step(1),
+  FRAMES
+);
+
 // Same density AND same link radius as the legacy run, for a strict apples-to-
 // apples comparison that isolates the algorithm from the tuning.
 const modern80r180 = new Field({ count: 80, width: W, height: H, linkDistance: 180, seed: 0xc0ffee });
@@ -282,9 +301,13 @@ const report = {
     legacy80: legacy,
     modern80: modern,
     modern130: modernHi,
+    modernRendezvous130: modernRv,
     modernIdenticalParams: modernSame,
     speedupAtEqualDensity: Number((legacy.perFrameMs / modern.perFrameMs).toFixed(2)),
     speedupMinToMin: Number((legacy.minFrameMs / modern.minFrameMs).toFixed(2)),
+    rendezvousOverheadPct: Number(
+      (((modernRv.perFrameMs - modernHi.perFrameMs) / modernHi.perFrameMs) * 100).toFixed(1)
+    ),
   },
   drawCallsPerFrame: {
     legacy80: legacyCtx._c,
@@ -308,6 +331,9 @@ console.log(
   `     ${modernSame.label} median ${ms(modernSame.perFrameMs)}   min ${ms(modernSame.minFrameMs)}`
 );
 console.log(`     ${modernHi.label} median ${ms(modernHi.perFrameMs)}   min ${ms(modernHi.minFrameMs)}`);
+console.log(
+  `     ${modernRv.label} median ${ms(modernRv.perFrameMs)}   min ${ms(modernRv.minFrameMs)}   → ${report.simulation.rendezvousOverheadPct >= 0 ? '+' : ''}${report.simulation.rendezvousOverheadPct}% over the same field without meetings`
+);
 console.log(
   '\n     The headline figure is min-to-min: the fastest of the repetitions is the\n' +
     '     sample least polluted by GC and by other load on the machine, and is\n' +

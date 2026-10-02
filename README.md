@@ -11,8 +11,8 @@
 </p>
 
 <p>
-  <img alt="critical path 51.4 kB gzip" src="https://img.shields.io/badge/critical%20path-51.4%20kB%20gzip-D4AF37?style=flat-square&labelColor=0B0B0B">
-  <img alt="221 specs passing" src="https://img.shields.io/badge/specs-221%20passing-D4AF37?style=flat-square&labelColor=0B0B0B">
+  <img alt="critical path 53.9 kB gzip" src="https://img.shields.io/badge/critical%20path-53.9%20kB%20gzip-D4AF37?style=flat-square&labelColor=0B0B0B">
+  <img alt="252 specs passing" src="https://img.shields.io/badge/specs-252%20passing-D4AF37?style=flat-square&labelColor=0B0B0B">
   <img alt="axe 0 violations" src="https://img.shields.io/badge/axe--core-0%20violations-D4AF37?style=flat-square&labelColor=0B0B0B">
   <img alt="2 runtime dependencies" src="https://img.shields.io/badge/runtime%20deps-2-D4AF37?style=flat-square&labelColor=0B0B0B">
   <img alt="zero UI framework" src="https://img.shields.io/badge/UI%20framework-none-FF1E00?style=flat-square&labelColor=0B0B0B">
@@ -46,15 +46,16 @@ test, a lint rule or a build plugin rather than by convention. Where something i
 unverified it is listed in [§9 Known gaps](#9--known-gaps) instead of being rounded
 up into a claim.
 
-| Dimension                          |                                           Measured | Enforced at                                        |
-| :--------------------------------- | -------------------------------------------------: | :------------------------------------------------- |
-| Critical path, gzip                |                     **51.4 kB** across **3 files** | build fails above 24 kB HTML / 170 kB total        |
-| Reduction vs. pre-upgrade baseline |                   **−60.1 %** (128.7 kB → 51.4 kB) | `measure:baseline` exits 1 on regression           |
-| Automated specs                    |                            **221** across 11 files | CI, every push                                     |
-| Accessibility                      |     **0** axe-core violations in **5** page states | CI, every push                                     |
-| Runtime dependencies               | **2** (`@supabase/supabase-js`, `@capacitor/core`) | contract test proves each is imported              |
-| Simulation cost                    |    **0.0108 ms/frame** @ 80 particles (was 0.0405) | `npm run bench`                                    |
-| First-paint backend bytes          |                                              **0** | `vendor-supabase` is unreachable from `index.html` |
+| Dimension                          |                                            Measured | Enforced at                                        |
+| :--------------------------------- | --------------------------------------------------: | :------------------------------------------------- |
+| Critical path, gzip                |                      **53.9 kB** across **3 files** | build fails above 24 kB HTML / 170 kB total        |
+| Reduction vs. pre-upgrade baseline |                    **−58.1 %** (128.7 kB → 53.9 kB) | `measure:baseline` exits 1 on regression           |
+| Automated specs                    |                             **252** across 14 files | CI, every push                                     |
+| Accessibility                      |      **0** axe-core violations in **5** page states | CI, every push                                     |
+| Runtime dependencies               |  **2** (`@supabase/supabase-js`, `@capacitor/core`) | contract test proves each is imported              |
+| Simulation cost                    | **0.0134 ms/frame** @ 80 particles (legacy: 0.0394) | `npm run bench`                                    |
+| Rendezvous layer overhead          |                    **~0 %** at max cadence (see §5) | `npm run bench`                                    |
+| First-paint backend bytes          |                                               **0** | `vendor-supabase` is unreachable from `index.html` |
 
 > [!IMPORTANT]
 > **The Open Graph card was broken and is now the highest-fidelity asset in the repo.**
@@ -156,12 +157,12 @@ stacking document listeners — which is what makes HMR and the test suite safe.
 > Code reachable only through a dynamic `import()` is excluded, because the browser does
 > not block first paint on it.
 
-| Asset               |        gzip | Why it is here                                             |
-| :------------------ | ----------: | :--------------------------------------------------------- |
-| `index.html`        |     22.8 kB | the document, with all markup and no executable inline script |
-| `assets/main-*.js`  |     14.3 kB | boot, i18n, modals, motion, the field                      |
-| `assets/main-*.css` |     13.2 kB | the design system                                          |
-| **Total**           | **51.4 kB** | **3 requests**                                             |
+| Asset               |        gzip | Why it is here                                                |
+| :------------------ | ----------: | :------------------------------------------------------------ |
+| `index.html`        |     23.1 kB | the document, with all markup and no executable inline script |
+| `assets/main-*.js`  |     17.0 kB | boot, i18n, modals, motion, the field                         |
+| `assets/main-*.css` |     13.9 kB | the design system                                             |
+| **Total**           | **53.9 kB** | **3 requests**                                                |
 
 The 51.1 kB Supabase client sits in `vendor-supabase`, which `index.html` never
 references. It is fetched on a magic-link callback, on the first sign of CTA intent, or
@@ -255,14 +256,18 @@ erDiagram
 ## 1.5 Render fallback ladder
 
 The ambient field is the only continuous `requestAnimationFrame` loop in the system. It
-negotiates downward and never blocks a paint.
+negotiates downward and never blocks a paint. On every tier that runs at all, it performs
+the same story: particles drift in a depth-graded gold haze, links wake where the pointer
+rests, the camera dollies as the reader scrolls, and every few seconds two particles
+rendezvous — they ease together, touch, flare warm ember, and stamp a soft expanding
+ripple: _where minds meet_, staged rather than stated.
 
 ```mermaid
 stateDiagram-v2
     [*] --> Probe
     Probe --> Off : prefers-reduced-motion, or tier low/off
-    Probe --> WebGL2 : context acquired · DPR cap 2 · 130 particles
-    Probe --> Canvas2D : no WebGL2 · DPR cap 1.5 · 80 particles
+    Probe --> WebGL2 : context acquired · DPR cap 2 · 130 particles · 3 meetings
+    Probe --> Canvas2D : no WebGL2 · DPR cap 1.5 · 80 particles · 2 meetings
     Canvas2D --> Off : no 2D context
     Off --> CSS : canvas hidden, pure-CSS gradient shown
     WebGL2 --> Shed : EMA frame time > 20.8 ms
@@ -294,14 +299,14 @@ graph LR
   class X deny;
 ```
 
-| Control       | Implementation                                                                                                                                                        |
-| :------------ | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Authorisation | Postgres RLS, forced on all three tables. The client cannot bypass it.                                                                                                |
+| Control       | Implementation                                                                                                                                                                                |
+| :------------ | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Authorisation | Postgres RLS, forced on all three tables. The client cannot bypass it.                                                                                                                        |
 | CSP           | `script-src 'self'` plus exact JSON-LD hash (no `unsafe-inline`), `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `frame-ancestors 'none'`, exactly one third-party `frame-src` |
-| Error text    | Supabase messages are never shown verbatim; they are mapped to a fixed set                                                                                            |
-| Logging       | `logger.js` redacts anything shaped like a JWT, a Supabase key or a bearer token, plus any value under a key matching `token\|key\|secret\|password\|authorization`   |
-| Translations  | allow-list sanitiser: only `<strong> <em> <b> <i> <br> <span> <small> <u>` with `class` from a 4-value allow-list survive; `on*` attributes and `<script>` never do   |
-| Degraded mode | in production, a missing-credential condition is logged, never rendered — a misconfigured deploy must not leak its configuration surface                              |
+| Error text    | Supabase messages are never shown verbatim; they are mapped to a fixed set                                                                                                                    |
+| Logging       | `logger.js` redacts anything shaped like a JWT, a Supabase key or a bearer token, plus any value under a key matching `token\|key\|secret\|password\|authorization`                           |
+| Translations  | allow-list sanitiser: only `<strong> <em> <b> <i> <br> <span> <small> <u>` with `class` from a 4-value allow-list survive; `on*` attributes and `<script>` never do                           |
+| Degraded mode | in production, a missing-credential condition is logged, never rendered — a misconfigured deploy must not leak its configuration surface                                                      |
 
 ---
 
@@ -316,7 +321,7 @@ simulation, no backend contract · ◌ not built
 | :----------------------------------------------------------------- | :----------------------------------------------------- | :---: | :------------------------------------- |
 | Single-page site: hero, process, roles, meeting, revenue, roadmap  | `index.html` (1,572 lines)                             |   ●   | `contracts/document.test.js`           |
 | Bilingual EN ⇄ AR with full RTL inversion                          | `src/app/i18n.js` · 161 bilingual nodes                |   ●   | 14 flow specs + axe in both directions |
-| Ambient constellation field                                        | `src/visual/{field,sim,renderer-webgl,renderer-2d}.js` |   ●   | 9 unit specs + `npm run bench`         |
+| Ambient constellation field (rendezvous · parallax · wake)         | `src/visual/{field,sim,renderer-webgl,renderer-2d}.js` |   ●   | 39 unit specs + `npm run bench`        |
 | Reveal · scroll progress · count-up · pointer parallax             | `src/motion/*`                                         |   ●   | 25 boot/motion specs                   |
 | Dialog stack: focus trap, `inert`, ESC, focus restore, scroll lock | `src/app/modal.js`                                     |   ●   | 15 modal specs                         |
 | Cal.com booking embed                                              | `#cal-modal`                                           |   ●   | CSP `frame-src` allow-list asserted    |
@@ -326,20 +331,20 @@ simulation, no backend contract · ◌ not built
 
 ### 2.2 Member console — every module lazily imported
 
-| Capability                                                      | Where                                               | State | Note                                                                                        |
-| :-------------------------------------------------------------- | :-------------------------------------------------- | :---: | :------------------------------------------------------------------------------------------ |
-| Email + password sign-in / registration                         | `src/auth.js`                                       |   ●   | validation runs **before** any network call                                                 |
-| Magic link                                                      | `boot.js` → `account.js`                            |   ●   | loaded eagerly; the token must be consumed before expiry                                    |
-| PKCE session, `storageKey: 'urlife-auth'`                       | `src/lib/supabase.js`                               |   ●   | one client, global-keyed singleton                                                          |
-| Role selection against the Postgres enum                        | `src/validators.js`                                 |   ●   | anything outside the enum is rejected                                                       |
-| Idea submission with field-level errors                         | `src/ideas.js`                                      |   ●   | schema-aligned `author_id` + `problem_statement`, auto-publishes open ideas                 |
-| Ideas feed                                                      | `#ideas-feed-list`                                  |   ●   | every field written via `textContent`; accepts current and legacy problem aliases           |
-| Nexus recommendations dashboard                                 | `src/dashboard.js`                                  |   ●   | reads `ideas_public` + `idea_interests`; no absent match table dependency                   |
-| Explainable match scoring                                       | `src/matchingEngine.js`                             |   ●   | role, fuzzy skills, industry, capital, reputation and data-confidence axes                  |
-| Realtime interest / idea updates                                | `supabase.channel('nexus')`                         |   ◐   | `postgres_changes`; untested against a live project                                         |
-| Deal room + escrow state machine                                | `src/components/DealRoom.js`, `src/escrowEngine.js` |   ○   | `Pending → Locked → Verified → Released`, **in-browser only — no custody, no payment rail** |
-| Verification badge tiers                                        | `src/components/VerificationBadge.js`               |   ○   | presentational; no issuing authority                                                        |
-| Settings + avatar upload                                        | `src/settings.js`, `src/avatar.js`                  |   ●   | Supabase Storage                                                                            |
+| Capability                                | Where                                               | State | Note                                                                                        |
+| :---------------------------------------- | :-------------------------------------------------- | :---: | :------------------------------------------------------------------------------------------ |
+| Email + password sign-in / registration   | `src/auth.js`                                       |   ●   | validation runs **before** any network call                                                 |
+| Magic link                                | `boot.js` → `account.js`                            |   ●   | loaded eagerly; the token must be consumed before expiry                                    |
+| PKCE session, `storageKey: 'urlife-auth'` | `src/lib/supabase.js`                               |   ●   | one client, global-keyed singleton                                                          |
+| Role selection against the Postgres enum  | `src/validators.js`                                 |   ●   | anything outside the enum is rejected                                                       |
+| Idea submission with field-level errors   | `src/ideas.js`                                      |   ●   | schema-aligned `author_id` + `problem_statement`, auto-publishes open ideas                 |
+| Ideas feed                                | `#ideas-feed-list`                                  |   ●   | every field written via `textContent`; accepts current and legacy problem aliases           |
+| Nexus recommendations dashboard           | `src/dashboard.js`                                  |   ●   | reads `ideas_public` + `idea_interests`; no absent match table dependency                   |
+| Explainable match scoring                 | `src/matchingEngine.js`                             |   ●   | role, fuzzy skills, industry, capital, reputation and data-confidence axes                  |
+| Realtime interest / idea updates          | `supabase.channel('nexus')`                         |   ◐   | `postgres_changes`; untested against a live project                                         |
+| Deal room + escrow state machine          | `src/components/DealRoom.js`, `src/escrowEngine.js` |   ○   | `Pending → Locked → Verified → Released`, **in-browser only — no custody, no payment rail** |
+| Verification badge tiers                  | `src/components/VerificationBadge.js`               |   ○   | presentational; no issuing authority                                                        |
+| Settings + avatar upload                  | `src/settings.js`, `src/avatar.js`                  |   ●   | Supabase Storage                                                                            |
 
 ### 2.3 Platform and delivery
 
@@ -694,7 +699,7 @@ idea is still — which is simultaneously the design decision and the compressio
 | Scheduling    | Cal.com iframe                                 | —           | The single allowed third-party frame origin.                                                                                               |
 | Visual layer  | Dependency-free WebGL2, written in-repo        | —           | Replaced `three` + `@react-three/*` + `gsap` + `lenis` (~600 kB) that **nothing imported**. 2 draw calls.                                  |
 | Native shells | Capacitor                                      | 7           | `android/`, `ios/`, `capacitor.config.ts`.                                                                                                 |
-| Tests         | Vitest + jsdom + axe-core                      | `^3.2`      | 221 specs: unit, flow, contract, accessibility.                                                                                            |
+| Tests         | Vitest + jsdom + axe-core                      | `^3.2`      | 252 specs: unit, flow, contract, accessibility.                                                                                            |
 | Lint / format | ESLint flat config + Prettier                  | `^9` / `^3` | Rules target the defect classes this codebase actually suffered, not style.                                                                |
 | Hosting       | Any static CDN                                 | —           | No server-side code of any kind.                                                                                                           |
 | Node          | ≥ 20.19                                        | —           | `engines` enforced.                                                                                                                        |
@@ -737,22 +742,29 @@ comparison stays falsifiable after the source changed.
 
 | Metric                | Baseline |         Now |           Δ |
 | :-------------------- | -------: | ----------: | ----------: |
-| Critical path, gzip   | 128.7 kB | **51.4 kB** | **−60.1 %** |
-| Critical path, brotli | 108.1 kB |     43.5 kB |     −59.8 % |
-| Critical path, raw    | 522.5 kB |    209.2 kB |     −60.0 % |
+| Critical path, gzip   | 128.7 kB | **53.9 kB** | **−58.1 %** |
+| Critical path, brotli | 108.1 kB |     45.6 kB |     −57.8 % |
+| Critical path, raw    | 522.5 kB |    216.1 kB |     −58.6 % |
 | Critical path, files  |        7 |       **3** |     −57.1 % |
-| All assets, gzip      | 129.1 kB |    127.7 kB |      −1.1 % |
+| All assets, gzip      | 129.1 kB |    135.3 kB |      +4.8 % |
 
-The "all assets" line barely moves, and that is the honest result: the same code still
-exists, it is simply no longer downloaded before first paint.
+The "all assets" line moves a little: the 2026-10 field upgrade (rendezvous events,
+scroll parallax, depth-graded rendering — §3) added ~2.6 kB gzip to the main chunk.
+The same code still exists, it is simply no longer downloaded before first paint.
 
 ### Simulation and draw cost
 
-| Case                                                 |           Median |           Min |                                    vs. legacy |
-| :--------------------------------------------------- | ---------------: | ------------: | --------------------------------------------: |
-| Legacy, 80 particles, O(n²) pair scan, r=180         | 0.0412–0.0493 ms |     0.0405 ms |                                             — |
-| Modern, 80 particles, spatial hash, identical params |        0.0110 ms | **0.0108 ms** |                              **3.8× cheaper** |
-| Modern, 130 particles, r=150 (shipping high tier)    |        0.0189 ms |     0.0184 ms | 2.2× cheaper **carrying 62 % more particles** |
+Measured on the CI runner (node v22.22.3); medians swing between runs, minima do not.
+
+| Case                                                    |    Median |           Min |                                    vs. legacy |
+| :------------------------------------------------------ | --------: | ------------: | --------------------------------------------: |
+| Legacy, 80 particles, O(n²) pair scan, r=180            | 0.0462 ms |     0.0394 ms |                                             — |
+| Modern, 80 particles, spatial hash, identical params    | 0.0144 ms | **0.0126 ms** |                              **3.1× cheaper** |
+| Modern, 130 particles, r=150 (shipping high tier)       | 0.0239 ms |     0.0232 ms | 1.7× cheaper **carrying 62 % more particles** |
+| Modern, 130 particles + rendezvous at **max** cadence\* | 0.0235 ms |     0.0217 ms |  the story layer is free (−2 %, within noise) |
+
+\* The bench schedules a new meeting every frame — deliberately worse than the
+shipping cadence (one every 4–8 s) so the number bounds the feature, not flatters it.
 
 | Canvas2D calls per frame, 80 particles |          Legacy |           Now | Why                                                                                           |
 | :------------------------------------- | --------------: | ------------: | :-------------------------------------------------------------------------------------------- |
@@ -774,18 +786,18 @@ graph LR
   P["push / PR"] --> Q["quality"]
   P --> B["build"]
   P --> D["audit"]
-  Q --> Q1["eslint"] --> Q2["prettier --check"] --> Q3["221 specs<br/>unit · flow · contract · a11y"] --> Q4["coverage + per-file thresholds"]
+  Q --> Q1["eslint"] --> Q2["prettier --check"] --> Q3["252 specs<br/>unit · flow · contract · a11y"] --> Q4["coverage + per-file thresholds"]
   B --> B1["vite build<br/>fails on inline style or size budget"] --> B2["measure"] --> B3["measure:baseline<br/>exit 1 if the critical path grew"] --> B4["bench"]
   D --> D1["npm run audit<br/>high/critical all deps"]
 ```
 
-| Gate                       | Threshold                 | On breach                                           |
-| :------------------------- | :------------------------ | :-------------------------------------------------- |
-| Inline `<style>`           | > 2 kB authored           | build fails (proven to fire on a 10,811-byte block) |
-| HTML size                  | > 24 kB gzip              | build fails                                         |
-| Total size                 | > 170 kB gzip             | build fails                                         |
-| Critical path vs. baseline | any growth                | CI exits 1                                          |
-| axe-core                   | any violation in 5 states | tests fail                                          |
+| Gate                         | Threshold                 | On breach                                           |
+| :--------------------------- | :------------------------ | :-------------------------------------------------- |
+| Inline `<style>`             | > 2 kB authored           | build fails (proven to fire on a 10,811-byte block) |
+| HTML size                    | > 24 kB gzip              | build fails                                         |
+| Total size                   | > 170 kB gzip             | build fails                                         |
+| Critical path vs. baseline   | any growth                | CI exits 1                                          |
+| axe-core                     | any violation in 5 states | tests fail                                          |
 | Locked dependency advisories | high or critical          | audit job fails                                     |
 
 ---
@@ -813,7 +825,7 @@ cp .env.example .env.local    # then fill VITE_SUPABASE_URL and VITE_SUPABASE_AN
 | `npm run dev`                                  | Vite dev server, bound to `0.0.0.0`                                                     |
 | `npm run build`                                | production build; **fails** on an inline `<style>` over 2 kB or a blown size budget     |
 | `npm run preview`                              | serve `dist/`                                                                           |
-| `npm test`                                     | 221 specs — unit, flow, contract, accessibility                                         |
+| `npm test`                                     | 252 specs — unit, flow, contract, accessibility                                         |
 | `npm run test:watch`                           | the same, in watch mode                                                                 |
 | `npm run test:coverage`                        | coverage with enforced per-file thresholds                                              |
 | `npm run lint` · `lint:fix`                    | ESLint flat config                                                                      |
@@ -868,8 +880,9 @@ scripts/
     png.mjs                minimal PNG encoder
   measure-bundle.mjs       size report + baseline comparison
   bench-field.mjs          simulation and draw-call benchmark
+  render-preview.mjs       software raster of a sim frame (no GPU needed) — inspect the field's composition anywhere
 public/                    icons · manifest · sw.js · og-image-animated.gif · og-cover.png
-tests/                     unit · flows · contracts · a11y        (221 specs)
+tests/                     unit · flows · contracts · a11y        (252 specs)
   unit/compositor.test.js  bloom energy conservation · blur edge clamping · beam clamps
 docs/                      ARCHITECTURE.md · VERIFICATION.md · MIGRATIONS.md
 archive/                   superseded code and documents, kept for provenance
@@ -882,14 +895,14 @@ archive/                   superseded code and documents, kept for provenance
 
 Listed rather than rounded off. Each one has the cheapest action that resolves it.
 
-|   # | Gap                                                                    | Confidence                                    | Cheapest resolution                                                                            |
-| --: | :--------------------------------------------------------------------- | :-------------------------------------------- | :--------------------------------------------------------------------------------------------- |
-|   1 | Real-browser FPS, LCP and CLS                                          | Unknown — no browser in the build environment | `npm run preview` then `npx lighthouse http://localhost:4173 --preset=desktop`                 |
+|   # | Gap                                                                    | Confidence                                    | Cheapest resolution                                                                                  |
+| --: | :--------------------------------------------------------------------- | :-------------------------------------------- | :--------------------------------------------------------------------------------------------------- |
+|   1 | Real-browser FPS, LCP and CLS                                          | Unknown — no browser in the build environment | `npm run preview` then `npx lighthouse http://localhost:4173 --preset=desktop`                       |
 |   2 | Colour contrast, screen-reader announcement quality, RTL visual layout | Unknown — axe cannot see rendered pixels      | One manual pass with VoiceOver/NVDA and a contrast checker; steps in `docs/VERIFICATION.md` § Limits |
-|   3 | Whether the Capacitor shells still compile                             | Unknown — needs Xcode / Android SDK           | `npm run cap:sync && npx cap open ios` on a Mac                                                |
-|   4 | Whether `VITE_CAL_LINK` is current                                     | Unknown                                       | One HTTP `HEAD`                                                                                |
-|   5 | Production CSP violations                                              | Unknown                                       | Deploy with `Content-Security-Policy-Report-Only` + a report endpoint for 24 h                 |
-|   6 | Escrow / deal room / verification tiers                                | **Simulation by design**                      | Treat as interaction scaffolding until a custody provider and an issuing authority exist       |
+|   3 | Whether the Capacitor shells still compile                             | Unknown — needs Xcode / Android SDK           | `npm run cap:sync && npx cap open ios` on a Mac                                                      |
+|   4 | Whether `VITE_CAL_LINK` is current                                     | Unknown                                       | One HTTP `HEAD`                                                                                      |
+|   5 | Production CSP violations                                              | Unknown                                       | Deploy with `Content-Security-Policy-Report-Only` + a report endpoint for 24 h                       |
+|   6 | Escrow / deal room / verification tiers                                | **Simulation by design**                      | Treat as interaction scaffolding until a custody provider and an issuing authority exist             |
 
 ---
 

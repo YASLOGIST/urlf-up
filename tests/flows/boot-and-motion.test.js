@@ -414,8 +414,33 @@ describe('ambient field', () => {
     expect(stats).toMatchObject({
       mode: 'canvas2d',
       particles: expect.any(Number),
+      // The rendezvous channels the renderers read must be surfaced too.
+      meetings: expect.any(Number),
+      meetingsHeld: expect.any(Number),
+      ripples: expect.any(Number),
+      camY: expect.any(Number),
     });
     expect(stats.particles).toBeGreaterThan(0);
+    handle.destroy();
+  });
+
+  it('dollies the field camera as the reader scrolls the page', async () => {
+    const { initField } = await import('../../src/visual/field.js');
+    const handle = initField({ tier: 'mid' });
+    expect(handle.getStats().camY).toBe(0); // top of page: no offset
+
+    Object.defineProperty(window, 'scrollY', { value: 4000, configurable: true });
+    window.dispatchEvent(new Event('scroll'));
+    // One rAF for the throttled read, then frames for the sim ease.
+    for (let i = 0; i < 60; i++) await flush(1);
+    const camY = handle.getStats().camY;
+    expect(camY).toBeLessThan(-30); // eased (or reached) the parallax target
+    expect(camY).toBeGreaterThanOrEqual(-130); // and never past it
+
+    Object.defineProperty(window, 'scrollY', { value: 0, configurable: true });
+    window.dispatchEvent(new Event('scroll'));
+    for (let i = 0; i < 60; i++) await flush(1);
+    expect(handle.getStats().camY).toBeGreaterThan(camY + 30); // it follows back up
     handle.destroy();
   });
 });
