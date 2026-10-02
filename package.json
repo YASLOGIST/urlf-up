@@ -23,6 +23,7 @@
     "measure:baseline": "node scripts/measure-bundle.mjs .baseline/dist dist",
     "bench": "node scripts/bench-field.mjs",
     "audit": "node scripts/audit-high.mjs",
+    "check:links": "node scripts/check-links.mjs",
     "icons": "node scripts/generate-icons.mjs",
     "og": "node scripts/generate-og.mjs",
     "brand": "npm run icons && npm run og",

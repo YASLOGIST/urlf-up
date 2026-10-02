@@ -104,5 +104,23 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
       - run: npm ci
-      - name: Fail on high or critical advisories in all locked dependencies
+      - name: Dependency audit
         run: npm run audit
+
+  link-liveness:
+    name: External link liveness
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      # The checker uses only node:fs and fetch — no install needed.
+      - name: Check functional links (booking link, font stylesheet)
+        # Fails while the Cal.com booking link is dead. Fix outside the repo:
+        # register the cal.com username or set VITE_CAL_LINK, then re-run.
+        run: npm run check:links
+      - name: Check declared deployment URLs (non-fatal until --strict in CI)
+        run: node scripts/check-links.mjs --strict
+        continue-on-error: true
