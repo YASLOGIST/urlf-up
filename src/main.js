@@ -10,13 +10,9 @@
  */
 
 import './styles/index.css';
-import { boot } from './app/boot.js';
+import { boot, teardownBoot } from './app/boot.js';
+import { showNotice } from './app/network.js';
 import { logger } from './lib/logger.js';
-
-// The interaction engine attaches its own capture-phase listener at import
-// time; keeping it in the static graph preserves the existing telemetry and
-// orphan-click behaviour.
-import './core.js';
 
 function start() {
   boot().catch((err) => logger.error('boot', 'fatal', err));
@@ -27,6 +23,10 @@ if (document.readyState === 'loading') {
 } else {
   start();
 }
+
+// Vite can re-evaluate this module during development. Release every owned
+// observer/listener before the replacement boot runs instead of stacking them.
+if (import.meta.hot) import.meta.hot.dispose(teardownBoot);
 
 /* ── Service worker ────────────────────────────────────────────────────────
  * Registered after `load` so it never competes with the critical path for
@@ -45,6 +45,13 @@ if ('serviceWorker' in navigator && import.meta.env.PROD && window.isSecureConte
           const next = reg.installing;
           next?.addEventListener('statechange', () => {
             if (next.state === 'installed' && navigator.serviceWorker.controller) {
+              const message = document.createElement('span');
+              message.textContent = 'A new version of UrLife is ready.';
+              const reload = document.createElement('button');
+              reload.type = 'button';
+              reload.textContent = 'Update now';
+              reload.addEventListener('click', () => window.location.reload(), { once: true });
+              showNotice([message, reload], { id: 'app-update' });
               window.dispatchEvent(new CustomEvent('urlife:update-available'));
               logger.info('sw', 'a new version is available');
             }

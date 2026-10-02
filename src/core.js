@@ -71,19 +71,12 @@ function handleClick(e) {
   const href = target.getAttribute('href');
   const label = identifyTarget(target);
 
-  // ── BRANCH 1: Hash links → smooth scroll, update history ──
+  // ── BRANCH 1: Hash links → navigation module owns scrolling/focus ──
+  // Do not call preventDefault here: scroll-fx.js is the single owner of
+  // anchor navigation and moves keyboard focus along with the viewport.
   if (href && href.startsWith('#') && href.length > 1) {
-    const section = document.querySelector(href);
-    if (section) {
-      e.preventDefault();
-      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      // Push state so back-button works
-      if (location.hash !== href) {
-        history.pushState(null, '', href);
-      }
-      TELEMETRY('nav_scroll', { to: href, from: label });
-      return;
-    }
+    TELEMETRY('nav_scroll', { to: href, from: label });
+    return;
   }
 
   // ── BRANCH 2: External links → let browser handle, just track ──
@@ -120,8 +113,10 @@ function handleClick(e) {
       return;
     }
 
-    // Orphan button — no module claimed it yet
-    e.preventDefault();
+    // Orphan control — report it, but never cancel native button semantics.
+    // Cancelling here used to prevent submit buttons from dispatching their
+    // form's submit event, breaking sign-in, registration and idea creation.
+    if (href === '#') e.preventDefault();
     pulseTactile(target);
     TELEMETRY('orphan_click', {
       label,
@@ -152,30 +147,42 @@ function handleKeydown(e) {
   }
 }
 
-// ── BOOT ──
+// ── LIFECYCLE ──
 let booted = false;
-function boot() {
-  if (booted) return;
+
+function onHashChange() {
+  let section;
+  try {
+    section = document.querySelector(location.hash);
+  } catch {
+    return;
+  }
+  if (!section) return;
+  const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  section.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+}
+
+/** Start the global interaction engine. Owned by app/boot.js like every other subsystem. */
+export function initCore() {
+  if (booted) return { destroy: destroyCore };
   booted = true;
 
-  // Capture phase so we fire BEFORE inline handlers can stopPropagation
+  // Capture phase so telemetry sees interactions even when a component stops propagation.
   document.addEventListener('click', handleClick, { capture: true });
   document.addEventListener('keydown', handleKeydown);
-
-  // Browser back-button on hash links → smooth scroll
-  window.addEventListener('hashchange', () => {
-    const section = document.querySelector(location.hash);
-    if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  });
+  window.addEventListener('hashchange', onHashChange);
 
   TELEMETRY('core_online', { ts: Date.now() });
   logger.debug('core', 'global interaction engine online');
+  return { destroy: destroyCore };
 }
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', boot, { once: true });
-} else {
-  boot();  // Already past DOMContentLoaded — boot immediately
+export function destroyCore() {
+  if (!booted) return;
+  document.removeEventListener('click', handleClick, { capture: true });
+  document.removeEventListener('keydown', handleKeydown);
+  window.removeEventListener('hashchange', onHashChange);
+  booted = false;
 }
 
 // Public API for other modules to mark buttons as 'owned'

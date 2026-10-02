@@ -6,6 +6,37 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { mountIndexHtml, flush } from '../helpers/page.js';
 import { showError, clearError, setLoading, showToast } from '../../src/ui.js';
+import { initCore, destroyCore } from '../../src/core.js';
+
+describe('global interaction engine', () => {
+  beforeEach(() => {
+    mountIndexHtml();
+    initCore();
+  });
+  afterEach(() => destroyCore());
+
+  it('never cancels a native form submit button click', () => {
+    document.getElementById('login-form').addEventListener('submit', (event) => event.preventDefault());
+    const event = new MouseEvent('click', { bubbles: true, cancelable: true });
+    document.getElementById('login-submit').dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(false);
+  });
+
+  it('leaves hash navigation to the accessible anchor-navigation owner', () => {
+    const link = document.querySelector('a[href="#how"]');
+    const event = new MouseEvent('click', { bubbles: true, cancelable: true });
+    link.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(false);
+  });
+
+  it('releases its listeners cleanly', () => {
+    destroyCore();
+    document.getElementById('login-form').addEventListener('submit', (event) => event.preventDefault());
+    const event = new MouseEvent('click', { bubbles: true, cancelable: true });
+    document.getElementById('login-submit').dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(false);
+  });
+});
 
 describe('error slots', () => {
   beforeEach(() => mountIndexHtml());

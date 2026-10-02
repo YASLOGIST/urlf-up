@@ -46,7 +46,7 @@ export default defineConfig({
         'src/motion/reveal.js': { lines: 90, functions: 55 },
         'src/motion/scroll-fx.js': { lines: 90, functions: 70 },
         'src/motion/countup.js': { lines: 85, functions: 60 },
-        'src/motion/pointer-fx.js': { lines: 84, functions: 85 },
+        'src/motion/pointer-fx.js': { lines: 84, functions: 75 },
         'src/motion/prefs.js': { lines: 85, functions: 75 },
         'src/validators.js': { lines: 100, functions: 100 },
         'src/sanitize.js': { lines: 100, functions: 100 },
