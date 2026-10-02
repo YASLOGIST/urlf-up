@@ -135,7 +135,7 @@ Source of truth: `nexus-schema.sql`.
 ```mermaid
 erDiagram
     AUTH_USERS ||--|| PROFILES : "id (FK, ON DELETE CASCADE)"
-    PROFILES ||--o{ IDEAS : "user_id"
+    PROFILES ||--o{ IDEAS : "author_id"
     PROFILES {
         uuid    id PK "= auth.users.id"
         text    full_name
@@ -150,11 +150,11 @@ erDiagram
     }
     IDEAS {
         uuid    id PK
-        uuid    user_id FK
-        text    title "5..200"
-        text    industry "2..80"
-        text    problem_solved "20..5000"
-        text[]  required_skills "<= 30"
+        uuid    author_id FK
+        text    title "1..200"
+        text    industry "1..80"
+        text    problem_statement "20..5000"
+        text[]  required_skills "<= 20"
         timestamptz created_at
     }
 ```
@@ -170,22 +170,14 @@ erDiagram
   earlier revision of this document claimed the `ideas` policies were absent
   from the repository. They are present (`ideas_select_public`,
   `ideas_select_own`, `ideas_insert_own`, `ideas_update_own`).
-- **CONFIRMED DEFECT — client/schema drift.** The console does not speak this
-  schema:
-
-  | Client reads/writes | Schema defines | Site of the call |
-  | --- | --- | --- |
-  | `ideas.user_id` | `ideas.author_id` | `src/ideas.js`, `src/dashboard.js` |
-  | `ideas.problem_solved` | `ideas.problem_statement` | `src/ideas.js`, `src/dashboard.js` |
-  | `ideas.viability_score` | *(absent)* | `src/dashboard.js` |
-  | view `v_top_matches` | *(absent)* | `src/dashboard.js` |
-  | table `matches` | *(absent)* | `src/dashboard.js` |
-
-  Either the committed schema or the client is stale; both cannot be right.
-  Cheapest resolution (≈30 s, no deploy):
-  `select table_name, column_name from information_schema.columns where table_name in ('ideas','matches')`
-  plus `select viewname from pg_views where schemaname='public'` in the Supabase
-  SQL editor. Then correct whichever side lost.
+- The client now speaks this schema directly. `src/ideas.js` writes
+  `author_id` and `problem_statement`; `src/dashboard.js` reads `ideas_public`,
+  `profiles_public` and `idea_interests`; and match scores are computed
+  client-side by `src/matchingEngine.js` rather than depending on absent
+  `matches` / `v_top_matches` prototype relations.
+- Sign-up metadata is normalised on both sides: the browser sends schema-native
+  `role_type` plus legacy `role`, and `handle_new_user()` accepts either CSV or
+  JSON-array skills before inserting a full `profiles` row with `username`.
 
 ---
 

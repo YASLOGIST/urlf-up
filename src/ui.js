@@ -1,4 +1,5 @@
 import { icon } from './icons.js'
+import { ideaProblem } from './matchingEngine.js'
 
 /**
  * Display an error in a named slot element.
@@ -186,7 +187,7 @@ export function buildIdeaCard(idea) {
 
   const problem = document.createElement('p')
   problem.className = 'idea-problem'
-  problem.textContent = idea.problem_solved || ''
+  problem.textContent = ideaProblem(idea)
 
   card.appendChild(chip)
   card.appendChild(title)

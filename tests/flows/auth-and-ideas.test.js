@@ -13,7 +13,7 @@ import { initModalSystem, __resetModalsForTests } from '../../src/app/modal.js';
 
 /** Build a controllable fake that matches the slice of supabase-js we use. */
 function makeFakeClient(overrides = {}) {
-  const calls = { signIn: [], signUp: [], otp: [], insert: [], select: [] };
+  const calls = { signIn: [], signUp: [], otp: [], insert: [], upsert: [], select: [] };
   const table = (name) => {
     const chain = {
       _name: name,
@@ -25,7 +25,8 @@ function makeFakeClient(overrides = {}) {
         calls.insert.push([name, row]);
         return chain;
       },
-      upsert() {
+      upsert(row, options) {
+        calls.upsert.push([name, row, options]);
         return chain;
       },
       eq() {
@@ -165,6 +166,73 @@ describe('authentication flows', () => {
     expect(fake.calls.signUp).toHaveLength(0);
   });
 
+  it('sends schema-native and legacy-safe metadata during registration', async () => {
+    const { handleSignUp } = await import('../../src/auth.js');
+    const onConfirmNeeded = vi.fn();
+
+    handleSignUp(
+      {
+        fullName: 'Ada Lovelace',
+        email: 'ada@example.com',
+        password: 'password1',
+        roleType: 'builder',
+        skillsRaw: 'Maths, Risk, maths',
+      },
+      () => {},
+      onConfirmNeeded
+    );
+    await flush(4);
+
+    expect(fake.calls.signUp).toHaveLength(1);
+    expect(fake.calls.signUp[0].options.data).toMatchObject({
+      full_name: 'Ada Lovelace',
+      role: 'builder',
+      role_type: 'builder',
+      skills: 'maths, risk',
+      skills_list: ['maths', 'risk'],
+    });
+    expect(onConfirmNeeded).toHaveBeenCalled();
+  });
+
+  it('repairs the profile with a full schema-valid upsert when confirmation is disabled', async () => {
+    fake = makeFakeClient({
+      signUp: {
+        data: {
+          session: { user: { id: 'u1', email: 'ada@example.com' } },
+          user: { id: 'u1', email: 'ada@example.com' },
+        },
+        error: null,
+      },
+    });
+    globalThis[GLOBAL_KEY] = fake;
+    const { handleSignUp } = await import('../../src/auth.js');
+    const onSuccess = vi.fn();
+
+    handleSignUp(
+      {
+        fullName: 'Ada Lovelace',
+        email: 'ada@example.com',
+        password: 'password1',
+        roleType: 'visionary',
+        skillsRaw: 'systems',
+      },
+      onSuccess,
+      () => {}
+    );
+    await flush(4);
+
+    expect(fake.calls.upsert[0][0]).toBe('profiles');
+    expect(fake.calls.upsert[0][1]).toMatchObject({
+      id: 'u1',
+      username: 'ada_u1',
+      full_name: 'Ada Lovelace',
+      role_type: 'visionary',
+      skills: ['systems'],
+    });
+    expect(fake.calls.upsert[0][2]).toEqual({ onConflict: 'id' });
+    expect(onSuccess).toHaveBeenCalled();
+  });
+
   it('sends the magic link and reports success', async () => {
     const { handleMagicLinkSignIn } = await import('../../src/auth.js');
     const onSuccess = vi.fn();
@@ -239,7 +307,7 @@ describe('idea submission', () => {
           id: 'i1',
           title: good.title,
           industry: 'FinTech',
-          problem_solved: good.problem,
+          problem_statement: good.problem,
           required_skills: ['solidity'],
         },
         error: null,
@@ -252,7 +320,12 @@ describe('idea submission', () => {
     await flush(5);
 
     expect(client.calls.insert[0][0]).toBe('ideas');
-    expect(client.calls.insert[0][1]).toMatchObject({ user_id: 'u1', title: good.title });
+    expect(client.calls.insert[0][1]).toMatchObject({
+      author_id: 'u1',
+      title: good.title,
+      problem_statement: good.problem,
+      status: 'open',
+    });
     const card = document.querySelector('#ideas-feed-list .idea-card');
     expect(card).not.toBeNull();
     expect(card.querySelector('.idea-title').textContent).toBe(good.title);
@@ -264,7 +337,7 @@ describe('idea submission', () => {
     const card = buildIdeaCard({
       title: '<img src=x onerror="window.__pwned=1">',
       industry: '<script>1</script>',
-      problem_solved: 'ok',
+      problem_statement: 'ok',
       required_skills: ['<b>x</b>'],
     });
     expect(card.querySelector('img')).toBeNull();

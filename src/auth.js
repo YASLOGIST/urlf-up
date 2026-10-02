@@ -17,29 +17,52 @@ export function getCachedProfile() {
   return _cachedProfile
 }
 
+function _usernameFromUser(user, fallbackName = '') {
+  const source = user.email?.split('@')[0] || fallbackName || 'member'
+  const base = source
+    .toLowerCase()
+    .replace(/[^a-z0-9_]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 24) || 'member'
+  const fallbackId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now()
+  const suffix = String(user.id || fallbackId).replace(/-/g, '').slice(0, 6)
+  return `${base}_${suffix}`.slice(0, 32)
+}
+
+function _skillsFromMeta(meta) {
+  return parseAndDedupeSkills(meta.skills_list || meta.skills || meta.skills_csv || '')
+}
+
+function _profilePayloadFromUser(user) {
+  const meta = user.user_metadata || {}
+  const fullName = String(meta.full_name || meta.fullName || user.email?.split('@')[0] || 'New Member')
+    .trim()
+    .slice(0, 80)
+  const roleType = isValidRoleType(meta.role_type) ? meta.role_type : isValidRoleType(meta.role) ? meta.role : 'visionary'
+  return {
+    id: user.id,
+    username: _usernameFromUser(user, fullName),
+    full_name: fullName.length >= 2 ? fullName : 'New Member',
+    role_type: roleType,
+    skills: _skillsFromMeta(meta),
+  }
+}
+
 async function _fetchAndCacheProfile(userId) {
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, full_name, role_type, skills, reputation, is_verified')
+    .select('id, username, full_name, role_type, skills, interests, bio, avatar_url, reputation, is_verified')
     .eq('id', userId)
     .single()
   _cachedProfile = error ? null : data
   return _cachedProfile
 }
 
-// Called after email-link confirmation: creates profile from user_metadata
-// if one doesn't already exist (ignoreDuplicates prevents overwriting).
+// Called after email-link confirmation: creates or repairs the profile from
+// user_metadata. The committed schema requires `username`, so the client must
+// not rely on a partial insert when the database trigger did not run.
 async function _upsertProfileFromMeta(user) {
-  const meta = user.user_metadata || {}
-  const { error } = await supabase.from('profiles').upsert(
-    {
-      id: user.id,
-      full_name: meta.full_name || '',
-      role_type: meta.role_type || 'visionary',
-      skills: meta.skills || [],
-    },
-    { onConflict: 'id', ignoreDuplicates: true }
-  )
+  const { error } = await supabase.from('profiles').upsert(_profilePayloadFromUser(user), { onConflict: 'id' })
   if (error) logger.error('auth', 'profile upsert failed', error)
   return _fetchAndCacheProfile(user.id)
 }
@@ -98,6 +121,7 @@ export async function initAuth(onSessionChange) {
 
 export function teardownAuth() {
   if (_authSubscription) _authSubscription.unsubscribe()
+  _authSubscription = null
 }
 
 export const handleSignIn = debounce(async (email, password, onSuccess) => {
@@ -168,7 +192,7 @@ export const handleSignUp = debounce(
     const skills = parseAndDedupeSkills(skillsRaw)
 
     if (!isValidFullName(fullName)) {
-      showError('register-error', 'Full name must be 2–120 characters.', { field: 'register-name' })
+      showError('register-error', 'Full name must be 2–80 characters.', { field: 'register-name' })
       return
     }
     if (!isValidEmail(email.trim())) {
@@ -190,7 +214,7 @@ export const handleSignUp = debounce(
     if (!isValidSkillsList(skills)) {
       showError(
         'register-error',
-        'Please enter at least one skill (comma-separated, max 50).',
+        'Please enter at least one skill (comma-separated, max 20).',
         { field: 'register-skills' }
       )
       return
@@ -204,8 +228,10 @@ export const handleSignUp = debounce(
         options: {
           data: {
             full_name: fullName.trim(),
+            role: roleType,
             role_type: roleType,
-            skills,
+            skills: skills.join(', '),
+            skills_list: skills,
           },
         },
       })
@@ -225,16 +251,22 @@ export const handleSignUp = debounce(
         return
       }
 
-      // Immediate session (email confirmation disabled) — insert profile now
-      const { error: profileErr } = await supabase.from('profiles').insert({
+      // Immediate session (email confirmation disabled) — the database trigger
+      // normally creates the row. Upsert a full schema-valid profile so local
+      // dev projects without the trigger do not produce an orphan auth user.
+      const profilePayload = {
         id: data.user.id,
+        username: _usernameFromUser(data.user, fullName),
         full_name: fullName.trim(),
         role_type: roleType,
         skills,
-      })
+      }
+      const { error: profileErr } = await supabase
+        .from('profiles')
+        .upsert(profilePayload, { onConflict: 'id' })
 
       if (profileErr) {
-        logger.error('auth', 'profile insert failed', profileErr)
+        logger.error('auth', 'profile upsert failed', profileErr)
         // Rollback: sign out to prevent an orphan auth user with no profile
         await supabase.auth.signOut()
         showError(
@@ -244,12 +276,7 @@ export const handleSignUp = debounce(
         return
       }
 
-      _cachedProfile = {
-        id: data.user.id,
-        full_name: fullName.trim(),
-        role_type: roleType,
-        skills,
-      }
+      _cachedProfile = profilePayload
       onSuccess(data.session)
     } finally {
       setLoading(btn, false)
