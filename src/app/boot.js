@@ -35,6 +35,7 @@ import { initScrollFx, initAnchorNavigation } from '../motion/scroll-fx.js';
 import { initCountUp } from '../motion/countup.js';
 import { initPointerFx } from '../motion/pointer-fx.js';
 import { initField } from '../visual/field.js';
+import { initCore } from '../core.js';
 import { deviceTier, hasFinePointer, prefersReducedMotion } from '../motion/prefs.js';
 import { IS_DEV } from '../lib/env.js';
 
@@ -62,6 +63,15 @@ const teardowns = [];
 function listen(target, type, handler, options) {
   target.addEventListener(type, handler, options);
   teardowns.push(() => target.removeEventListener(type, handler, options));
+}
+
+/** Register the lifecycle shape returned by an initializer. */
+function own(resource) {
+  if (!resource) return resource;
+  if (typeof resource === 'function') teardowns.push(resource);
+  else if (typeof resource.destroy === 'function') teardowns.push(() => resource.destroy());
+  else if (typeof resource.disconnect === 'function') teardowns.push(() => resource.disconnect());
+  return resource;
 }
 
 /** Undo everything `boot()` attached. Safe to call when boot never ran. */
@@ -118,8 +128,9 @@ export async function boot() {
   html.classList.toggle('has-custom-cursor', hasFinePointer() && !prefersReducedMotion());
   html.dataset.tier = deviceTier();
 
-  guard('errors', initErrorReporting);
-  guard('network', initNetworkStatus);
+  own(guard('errors', initErrorReporting));
+  own(guard('core', initCore));
+  own(guard('network', initNetworkStatus));
   guard('env-report', () => reportBackendConfig({ dev: IS_DEV }));
 
   // 2 ── language ─────────────────────────────────────────────────────────
@@ -129,18 +140,19 @@ export async function boot() {
   guard('modals', initModalSystem);
 
   // 4 ── scroll-driven motion ─────────────────────────────────────────────
-  const reveal = guard('reveal', initReveal);
-  guard('scroll-fx', initScrollFx);
-  guard('anchors', initAnchorNavigation);
-  guard('countup', initCountUp);
+  const reveal = own(guard('reveal', initReveal));
+  own(guard('scroll-fx', initScrollFx));
+  own(guard('anchors', initAnchorNavigation));
+  own(guard('countup', initCountUp));
 
   // 5 ── pointer-driven motion ────────────────────────────────────────────
-  guard('pointer-fx', initPointerFx);
-  await guardAsync('cursor', async () => {
-    if (!hasFinePointer() || prefersReducedMotion()) return;
+  own(guard('pointer-fx', initPointerFx));
+  const cursor = await guardAsync('cursor', async () => {
+    if (!hasFinePointer() || prefersReducedMotion()) return undefined;
     const { initCursor } = await import('../cursor.js');
-    initCursor();
+    return initCursor();
   });
+  own(cursor);
 
   // 6 ── ambient backdrop (the only continuous rAF loop) ──────────────────
   const field = guard('field', () => initField());

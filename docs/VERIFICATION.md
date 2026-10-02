@@ -17,7 +17,7 @@ npm ci
 
 npm run lint            # ESLint flat config, 0 errors expected
 npm run format:check    # Prettier, 0 differences expected
-npm run test            # 210 specs across 10 files
+npm run test            # 213 specs across 10 files
 npm run test:coverage   # coverage + per-file thresholds
 npm run build           # fails on inline-style or size-budget violations
 npm run measure         # size report for dist/
@@ -182,7 +182,7 @@ and not only in JS; a visible `:focus-visible` ring exists.
 
 ## 6. Test suite
 
-`npm run test` — **210 specs, 10 files, all passing.**
+`npm run test` — **213 specs, 10 files, all passing.**
 
 | file | specs | covers |
 |---|---:|---|
@@ -285,11 +285,11 @@ These are real gaps, stated rather than papered over.
 | Critical-path payload | 128.7 kB gz, 7 files | **50.3 kB gz, 3 files** |
 | Module entry points | 8 | **1** |
 | Supabase clients at runtime | 2 (racing refresh timers) | **1** |
-| Automated tests | 0 | **210** |
+| Automated tests | 0 | **213** |
 | axe violations | not measured; ≥5 real defects present | **0 in 5 page states** |
 | CSP | `script-src 'unsafe-inline'`, no `frame-src` (booking iframe blocked) | hardened, 6 directives, booking works |
 | Service worker | 2 lines, cache-poisoning hazard | versioned, strategy-based, offline fallback |
 | Unused runtime dependencies | 7 (react, react-dom, three, @react-three ×2, gsap, lenis) | **0**, enforced by a test |
 | Simulation cost @ equal params | 0.0405 ms/frame | **0.0108 ms/frame** |
 | Canvas state-changing calls/frame | 585 | **90** |
-| CI | none | lint · format · 210 tests · axe · coverage thresholds · size budget · bench · audit |
+| CI | none | lint · format · 213 tests · axe · coverage thresholds · size budget · bench · audit |
