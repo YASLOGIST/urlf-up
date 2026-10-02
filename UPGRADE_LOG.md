@@ -33,7 +33,7 @@
 2. **P0 — Corrupted English copy in Roadmap (MVP milestone):**
    "…Notion for active projects. from day one." — a clause was lost. The Arabic
    string (`عربي وإنجليزي من اليوم الأول`) preserves the intended meaning:
-   *bilingual Arabic and English from day one*.
+   _bilingual Arabic and English from day one_.
 3. **P1 — Member console is English-only:** marketing page is fully bilingual
    (180+ nodes), but everything behind login — dashboard, toasts, validation
    errors, Deal Room, settings, ideas feed — renders English strings even when
@@ -44,16 +44,43 @@
    (below modals 9500 / toasts 9800), and `shortDate` hardcodes `Intl … 'en'`.
 5. **P2 — Contrast unmeasured (Known gap #2):** `--dim` (ice @ 0.45 alpha) on
    obsidian computes to ≈4.4:1 — likely AA-fail for small text. Needs a
-   measured audit, then fixes where real.
+   measured audit, then fixes where real. _(Resolved in W-C — the `--dim`
+   override to 0.62 in `a11y.css` was already correct; the audit then found 20
+   further real failures elsewhere, all fixed.)_
 
 ## Waves
 
-| Wave | Scope | Status |
-|---|---|---|
-| W-A | P0 content/link fixes + link-liveness gate | ✅ done |
-| W-B | Bilingual member console (dictionary, all modules, re-render on langchange, tests) | ✅ done |
-| W-C | Static WCAG contrast audit gate + token fixes | ✅ done |
-| W-D | README/docs truth pass, final verify | ✅ done |
+| Wave | Scope                                                                              | Status                     | Evidence                                                                                                                                                      |
+| ---- | ---------------------------------------------------------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| W-A  | P0 content/link fixes + link-liveness gate                                         | ✅ done — commit `3fae6e0` | roadmap sentence restored; `npm run check:links` + CI `link-liveness` job                                                                                     |
+| W-B  | Bilingual member console (dictionary, all modules, re-render on langchange, tests) | ✅ done — commit `a1bf07c` | 18 new specs (`tests/flows/console-i18n.test.js`), 270/270 total; strings-*.js lazy chunk 7.3 kB gz off critical path; critical path 54.5 kB gz (gate green)  |
+| W-C  | Measured WCAG AA contrast audit wired to CI + fixes                                | ✅ done (this commit)      | `scripts/audit-contrast.mjs` — first run **20 failures / 8 root causes**, after fixes **223/223 pass · 0 unmeasured**; in `npm run verify` + CI `quality` job |
+| W-D  | README/docs truth pass, final verify                                               | ✅ done (this commit)      | README §9 gap #2 now carries measured numbers; full verify green at commit                                                                                    |
+
+### W-C detail (measured 2026-10-02)
+
+First audit run: 20 failing elements, 0 false positives after three tool bugs were
+found and fixed while verifying like a hostile reviewer (minified-CSS last-declaration
+parsing, alpha compositing that collapsed translucent stacks to solid colour, `px`
+falling through a `switch` so every explicit px font-size read as 16 px).
+
+Real defects found and fixed (all in `src/styles/a11y.css`, measured before → after):
+
+| Surface                                            | Before                     | After                                                                  |
+| -------------------------------------------------- | -------------------------- | ---------------------------------------------------------------------- |
+| `.htitle .l3` hero ghost outline (stroke 25% gold) | 1.47:1 (needs 3:1 @ 42 px) | stroke 62% ≈ 3.7:1                                                     |
+| `.rev-list li` revenue list                        | 4.34:1 @ 12 px             | 0.68 alpha ≈ 6:1                                                       |
+| `.rev-pill` (worst gradient stop)                  | 4.39:1 @ 11 px             | `#ff6a56` ≈ 6:1                                                        |
+| footer brand statement group                       | 2.83:1 @ 11 px             | 0.66 white ≈ 7:1                                                       |
+| `.role-card-desc`                                  | 3.82:1 @ 10 px             | 0.70 white ≈ 7:1                                                       |
+| `.glass-modal-close` ✕                             | 3.81:1 @ 20 px             | 0.70 white ≈ 7:1                                                       |
+| `.avatar-placeholder` +                            | 1.98:1 (needs 3:1 @ 32 px) | 0.8 gold ≈ 5:1                                                         |
+| `.rm-n` numerals, `.manifesto-watermark`           | 1.05–1.06:1                | decorative → `aria-hidden="true"` (also stops SR reading stray digits) |
+
+Honest limits kept visible in the script header: cascade approximation (order, not
+full specificity), desktop media values (mobile overrides only shrink text, so a
+desktop pass is the lenient direction), pseudo-element text excluded, dynamic
+overlays audited via their literal inline-style pairs instead of the DOM.
 
 ## Assumptions
 

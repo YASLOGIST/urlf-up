@@ -77,6 +77,11 @@ jobs:
       - name: Measure bundle
         run: npm run measure
 
+      - name: WCAG AA contrast audit
+        # Static but document-aware: loads the real DOM + shipped CSS and
+        # fails on any AA contrast failure (see scripts/audit-contrast.mjs).
+        run: npm run audit:contrast
+
       - name: Compare against the recorded baseline
         # .baseline/dist is the verbatim pre-upgrade build, committed so that
         # every improvement claim stays falsifiable.

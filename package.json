@@ -3,7 +3,7 @@
   "version": "2.0.0",
   "private": true,
   "type": "module",
-  "description": "UrLife — Where Minds Meet. Vanilla-JS, zero-UI-framework marketing site and member console.",
+  "description": "UrLife \u2014 Where Minds Meet. Vanilla-JS, zero-UI-framework marketing site and member console.",
   "license": "UNLICENSED",
   "engines": {
     "node": ">=20.19"
@@ -16,6 +16,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "lint": "eslint .",
+    "audit:contrast": "node scripts/audit-contrast.mjs",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"src/**/*.{js,css}\" \"tests/**/*.js\" \"scripts/**/*.mjs\" \"*.{js,json,md}\"",
     "format:check": "prettier --check \"src/**/*.{js,css}\" \"tests/**/*.js\" \"scripts/**/*.mjs\"",
@@ -27,7 +28,7 @@
     "icons": "node scripts/generate-icons.mjs",
     "og": "node scripts/generate-og.mjs",
     "brand": "npm run icons && npm run og",
-    "verify": "npm run lint && npm run test && npm run build && npm run measure && npm run audit",
+    "verify": "npm run lint && npm run test && npm run build && npm run measure && npm run audit:contrast && npm run audit",
     "cap:sync": "npm run build && npx cap sync",
     "cap:ios": "npm run build && npx cap sync ios && npx cap open ios",
     "cap:android": "npm run build && npx cap sync android && npx cap open android"
