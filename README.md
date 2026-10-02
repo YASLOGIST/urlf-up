@@ -11,8 +11,8 @@
 </p>
 
 <p>
-  <img alt="critical path 50.3 kB gzip" src="https://img.shields.io/badge/critical%20path-50.3%20kB%20gzip-D4AF37?style=flat-square&labelColor=0B0B0B">
-  <img alt="213 specs passing" src="https://img.shields.io/badge/specs-213%20passing-D4AF37?style=flat-square&labelColor=0B0B0B">
+  <img alt="critical path 51.4 kB gzip" src="https://img.shields.io/badge/critical%20path-51.4%20kB%20gzip-D4AF37?style=flat-square&labelColor=0B0B0B">
+  <img alt="221 specs passing" src="https://img.shields.io/badge/specs-221%20passing-D4AF37?style=flat-square&labelColor=0B0B0B">
   <img alt="axe 0 violations" src="https://img.shields.io/badge/axe--core-0%20violations-D4AF37?style=flat-square&labelColor=0B0B0B">
   <img alt="2 runtime dependencies" src="https://img.shields.io/badge/runtime%20deps-2-D4AF37?style=flat-square&labelColor=0B0B0B">
   <img alt="zero UI framework" src="https://img.shields.io/badge/UI%20framework-none-FF1E00?style=flat-square&labelColor=0B0B0B">
@@ -48,9 +48,9 @@ up into a claim.
 
 | Dimension                          |                                           Measured | Enforced at                                        |
 | :--------------------------------- | -------------------------------------------------: | :------------------------------------------------- |
-| Critical path, gzip                |                     **50.3 kB** across **3 files** | build fails above 24 kB HTML / 170 kB total        |
-| Reduction vs. pre-upgrade baseline |                   **−60.9 %** (128.7 kB → 50.3 kB) | `measure:baseline` exits 1 on regression           |
-| Automated specs                    |                            **213** across 10 files | CI, every push                                     |
+| Critical path, gzip                |                     **51.4 kB** across **3 files** | build fails above 24 kB HTML / 170 kB total        |
+| Reduction vs. pre-upgrade baseline |                   **−60.1 %** (128.7 kB → 51.4 kB) | `measure:baseline` exits 1 on regression           |
+| Automated specs                    |                            **221** across 11 files | CI, every push                                     |
 | Accessibility                      |     **0** axe-core violations in **5** page states | CI, every push                                     |
 | Runtime dependencies               | **2** (`@supabase/supabase-js`, `@capacitor/core`) | contract test proves each is imported              |
 | Simulation cost                    |    **0.0108 ms/frame** @ 80 particles (was 0.0405) | `npm run bench`                                    |
@@ -161,7 +161,7 @@ stacking document listeners — which is what makes HMR and the test suite safe.
 | `index.html`        |     22.8 kB | the document, with all markup and no executable inline script |
 | `assets/main-*.js`  |     14.3 kB | boot, i18n, modals, motion, the field                      |
 | `assets/main-*.css` |     13.2 kB | the design system                                          |
-| **Total**           | **50.3 kB** | **3 requests**                                             |
+| **Total**           | **51.4 kB** | **3 requests**                                             |
 
 The 51.1 kB Supabase client sits in `vendor-supabase`, which `index.html` never
 references. It is fetched on a magic-link callback, on the first sign of CTA intent, or
@@ -245,13 +245,12 @@ erDiagram
 `src/validators.js` exports `ROLE_TYPES` as the single client-side mirror of the
 `user_role_type` enum, and a unit test asserts nothing outside it is ever accepted.
 
-> [!WARNING]
-> The console reads `ideas.user_id`, `ideas.problem_solved`, `ideas.viability_score`, the
-> view `v_top_matches` and the table `matches` — **none of which exist in
-> `nexus-schema.sql`**, which names them `author_id` and `problem_statement` and defines
-> no match relation at all. Either the committed schema or the client is stale. This is a
-> real, falsifiable defect, not a documentation nit — see
-> [§9 Known gaps](#9--known-gaps) for the 30-second resolution.
+> [!NOTE]
+> The member console now speaks the committed schema directly: idea writes use
+> `author_id` + `problem_statement`, discovery reads `ideas_public`, and the match workflow
+> is built on `idea_interests` instead of the removed `matches` / `v_top_matches`
+> prototype. The dashboard computes explainable scores client-side from profiles, skills,
+> interests and idea requirements, then persists only the durable hand-raise state.
 
 ## 1.5 Render fallback ladder
 
@@ -333,11 +332,11 @@ simulation, no backend contract · ◌ not built
 | Magic link                                                      | `boot.js` → `account.js`                            |   ●   | loaded eagerly; the token must be consumed before expiry                                    |
 | PKCE session, `storageKey: 'urlife-auth'`                       | `src/lib/supabase.js`                               |   ●   | one client, global-keyed singleton                                                          |
 | Role selection against the Postgres enum                        | `src/validators.js`                                 |   ●   | anything outside the enum is rejected                                                       |
-| Idea submission with field-level errors                         | `src/ideas.js`                                      |   ◐   | column drift vs. schema — [§9](#9--known-gaps)                                              |
-| Ideas feed                                                      | `#ideas-feed-list`                                  |   ◐   | every field written via `textContent`                                                       |
-| Match dashboard with viability rings                            | `src/dashboard.js`                                  |   ◐   | reads `v_top_matches`, absent from the schema                                               |
-| Match scoring (industry 40 % + skill overlap 60 %, accept ≥ 50) | `src/matchingEngine.js`                             |   ●   | pure function, deterministic                                                                |
-| Realtime match / idea updates                                   | `supabase.channel('nexus')`                         |   ◐   | `postgres_changes`; untested against a live project                                         |
+| Idea submission with field-level errors                         | `src/ideas.js`                                      |   ●   | schema-aligned `author_id` + `problem_statement`, auto-publishes open ideas                 |
+| Ideas feed                                                      | `#ideas-feed-list`                                  |   ●   | every field written via `textContent`; accepts current and legacy problem aliases           |
+| Nexus recommendations dashboard                                 | `src/dashboard.js`                                  |   ●   | reads `ideas_public` + `idea_interests`; no absent match table dependency                   |
+| Explainable match scoring                                       | `src/matchingEngine.js`                             |   ●   | role, fuzzy skills, industry, capital, reputation and data-confidence axes                  |
+| Realtime interest / idea updates                                | `supabase.channel('nexus')`                         |   ◐   | `postgres_changes`; untested against a live project                                         |
 | Deal room + escrow state machine                                | `src/components/DealRoom.js`, `src/escrowEngine.js` |   ○   | `Pending → Locked → Verified → Released`, **in-browser only — no custody, no payment rail** |
 | Verification badge tiers                                        | `src/components/VerificationBadge.js`               |   ○   | presentational; no issuing authority                                                        |
 | Settings + avatar upload                                        | `src/settings.js`, `src/avatar.js`                  |   ●   | Supabase Storage                                                                            |
@@ -695,7 +694,7 @@ idea is still — which is simultaneously the design decision and the compressio
 | Scheduling    | Cal.com iframe                                 | —           | The single allowed third-party frame origin.                                                                                               |
 | Visual layer  | Dependency-free WebGL2, written in-repo        | —           | Replaced `three` + `@react-three/*` + `gsap` + `lenis` (~600 kB) that **nothing imported**. 2 draw calls.                                  |
 | Native shells | Capacitor                                      | 7           | `android/`, `ios/`, `capacitor.config.ts`.                                                                                                 |
-| Tests         | Vitest + jsdom + axe-core                      | `^3.2`      | 213 specs: unit, flow, contract, accessibility.                                                                                            |
+| Tests         | Vitest + jsdom + axe-core                      | `^3.2`      | 221 specs: unit, flow, contract, accessibility.                                                                                            |
 | Lint / format | ESLint flat config + Prettier                  | `^9` / `^3` | Rules target the defect classes this codebase actually suffered, not style.                                                                |
 | Hosting       | Any static CDN                                 | —           | No server-side code of any kind.                                                                                                           |
 | Node          | ≥ 20.19                                        | —           | `engines` enforced.                                                                                                                        |
@@ -738,9 +737,9 @@ comparison stays falsifiable after the source changed.
 
 | Metric                | Baseline |         Now |           Δ |
 | :-------------------- | -------: | ----------: | ----------: |
-| Critical path, gzip   | 128.7 kB | **50.3 kB** | **−60.9 %** |
-| Critical path, brotli | 108.1 kB |     42.6 kB |     −60.6 % |
-| Critical path, raw    | 522.5 kB |    204.1 kB |     −60.9 % |
+| Critical path, gzip   | 128.7 kB | **51.4 kB** | **−60.1 %** |
+| Critical path, brotli | 108.1 kB |     43.5 kB |     −59.8 % |
+| Critical path, raw    | 522.5 kB |    209.2 kB |     −60.0 % |
 | Critical path, files  |        7 |       **3** |     −57.1 % |
 | All assets, gzip      | 129.1 kB |    127.7 kB |      −1.1 % |
 
@@ -775,7 +774,7 @@ graph LR
   P["push / PR"] --> Q["quality"]
   P --> B["build"]
   P --> D["audit"]
-  Q --> Q1["eslint"] --> Q2["prettier --check"] --> Q3["213 specs<br/>unit · flow · contract · a11y"] --> Q4["coverage + per-file thresholds"]
+  Q --> Q1["eslint"] --> Q2["prettier --check"] --> Q3["221 specs<br/>unit · flow · contract · a11y"] --> Q4["coverage + per-file thresholds"]
   B --> B1["vite build<br/>fails on inline style or size budget"] --> B2["measure"] --> B3["measure:baseline<br/>exit 1 if the critical path grew"] --> B4["bench"]
   D --> D1["npm run audit<br/>high/critical all deps"]
 ```
@@ -814,7 +813,7 @@ cp .env.example .env.local    # then fill VITE_SUPABASE_URL and VITE_SUPABASE_AN
 | `npm run dev`                                  | Vite dev server, bound to `0.0.0.0`                                                     |
 | `npm run build`                                | production build; **fails** on an inline `<style>` over 2 kB or a blown size budget     |
 | `npm run preview`                              | serve `dist/`                                                                           |
-| `npm test`                                     | 213 specs — unit, flow, contract, accessibility                                         |
+| `npm test`                                     | 221 specs — unit, flow, contract, accessibility                                         |
 | `npm run test:watch`                           | the same, in watch mode                                                                 |
 | `npm run test:coverage`                        | coverage with enforced per-file thresholds                                              |
 | `npm run lint` · `lint:fix`                    | ESLint flat config                                                                      |
@@ -870,7 +869,7 @@ scripts/
   measure-bundle.mjs       size report + baseline comparison
   bench-field.mjs          simulation and draw-call benchmark
 public/                    icons · manifest · sw.js · og-image-animated.gif · og-cover.png
-tests/                     unit · flows · contracts · a11y        (213 specs)
+tests/                     unit · flows · contracts · a11y        (221 specs)
   unit/compositor.test.js  bloom energy conservation · blur edge clamping · beam clamps
 docs/                      ARCHITECTURE.md · VERIFICATION.md · MIGRATIONS.md
 archive/                   superseded code and documents, kept for provenance
@@ -883,16 +882,14 @@ archive/                   superseded code and documents, kept for provenance
 
 Listed rather than rounded off. Each one has the cheapest action that resolves it.
 
-|   # | Gap                                                                                                                                                                                                                       | Confidence                                    | Cheapest resolution                                                                                                                                |
-| --: | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :-------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------- |
-|   1 | **Client/schema drift.** `src/ideas.js` and `src/dashboard.js` use `ideas.user_id`, `ideas.problem_solved`, `ideas.viability_score`; `nexus-schema.sql` defines `author_id`, `problem_statement` and no viability column. | **Confirmed by inspection**                   | `select column_name from information_schema.columns where table_name='ideas'` in the Supabase SQL editor — 30 s. Then fix whichever side is stale. |
-|   2 | **`matches` and `v_top_matches` are read and written by the dashboard but are absent from the committed schema.**                                                                                                         | **Confirmed by inspection**                   | `select * from pg_views where viewname='v_top_matches'` — 30 s. If missing, the match dashboard cannot work against this schema.                   |
-|   3 | Real-browser FPS, LCP and CLS                                                                                                                                                                                             | Unknown — no browser in the build environment | `npm run preview` then `npx lighthouse http://localhost:4173 --preset=desktop`                                                                     |
-|   4 | Colour contrast, screen-reader announcement quality, RTL visual layout                                                                                                                                                    | Unknown — axe cannot see rendered pixels      | One manual pass with VoiceOver/NVDA and a contrast checker; steps in `docs/VERIFICATION.md` § Limits                                               |
-|   5 | Whether the Capacitor shells still compile                                                                                                                                                                                | Unknown — needs Xcode / Android SDK           | `npm run cap:sync && npx cap open ios` on a Mac                                                                                                    |
-|   6 | Whether `VITE_CAL_LINK` is current                                                                                                                                                                                        | Unknown                                       | One HTTP `HEAD`                                                                                                                                    |
-|   7 | Production CSP violations                                                                                                                                                                                                 | Unknown                                       | Deploy with `Content-Security-Policy-Report-Only` + a report endpoint for 24 h                                                                     |
-|   8 | Escrow / deal room / verification tiers                                                                                                                                                                                   | **Simulation by design**                      | Treat as interaction scaffolding until a custody provider and an issuing authority exist                                                           |
+|   # | Gap                                                                    | Confidence                                    | Cheapest resolution                                                                            |
+| --: | :--------------------------------------------------------------------- | :-------------------------------------------- | :--------------------------------------------------------------------------------------------- |
+|   1 | Real-browser FPS, LCP and CLS                                          | Unknown — no browser in the build environment | `npm run preview` then `npx lighthouse http://localhost:4173 --preset=desktop`                 |
+|   2 | Colour contrast, screen-reader announcement quality, RTL visual layout | Unknown — axe cannot see rendered pixels      | One manual pass with VoiceOver/NVDA and a contrast checker; steps in `docs/VERIFICATION.md` § Limits |
+|   3 | Whether the Capacitor shells still compile                             | Unknown — needs Xcode / Android SDK           | `npm run cap:sync && npx cap open ios` on a Mac                                                |
+|   4 | Whether `VITE_CAL_LINK` is current                                     | Unknown                                       | One HTTP `HEAD`                                                                                |
+|   5 | Production CSP violations                                              | Unknown                                       | Deploy with `Content-Security-Policy-Report-Only` + a report endpoint for 24 h                 |
+|   6 | Escrow / deal room / verification tiers                                | **Simulation by design**                      | Treat as interaction scaffolding until a custody provider and an issuing authority exist       |
 
 ---
 

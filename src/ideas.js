@@ -56,8 +56,8 @@ export const handleIdeaSubmit = debounce(async (fields, session) => {
       sessionStorage.setItem('nexus_pending_idea', JSON.stringify({
         title: title.trim(),
         industry: industry.trim(),
-        problem_solved: problem.trim(),
-        required_skills: requiredSkills,
+        problem: problem.trim(),
+        skillsRaw: requiredSkills.join(', '),
         ts: Date.now(),
       }))
     } catch {
@@ -89,13 +89,15 @@ export const handleIdeaSubmit = debounce(async (fields, session) => {
     const { data, error } = await supabase
       .from('ideas')
       .insert({
-        user_id: session.user.id,
+        author_id: session.user.id,
         title: title.trim(),
         industry: industry.trim(),
-        problem_solved: problem.trim(),
+        problem_statement: problem.trim(),
         required_skills: requiredSkills,
+        status: 'open',
+        published_at: new Date().toISOString(),
       })
-      .select()
+      .select('id, author_id, title, industry, problem_statement, required_skills, status, published_at, created_at')
       .single()
 
     if (error) {
@@ -139,8 +141,8 @@ window.addEventListener('nexus:retry-pending-idea', ({ detail }) => {
 export async function loadUserIdeas(userId) {
   const { data, error } = await supabase
     .from('ideas')
-    .select('id, title, industry, problem_solved, required_skills, created_at')
-    .eq('user_id', userId)
+    .select('id, author_id, title, industry, problem_statement, required_skills, status, published_at, created_at')
+    .eq('author_id', userId)
     .order('created_at', { ascending: false })
     .limit(10)
 

@@ -132,35 +132,67 @@ DECLARE
     v_skills_arr TEXT[];
     v_attempt    INT := 0;
 BEGIN
-    v_full_name := COALESCE(
+    v_full_name := btrim(COALESCE(
         NEW.raw_user_meta_data->>'full_name',
         NEW.raw_user_meta_data->>'fullName',
+        split_part(NEW.email, '@', 1),
         'New Member'
-    );
+    ));
+    IF char_length(v_full_name) < 2 THEN
+        v_full_name := 'New Member';
+    END IF;
+    v_full_name := substring(v_full_name, 1, 80);
 
-    v_role := lower(COALESCE(NEW.raw_user_meta_data->>'role', 'visionary'));
+    -- The client now sends both `role_type` (schema language) and `role`
+    -- (legacy trigger language). Accept either so old confirmation links and
+    -- new registrations hydrate identically.
+    v_role := lower(COALESCE(
+        NEW.raw_user_meta_data->>'role_type',
+        NEW.raw_user_meta_data->>'role',
+        'visionary'
+    ));
     IF v_role NOT IN ('visionary', 'builder', 'enabler') THEN
         v_role := 'visionary';
     END IF;
 
-    v_skills_str := NEW.raw_user_meta_data->>'skills';
-    IF v_skills_str IS NULL OR length(trim(v_skills_str)) = 0 THEN
-        v_skills_arr := '{}'::TEXT[];
-    ELSE
-        SELECT array_agg(s) INTO v_skills_arr FROM (
-            SELECT DISTINCT trim(unnest) AS s
-            FROM unnest(string_to_array(v_skills_str, ','))
-            WHERE trim(unnest) <> ''
+    -- Skills may arrive as a JSON array (`skills_list`), a CSV string
+    -- (`skills`), or a historical CSV mirror (`skills_csv`). Normalise to a
+    -- distinct, lower-cased text[] capped to the profiles.skills constraint.
+    IF jsonb_typeof(NEW.raw_user_meta_data->'skills_list') = 'array' THEN
+        SELECT array_agg(skill) INTO v_skills_arr FROM (
+            SELECT DISTINCT lower(btrim(value)) AS skill
+            FROM jsonb_array_elements_text(NEW.raw_user_meta_data->'skills_list') AS value
+            WHERE btrim(value) <> ''
             LIMIT 20
         ) sub;
-        v_skills_arr := COALESCE(v_skills_arr, '{}'::TEXT[]);
+    ELSIF jsonb_typeof(NEW.raw_user_meta_data->'skills') = 'array' THEN
+        SELECT array_agg(skill) INTO v_skills_arr FROM (
+            SELECT DISTINCT lower(btrim(value)) AS skill
+            FROM jsonb_array_elements_text(NEW.raw_user_meta_data->'skills') AS value
+            WHERE btrim(value) <> ''
+            LIMIT 20
+        ) sub;
+    ELSE
+        v_skills_str := COALESCE(
+            NEW.raw_user_meta_data->>'skills_csv',
+            NEW.raw_user_meta_data->>'skills',
+            ''
+        );
+        SELECT array_agg(skill) INTO v_skills_arr FROM (
+            SELECT DISTINCT lower(btrim(unnest)) AS skill
+            FROM unnest(string_to_array(v_skills_str, ','))
+            WHERE btrim(unnest) <> ''
+            LIMIT 20
+        ) sub;
     END IF;
+    v_skills_arr := COALESCE(v_skills_arr, '{}'::TEXT[]);
 
     v_username := lower(regexp_replace(
         split_part(NEW.email, '@', 1), '[^a-z0-9_]', '_', 'g'
     ));
+    v_username := regexp_replace(v_username, '^_+|_+$', '', 'g');
     IF char_length(v_username) < 3 THEN
-        v_username := v_username || substr(md5(random()::text), 1, 6);
+        v_username := 'member_' || substr(replace(NEW.id::text, '-', ''), 1, 6);
     END IF;
     v_username := substring(v_username, 1, 32);
 
@@ -176,7 +208,11 @@ BEGIN
                 v_full_name,
                 v_role::user_role_type,
                 v_skills_arr
-            );
+            )
+            ON CONFLICT (id) DO UPDATE SET
+                full_name = EXCLUDED.full_name,
+                role_type = EXCLUDED.role_type,
+                skills = EXCLUDED.skills;
             EXIT;
         EXCEPTION WHEN unique_violation THEN
             v_attempt := v_attempt + 1;

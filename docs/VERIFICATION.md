@@ -17,7 +17,7 @@ npm ci
 
 npm run lint            # ESLint flat config, 0 errors expected
 npm run format:check    # Prettier, 0 differences expected
-npm run test            # 213 specs across 10 files
+npm run test            # 221 specs across 11 files
 npm run test:coverage   # coverage + per-file thresholds
 npm run build           # fails on inline-style or size-budget violations
 npm run measure         # size report for dist/
@@ -36,9 +36,9 @@ npm run verify          # lint + test + build + measure + audit in one shot
 
 | metric | baseline | final | change |
 |---|---:|---:|---:|
-| **critical path, gzip** | **128.7 kB** | **50.3 kB** | **−60.9 %** |
-| critical path, brotli | 108.1 kB | 42.6 kB | −60.6 % |
-| critical path, raw | 522.5 kB | 204.1 kB | −60.9 % |
+| **critical path, gzip** | **128.7 kB** | **51.4 kB** | **−60.1 %** |
+| critical path, brotli | 108.1 kB | 43.5 kB | −59.8 % |
+| critical path, raw | 522.5 kB | 209.2 kB | −60.0 % |
 | critical path, files | 7 | 3 | −57.1 % |
 | all assets, gzip | 129.1 kB | 127.7 kB | −1.1 % |
 | all assets, raw | 523.1 kB | 476.9 kB | −8.8 % |
@@ -182,7 +182,7 @@ and not only in JS; a visible `:focus-visible` ring exists.
 
 ## 6. Test suite
 
-`npm run test` — **213 specs, 10 files, all passing.**
+`npm run test` — **221 specs, 11 files, all passing.**
 
 | file | specs | covers |
 |---|---:|---|
@@ -282,14 +282,14 @@ These are real gaps, stated rather than papered over.
 
 | dimension | baseline | final |
 |---|---|---|
-| Critical-path payload | 128.7 kB gz, 7 files | **50.3 kB gz, 3 files** |
+| Critical-path payload | 128.7 kB gz, 7 files | **51.4 kB gz, 3 files** |
 | Module entry points | 8 | **1** |
 | Supabase clients at runtime | 2 (racing refresh timers) | **1** |
-| Automated tests | 0 | **213** |
+| Automated tests | 0 | **221** |
 | axe violations | not measured; ≥5 real defects present | **0 in 5 page states** |
 | CSP | `script-src 'unsafe-inline'`, no `frame-src` (booking iframe blocked) | hardened, 6 directives, booking works |
 | Service worker | 2 lines, cache-poisoning hazard | versioned, strategy-based, offline fallback |
 | Unused runtime dependencies | 7 (react, react-dom, three, @react-three ×2, gsap, lenis) | **0**, enforced by a test |
 | Simulation cost @ equal params | 0.0405 ms/frame | **0.0108 ms/frame** |
 | Canvas state-changing calls/frame | 585 | **90** |
-| CI | none | lint · format · 213 tests · axe · coverage thresholds · size budget · bench · audit |
+| CI | none | lint · format · 221 tests · axe · coverage thresholds · size budget · bench · audit |

@@ -279,6 +279,19 @@
           <div id="nx-ideas-list"></div>
           <div id="nx-ideas-sentinel"></div>
         </div>
+        <section id="nx-ai-matches-panel" class="nx-recommendations-panel" aria-labelledby="nx-ai-matches-title"
+          hidden="">
+          <div class="nx-section-heading">
+            <p class="nx-kicker" data-en="Nexus Intelligence" data-ar="ذكاء نيكسس">Nexus Intelligence</p>
+            <h2 id="nx-ai-matches-title" data-en="Recommended next meetings" data-ar="اجتماعات موصى بها">Recommended next
+              meetings</h2>
+            <p id="nx-ai-matches-subtitle"
+              data-en="Ranked by role fit, skills, industry interests and profile confidence."
+              data-ar="مرتبة حسب توافق الدور والمهارات واهتمامات الصناعة وثقة الملف الشخصي.">Ranked by role fit,
+              skills, industry interests and profile confidence.</p>
+          </div>
+          <div id="nx-ai-matches-list" class="nx-recommendations-list"></div>
+        </section>
         <div id="nx-matches-panel" hidden="">
           <div id="nx-matches-list"></div>
           <div id="nx-matches-sentinel"></div>
@@ -1378,8 +1391,8 @@
         <form id="register-form" novalidate="" autocomplete="on">
           <div class="field-group">
             <label for="register-name">Full Name</label>
-            <input type="text" id="register-name" name="fullName" autocomplete="name" placeholder="Your full name"
-              required="">
+            <input type="text" id="register-name" name="fullName" autocomplete="name" maxlength="80"
+              placeholder="Your full name" required="">
           </div>
           <div class="field-group">
             <label for="register-email">Email</label>
@@ -1482,7 +1495,7 @@
       </div>
       <div class="field-group">
         <label for="settings-name">Full Name</label>
-        <input type="text" id="settings-name" name="full_name" autocomplete="name" placeholder="Your full name">
+        <input type="text" id="settings-name" name="full_name" autocomplete="name" maxlength="80" placeholder="Your full name">
       </div>
       <div class="field-group" style="margin-block-start:20px;">
         <label>Your Role</label>

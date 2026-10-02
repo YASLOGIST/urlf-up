@@ -2,6 +2,7 @@ import { logger } from './lib/logger.js'
 import { supabase } from './lib/supabase.js'
 import { showToast, showError, clearError, setLoading } from './ui.js'
 import {
+  MAX_SKILLS,
   isValidFullName,
   isValidRoleType,
   isValidSkillsList,
@@ -175,11 +176,11 @@ async function _handleSubmit(e) {
 
   if (mode !== 'rapid-switch') {
     if (!isValidFullName(fullName)) {
-      showError('settings-error', 'Full name must be 2–120 characters.')
+      showError('settings-error', 'Full name must be 2–80 characters.')
       return
     }
     if (!isValidSkillsList(skills)) {
-      showError('settings-error', 'Please enter at least one skill (max 50).')
+      showError('settings-error', 'Please enter at least one skill (max 20).')
       return
     }
   }
@@ -272,13 +273,13 @@ function _initModal() {
   // Chip inputs — skills
   const skillWrap = document.getElementById('settings-skill-chips-wrap')
   if (skillWrap) {
-    _skillChipInput = makeChipInput(skillWrap, { name: 'skills', max: 50 })
+    _skillChipInput = makeChipInput(skillWrap, { name: 'skills', max: MAX_SKILLS })
   }
 
   // Chip inputs — interests
   const interestWrap = document.getElementById('settings-interest-chips-wrap')
   if (interestWrap) {
-    _interestChipInput = makeChipInput(interestWrap, { name: 'interests', max: 30 })
+    _interestChipInput = makeChipInput(interestWrap, { name: 'interests', max: MAX_SKILLS })
   }
 
   // Avatar zone

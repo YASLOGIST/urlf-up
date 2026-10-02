@@ -39,9 +39,11 @@ export function isValidPassword(password) {
   return password.length >= 8 && /[0-9]/.test(password) && /[a-zA-Z]/.test(password);
 }
 
+export const MAX_FULL_NAME = 80;
+
 export function isValidFullName(name) {
   const t = str(name);
-  return t.length >= 2 && t.length <= 120;
+  return t.length >= 2 && t.length <= MAX_FULL_NAME;
 }
 
 /** The three values of the `user_role_type` Postgres enum — nothing else. */
@@ -68,7 +70,7 @@ export function parseAndDedupeSkills(raw, max = MAX_SKILLS) {
 }
 
 export function isValidSkillsList(skills) {
-  return Array.isArray(skills) && skills.length >= 1 && skills.length <= 50;
+  return Array.isArray(skills) && skills.length >= 1 && skills.length <= MAX_SKILLS;
 }
 
 export function isValidIdeaTitle(title) {
@@ -87,7 +89,7 @@ export function isValidProblemSolved(text) {
 }
 
 export function isValidRequiredSkills(skills) {
-  return Array.isArray(skills) && skills.length <= 30;
+  return Array.isArray(skills) && skills.length <= MAX_SKILLS;
 }
 
 /** True for `https:` URLs only — used for user-supplied avatar links. */
