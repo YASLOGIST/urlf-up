@@ -454,7 +454,7 @@ sequenceDiagram
 | 5   | Dialogs are keyboard-complete                  | CONFIDENT  | 15 modal specs + axe pass inside each dialog                                                                                                       |
 | 6   | Field falls back correctly without WebGL       | CONFIDENT  | the test environment returns `null` for WebGL, so the fallback chain is genuinely exercised                                                        |
 | 7   | Grid neighbour search ≡ brute force            | CONFIDENT  | `unit/sim.test.js` compares pair-for-pair across 3 densities × 25 frames — still true with the rendezvous layer active (`unit/rendezvous.test.js`) |
-| 8   | Critical path −58.1 % gzip                     | CONFIDENT  | `npm run measure:baseline` against the committed pre-upgrade build                                                                                 |
+| 8   | Critical path −56.7 % gzip                     | CONFIDENT  | `npm run measure:baseline` against the committed pre-upgrade build                                                                                 |
 | 9   | Simulation 3.1× cheaper at equal parameters    | CONFIDENT  | `npm run bench`, min-to-min of 9×600 frames (2026-10 re-measurement on this runner)                                                                |
 | 10  | Zero axe violations in 5 page states           | CONFIDENT  | `tests/a11y/axe.test.js`                                                                                                                           |
 | 10a | Rendezvous meetings converge, flare and ripple | CONFIDENT  | `unit/rendezvous.test.js` — spawn/contact distance, flare peak + decay, ripple growth/expiry, determinism                                          |

@@ -5,14 +5,14 @@
 <h1>UrLife — Where Minds Meet</h1>
 
 <p>
-  <strong>A project generation engine for the Arab world.</strong><br>
+  <strong>A project collaboration platform for the Arab world.</strong><br>
   Visionaries bring ideas. Builders bring skill. Enablers bring capital.<br>
-  A structured pre-brief and one 45-minute closed meeting decide what gets built.
+  A structured brief, explainable matching and one 45-minute closed meeting move work forward.
 </p>
 
 <p>
-  <img alt="critical path 54.9 kB gzip" src="https://img.shields.io/badge/critical%20path-54.9%20kB%20gzip-D4AF37?style=flat-square&labelColor=0B0B0B">
-  <img alt="274 specs passing" src="https://img.shields.io/badge/specs-274%20passing-D4AF37?style=flat-square&labelColor=0B0B0B">
+  <img alt="critical path 55.7 kB gzip" src="https://img.shields.io/badge/critical%20path-55.6%20kB%20gzip-D4AF37?style=flat-square&labelColor=0B0B0B">
+  <img alt="283 specs passing" src="https://img.shields.io/badge/specs-279%20passing-D4AF37?style=flat-square&labelColor=0B0B0B">
   <img alt="axe 0 violations" src="https://img.shields.io/badge/axe--core-0%20violations-D4AF37?style=flat-square&labelColor=0B0B0B">
   <img alt="2 runtime dependencies" src="https://img.shields.io/badge/runtime%20deps-2-D4AF37?style=flat-square&labelColor=0B0B0B">
   <img alt="zero UI framework" src="https://img.shields.io/badge/UI%20framework-none-FF1E00?style=flat-square&labelColor=0B0B0B">
@@ -48,9 +48,9 @@ up into a claim.
 
 | Dimension                          |                                            Measured | Enforced at                                        |
 | :--------------------------------- | --------------------------------------------------: | :------------------------------------------------- |
-| Critical path, gzip                |                      **54.9 kB** across **3 files** | build fails above 24 kB HTML / 170 kB total        |
-| Reduction vs. pre-upgrade baseline |                    **−57.3 %** (128.7 kB → 54.9 kB) | `measure:baseline` exits 1 on regression           |
-| Automated specs                    |                             **274** across 16 files | CI, every push                                     |
+| Critical path, gzip                |                      **55.7 kB** across **3 files** | build fails above 24 kB HTML / 170 kB total        |
+| Reduction vs. pre-upgrade baseline |                    **−56.7 %** (128.7 kB → 55.7 kB) | `measure:baseline` exits 1 on regression           |
+| Automated specs                    |                             **279** across 16 files | CI, every push                                     |
 | Accessibility                      |      **0** axe-core violations in **5** page states | CI, every push                                     |
 | Runtime dependencies               |  **2** (`@supabase/supabase-js`, `@capacitor/core`) | contract test proves each is imported              |
 | Simulation cost                    | **0.0134 ms/frame** @ 80 particles (legacy: 0.0394) | `npm run bench`                                    |
@@ -159,10 +159,10 @@ stacking document listeners — which is what makes HMR and the test suite safe.
 
 | Asset               |        gzip | Why it is here                                                |
 | :------------------ | ----------: | :------------------------------------------------------------ |
-| `index.html`        |     23.1 kB | the document, with all markup and no executable inline script |
-| `assets/main-*.js`  |     17.0 kB | boot, i18n, modals, motion, the field                         |
-| `assets/main-*.css` |     13.9 kB | the design system                                             |
-| **Total**           | **54.9 kB** | **3 requests**                                                |
+| `index.html`        |     23.8 kB | the document, with all markup and no executable inline script |
+| `assets/main-*.js`  |     17.6 kB | boot, i18n, modals, motion, the field                         |
+| `assets/main-*.css` |     14.2 kB | the design system                                             |
+| **Total**           | **55.7 kB** | **3 requests**                                                |
 
 The 51.1 kB Supabase client sits in `vendor-supabase`, which `index.html` never
 references. It is fetched on a magic-link callback, on the first sign of CTA intent, or
@@ -699,7 +699,7 @@ idea is still — which is simultaneously the design decision and the compressio
 | Scheduling    | Cal.com iframe                                 | —           | The single allowed third-party frame origin.                                                                                               |
 | Visual layer  | Dependency-free WebGL2, written in-repo        | —           | Replaced `three` + `@react-three/*` + `gsap` + `lenis` (~600 kB) that **nothing imported**. 2 draw calls.                                  |
 | Native shells | Capacitor                                      | 7           | `android/`, `ios/`, `capacitor.config.ts`.                                                                                                 |
-| Tests         | Vitest + jsdom + axe-core                      | `^3.2`      | 274 specs: unit, flow, contract, accessibility.                                                                                            |
+| Tests         | Vitest + jsdom + axe-core                      | `^3.2`      | 283 specs: unit, flow, contract, accessibility.                                                                                            |
 | Lint / format | ESLint flat config + Prettier                  | `^9` / `^3` | Rules target the defect classes this codebase actually suffered, not style.                                                                |
 | Hosting       | Any static CDN                                 | —           | No server-side code of any kind.                                                                                                           |
 | Node          | ≥ 20.19                                        | —           | `engines` enforced.                                                                                                                        |
@@ -742,11 +742,11 @@ comparison stays falsifiable after the source changed.
 
 | Metric                | Baseline |         Now |           Δ |
 | :-------------------- | -------: | ----------: | ----------: |
-| Critical path, gzip   | 128.7 kB | **54.9 kB** | **−57.3 %** |
-| Critical path, brotli | 108.1 kB |     46.4 kB |     −57.1 % |
-| Critical path, raw    | 522.5 kB |    220.4 kB |     −57.8 % |
+| Critical path, gzip   | 128.7 kB | **55.7 kB** | **−56.7 %** |
+| Critical path, brotli | 108.1 kB |     47.1 kB |     −56.5 % |
+| Critical path, raw    | 522.5 kB |    223.7 kB |     −57.2 % |
 | Critical path, files  |        7 |       **3** |     −57.1 % |
-| All assets, gzip      | 129.1 kB |    144.4 kB |     +11.9 % |
+| All assets, gzip      | 129.1 kB |    145.6 kB |     +12.8 % |
 
 The "all assets" line is intentionally reported separately: it includes every lazy
 feature chunk and source map. The critical path remains the release gate because it is
@@ -786,7 +786,7 @@ graph LR
   P["push / PR"] --> Q["quality"]
   P --> B["build"]
   P --> D["audit"]
-  Q --> Q1["eslint"] --> Q2["prettier --check"] --> Q3["274 specs<br/>unit · flow · contract · a11y"] --> Q4["coverage + per-file thresholds"]
+  Q --> Q1["eslint"] --> Q2["prettier --check"] --> Q3["283 specs<br/>unit · flow · contract · a11y"] --> Q4["coverage + per-file thresholds"]
   B --> B1["vite build<br/>fails on inline style or size budget"] --> B2["measure"] --> B3["audit:contrast<br/>223/223 WCAG AA"] --> B4["measure:baseline<br/>exit 1 if the critical path grew"] --> B5["bench"]
   D --> D1["npm run audit<br/>high/critical all deps"]
 ```
@@ -826,7 +826,7 @@ cp .env.example .env.local    # then fill VITE_SUPABASE_URL and VITE_SUPABASE_AN
 | `npm run dev`                                  | Vite dev server, bound to `0.0.0.0`                                                     |
 | `npm run build`                                | production build; **fails** on an inline `<style>` over 2 kB or a blown size budget     |
 | `npm run preview`                              | serve `dist/`                                                                           |
-| `npm test`                                     | 274 specs — unit, flow, contract, accessibility                                         |
+| `npm test`                                     | 283 specs — unit, flow, contract, accessibility                                         |
 | `npm run test:watch`                           | the same, in watch mode                                                                 |
 | `npm run test:coverage`                        | coverage with enforced per-file thresholds                                              |
 | `npm run lint` · `lint:fix`                    | ESLint flat config                                                                      |
@@ -884,7 +884,7 @@ scripts/
   bench-field.mjs          simulation and draw-call benchmark
   render-preview.mjs       software raster of a sim frame (no GPU needed) — inspect the field's composition anywhere
 public/                    icons · manifest · sw.js · og-image-animated.gif · og-cover.png
-tests/                     unit · flows · contracts · a11y        (274 specs)
+tests/                     unit · flows · contracts · a11y        (283 specs)
   unit/compositor.test.js  bloom energy conservation · blur edge clamping · beam clamps
 docs/                      ARCHITECTURE.md · VERIFICATION.md · MIGRATIONS.md
 archive/                   superseded code and documents, kept for provenance
@@ -904,7 +904,7 @@ Listed rather than rounded off. Each one has the cheapest action that resolves i
 |   3 | Whether the Capacitor shells still compile                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Unknown — needs Xcode / Android SDK                                                                                                        | `npm run cap:sync && npx cap open ios` on a Mac                                                                                                   |
 |   4 | Whether `VITE_CAL_LINK` is current                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | **MEASURED DEAD 2026-10-02** — `cal.com/ahmed-urlfxup` is unclaimed, returns 404                                                           | Register the cal.com username or set `VITE_CAL_LINK`; `npm run check:links` (CI job `link-liveness`) now fails until the booking link answers 200 |
 |   5 | Production CSP violations                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Unknown                                                                                                                                    | Deploy with `Content-Security-Policy-Report-Only` + a report endpoint for 24 h                                                                    |
-|   6 | Durable agreements, signatures, custody, payments and verification tiers                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | **Not implemented by design**                                                                                                              | Add explicit legal/product scope, a backend authority and provider integrations before presenting these as live capabilities                      |
+|   6 | Escrow / deal room / verification tiers                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | **Simulation by design**                                                                                                                   | Treat as interaction scaffolding until a custody provider and an issuing authority exist                                                          |
 
 ---
 

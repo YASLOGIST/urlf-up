@@ -17,7 +17,7 @@ npm ci
 
 npm run lint            # ESLint flat config, 0 errors expected
 npm run format:check    # Prettier, 0 differences expected
-npm run test            # 274 specs across 16 files
+npm run test            # 283 specs across 18 files
 npm run test:coverage   # coverage + per-file thresholds
 npm run build           # fails on inline-style or size-budget violations
 npm run measure         # size report for dist/
@@ -36,14 +36,14 @@ npm run verify          # lint + test + build + measure + audit in one shot
 
 | metric                  |     baseline |       final |      change |
 | ----------------------- | -----------: | ----------: | ----------: |
-| **critical path, gzip** | **128.7 kB** | **54.9 kB** | **−57.3 %** |
-| critical path, brotli   |     108.1 kB |     46.4 kB |     −57.1 % |
-| critical path, raw      |     522.5 kB |    220.4 kB |     −57.8 % |
+| **critical path, gzip** | **128.7 kB** | **55.7 kB** | **−56.7 %** |
+| critical path, brotli   |     108.1 kB |     47.1 kB |     −56.5 % |
+| critical path, raw      |     522.5 kB |    223.7 kB |     −57.2 % |
 | critical path, files    |            7 |           3 |     −57.1 % |
-| all assets, gzip        |     129.1 kB |    144.4 kB |     +11.9 % |
-| all assets, raw         |     523.1 kB |    530.3 kB |      +1.4 % |
+| all assets, gzip        |     129.1 kB |    145.6 kB |     +12.8 % |
+| all assets, raw         |     523.1 kB |    534.6 kB |      +2.2 % |
 
-> The critical-path baseline gate (`measure:baseline`) passes with **73.7 kB gzip**
+> The critical-path baseline gate (`measure:baseline`) passes with **72.9 kB gzip**
 > of headroom. The all-assets row also includes every optional lazy feature and its
 > source map, so it is reported separately from first-paint cost.
 
@@ -234,7 +234,7 @@ and not only in JS; a visible `:focus-visible` ring exists.
 
 ## 6. Test suite
 
-`npm run test` — **274 specs, 16 files, all passing.**
+`npm run test` — **283 specs, 18 files, all passing.**
 
 | file                                  | specs | covers                                                                                                               |
 | ------------------------------------- | ----: | -------------------------------------------------------------------------------------------------------------------- |
@@ -245,12 +245,14 @@ and not only in JS; a visible `:focus-visible` ring exists.
 | `tests/unit/renderer-2d.test.js`      |     5 | stroke budget (≤ 6 bands + ≤ 3 rings), ember heart only while flaring, depth sprite ladder, DPR sizing               |
 | `tests/unit/compositor.test.js`       |    10 | SDF/bloom compositor invariants for generated brand assets                                                           |
 | `tests/unit/lib.test.js`              |    43 | logger + redaction, env, **device-tier mapping**, validators, sanitize, degraded-mode client                         |
+| `tests/unit/avatar.test.js`           |     2 | upload validation and safe avatar preview behaviour                                                                  |
 | `tests/unit/matching.test.js`         |     6 | matching-engine scoring invariants                                                                                   |
-| `tests/flows/i18n.test.js`            |    14 | EN⇄AR switching, persistence, `renderRichText` XSS                                                                   |
+| `tests/flows/i18n.test.js`            |    15 | EN⇄AR switching, responsive-menu labels, persistence, `renderRichText` XSS                                           |
 | `tests/flows/modal.test.js`           |    15 | focus trap/restore, inert, ESC stacking, scroll lock                                                                 |
 | `tests/flows/auth-and-ideas.test.js`  |    15 | sign-in, registration, magic link, idea submission, role gate                                                        |
 | `tests/flows/boot-and-motion.test.js` |    27 | boot order, idempotency, lazy account loading, motion preference changes, field fallback chain + scroll camera       |
 | `tests/flows/ui-and-network.test.js`  |    31 | error slots, toasts, loading, offline, degraded notice, pointer fx                                                   |
+| `tests/flows/navigation.test.js`      |     6 | responsive primary navigation, focus handling and viewport transitions                                               |
 | `tests/flows/console-i18n.test.js`    |    18 | bilingual console and dashboard re-rendering, safe translated markup                                                 |
 | `tests/flows/deal-room.test.js`       |     3 | shared dialog lifecycle, local-draft validation/truth boundary, Arabic rendering                                     |
 | `tests/a11y/axe.test.js`              |    13 | five axe page states plus structural invariants                                                                      |
@@ -266,10 +268,10 @@ page — is invisible to fixture-based tests.
 
 | scope         | statements | branches | functions |
 | ------------- | ---------: | -------: | --------: |
-| whole `src/`  |     78.1 % |   76.2 % |    70.9 % |
-| `src/app/`    |     83.3 % |   78.9 % |    82.4 % |
+| whole `src/`  |     78.5 % |   76.4 % |    71.7 % |
+| `src/app/`    |     84.4 % |   79.7 % |    83.8 % |
 | `src/motion/` |     93.2 % |   77.6 % |    81.8 % |
-| `src/visual/` |     95.5 % |   82.8 % |    78.9 % |
+| `src/visual/` |     95.5 % |   82.8 % |    78.8 % |
 | `src/lib/`    |     82.1 % |   83.7 % |    63.5 % |
 
 Per-file thresholds are enforced in `vitest.config.js` and fail CI. They are
@@ -341,14 +343,14 @@ These are real gaps, stated rather than papered over.
 
 | dimension                         | baseline                                                              | final                                                                                                                           |
 | --------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| Critical-path payload             | 128.7 kB gz, 7 files                                                  | **51.4 kB gz, 3 files**                                                                                                         |
+| Critical-path payload             | 128.7 kB gz, 7 files                                                  | **55.7 kB gz, 3 files**                                                                                                         |
 | Module entry points               | 8                                                                     | **1**                                                                                                                           |
 | Supabase clients at runtime       | 2 (racing refresh timers)                                             | **1**                                                                                                                           |
-| Automated tests                   | 0                                                                     | **274**                                                                                                                         |
+| Automated tests                   | 0                                                                     | **283**                                                                                                                         |
 | axe violations                    | not measured; ≥5 real defects present                                 | **0 in 5 page states**                                                                                                          |
 | CSP                               | `script-src 'unsafe-inline'`, no `frame-src` (booking iframe blocked) | hardened, 6 directives, booking works                                                                                           |
 | Service worker                    | 2 lines, cache-poisoning hazard                                       | versioned, strategy-based, offline fallback                                                                                     |
 | Unused runtime dependencies       | 7 (react, react-dom, three, @react-three ×2, gsap, lenis)             | **0**, enforced by a test                                                                                                       |
 | Simulation cost @ equal params    | 0.0405 ms/frame                                                       | **0.0108 ms/frame**                                                                                                             |
 | Canvas state-changing calls/frame | 585                                                                   | **90**                                                                                                                          |
-| CI                                | none                                                                  | lint · format · 274 tests · axe · coverage thresholds · size budget · contrast audit · bench · dependency audit · link liveness |
+| CI                                | none                                                                  | lint · format · 283 tests · axe · coverage thresholds · size budget · contrast audit · bench · dependency audit · link liveness |

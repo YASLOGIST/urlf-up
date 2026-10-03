@@ -51,19 +51,19 @@
 
 ## W7 verification (final measured state)
 
-- **PASS:** `npm run verify` — ESLint; **274/274** specs across 16 files;
+- **PASS:** `npm run verify` — ESLint; **283/283** specs across 18 files;
   production Vite build; bundle measure; **223/223** static contrast checks;
   and zero high/critical dependency advisories. The audit reports three
   lower-severity advisories, which were not force-upgraded without review.
-- **PASS:** `npm run test:coverage` — 78.1% statements, 76.2% branches and
-  70.9% functions across `src/`; configured global and per-file thresholds
+- **PASS:** `npm run test:coverage` — 78.5% statements, 76.4% branches and
+  71.7% functions across `src/`; configured global and per-file thresholds
   passed. The new terms workspace is 98.2% line-covered.
-- **PASS:** `npm run measure:baseline` — critical path **54.9 kB gzip**, three
-  files, **73.7 kB / 57.3% smaller** than the committed baseline. All assets:
-  144.4 kB gzip; optional dashboard/terms CSS remains lazy.
+- **PASS:** `npm run measure:baseline` — critical path **55.7 kB gzip**, three
+  files, **72.9 kB / 56.7% smaller** than the committed baseline. All assets:
+  145.6 kB gzip; optional dashboard/terms CSS remains lazy.
 - **PASS:** `npm run bench` — shipping high-tier field simulation median
-  0.0236 ms/frame (minimum 0.0227 ms); the spatial-hash implementation was
-  3.33× faster than the legacy minimum in the final run’s benchmark headline.
+  0.0233 ms/frame (minimum 0.0226 ms); the spatial-hash implementation was
+  2.97× faster than the legacy minimum in the final run’s benchmark headline.
 - **PASS:** `git diff --check`; no stale `escrowEngine` references remain in
   active source or current documentation. The production build emits a separate
   3.3 kB raw dashboard/terms stylesheet, so the new workspace does not inflate
@@ -184,3 +184,22 @@ overlays audited via their literal inline-style pairs instead of the DOM.
 - Did not replace or "improve" the dead Cal link with an invented one.
 - No UI framework, no new runtime deps (dictionary is plain JS) — preserves the
   2-runtime-dependency contract.
+
+---
+
+## Run — 2026-10-03 (APEX V14)
+
+- **Mode / depth:** UPGRADE · STANDARD
+- **Baseline:** `npm run verify` passed after dependency install; 277 specs,
+  55.6 kB gzip critical path, 223/223 static contrast checks.
+- **Finding:** local avatar uploads produced base64 data URLs, while the committed
+  database constraint accepts HTTPS URLs only. Every uploaded avatar therefore
+  failed at profile save. The implementation also assumed `OffscreenCanvas`,
+  excluding Safari / the iOS Capacitor shell.
+- **Resolution:** avatar images are now bounded, centre-cropped WebP blobs uploaded
+  to an RLS-protected Supabase Storage path before the HTTPS URL is saved. Added
+  HTML-canvas fallback, bitmap/object-URL cleanup, localized size failures,
+  HTTPS-only remote URLs, bucket migration/rollback notes, and two regression specs.
+- **Deployment dependency:** apply the idempotent Storage section in
+  `nexus-schema.sql` before deploying this client. No production migration was
+  executed from this workspace.

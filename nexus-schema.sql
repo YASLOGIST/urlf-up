@@ -9,6 +9,27 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "citext";
 CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 
+-- Public avatar assets. Each account can only write inside its own UUID folder;
+-- the bucket is public because avatar URLs appear in public profile views.
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('avatars', 'avatars', true, 250000, ARRAY['image/webp'])
+ON CONFLICT (id) DO UPDATE SET
+    public = EXCLUDED.public,
+    file_size_limit = EXCLUDED.file_size_limit,
+    allowed_mime_types = EXCLUDED.allowed_mime_types;
+
+DROP POLICY IF EXISTS "avatar_insert_own" ON storage.objects;
+DROP POLICY IF EXISTS "avatar_update_own" ON storage.objects;
+DROP POLICY IF EXISTS "avatar_delete_own" ON storage.objects;
+
+CREATE POLICY "avatar_insert_own" ON storage.objects FOR INSERT TO authenticated
+WITH CHECK (bucket_id = 'avatars' AND (storage.foldername(name))[1] = auth.uid()::text);
+CREATE POLICY "avatar_update_own" ON storage.objects FOR UPDATE TO authenticated
+USING (bucket_id = 'avatars' AND (storage.foldername(name))[1] = auth.uid()::text)
+WITH CHECK (bucket_id = 'avatars' AND (storage.foldername(name))[1] = auth.uid()::text);
+CREATE POLICY "avatar_delete_own" ON storage.objects FOR DELETE TO authenticated
+USING (bucket_id = 'avatars' AND (storage.foldername(name))[1] = auth.uid()::text);
+
 -- 1. ENUMS
 DO $$ BEGIN
     CREATE TYPE user_role_type AS ENUM ('visionary', 'builder', 'enabler');
