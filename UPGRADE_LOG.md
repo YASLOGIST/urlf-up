@@ -97,3 +97,22 @@ overlays audited via their literal inline-style pairs instead of the DOM.
 - Did not replace or "improve" the dead Cal link with an invented one.
 - No UI framework, no new runtime deps (dictionary is plain JS) — preserves the
   2-runtime-dependency contract.
+
+---
+
+## Run — 2026-10-03 (APEX V14)
+
+- **Mode / depth:** UPGRADE · STANDARD
+- **Baseline:** `npm run verify` passed after dependency install; 277 specs,
+  55.6 kB gzip critical path, 223/223 static contrast checks.
+- **Finding:** local avatar uploads produced base64 data URLs, while the committed
+  database constraint accepts HTTPS URLs only. Every uploaded avatar therefore
+  failed at profile save. The implementation also assumed `OffscreenCanvas`,
+  excluding Safari / the iOS Capacitor shell.
+- **Resolution:** avatar images are now bounded, centre-cropped WebP blobs uploaded
+  to an RLS-protected Supabase Storage path before the HTTPS URL is saved. Added
+  HTML-canvas fallback, bitmap/object-URL cleanup, localized size failures,
+  HTTPS-only remote URLs, bucket migration/rollback notes, and two regression specs.
+- **Deployment dependency:** apply the idempotent Storage section in
+  `nexus-schema.sql` before deploying this client. No production migration was
+  executed from this workspace.
