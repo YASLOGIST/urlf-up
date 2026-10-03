@@ -7,7 +7,7 @@
 
   <title>UrLife — Where Minds Meet</title>
   <meta name="description"
-    content="UrLife is a project generation engine: ambitious ideas meet the right people, get filtered by AI, and become real businesses. Zero financial barriers, 100% merit-based.">
+    content="UrLife is a project collaboration platform: submit a real problem, find complementary operators, and move from a first brief to a private decision.">
   <link rel="canonical" href="https://urlifeisup.com/">
   <meta name="robots" content="index, follow, max-image-preview:large">
   <link rel="alternate" hreflang="en" href="https://urlifeisup.com/?lang=en">
@@ -28,7 +28,7 @@
   <meta property="og:locale:alternate" content="ar_EG">
   <meta property="og:title" content="UrLife — Where Minds Meet">
   <meta property="og:description"
-    content="A project generation engine. Ambitious ideas meet the right people, get filtered by AI, and become real businesses.">
+    content="A project collaboration platform. Submit a real problem, find complementary operators, and move from a first brief to a private decision.">
   <meta property="og:url" content="https://urlifeisup.com/">
   <meta property="og:image" content="https://urlifeisup.com/og-image-animated.gif">
   <meta property="og:image:type" content="image/gif">
@@ -43,7 +43,7 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="UrLife — Where Minds Meet">
   <meta name="twitter:description"
-    content="A project generation engine. Ambitious ideas meet the right people, get filtered by AI, and become real businesses.">
+    content="A project collaboration platform. Submit a real problem, find complementary operators, and move from a first brief to a private decision.">
   <meta name="twitter:image" content="https://urlifeisup.com/og-image-animated.gif">
   <meta name="twitter:image:alt"
     content="UR LF ✘ UP — Where Minds Meet. Visionary, Builder and Enabler converging on one mark.">
@@ -88,7 +88,7 @@
              object-src 'none';
              form-action 'self';
              frame-ancestors 'none';
-             script-src 'self' 'sha256-1mk8jjMyLpqJdMSeBqkHNIhPDE9P5sZngKdk2eO9FCo=';
+             script-src 'self' 'sha256-wL+uKAP6lH+8SJpfmC9EcYxUZYNrbUzRdkp+st28O5U=';
              style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
              font-src 'self' https://fonts.gstatic.com;
              img-src 'self' data: blob: https:;
@@ -118,7 +118,7 @@
     "url": "https://urlifeisup.com/",
     "logo": "https://urlifeisup.com/icons/icon-512.png",
     "image": "https://urlifeisup.com/og-cover.png",
-    "description": "A project generation engine where ambitious ideas meet the right people, get filtered by AI, and become real businesses.",
+    "description": "A project collaboration platform where ideas meet complementary operators and move from a first brief to a private decision.",
     "email": "ops@urlifeisup.com",
     "knowsLanguage": ["en", "ar"]
   }
@@ -166,7 +166,7 @@
       <a class="nav-logo" href="#main"><span class="text-2xl font-bold text-white">UR LF <span
             style="color: #D4A373;">✘</span>
           <span style="color: #ef4444;">UP ™</span></span></a>
-      <div class="nav-links">
+      <div class="nav-links" id="primary-links">
         <a href="#how" data-en="How It Works" data-ar="كيف يعمل">How It Works</a>
         <a href="#roles" data-en="Who It's For" data-ar="لمن هذه المنصة">Who It's For</a>
         <a href="#meeting" data-en="Closed Meeting" data-ar="الاجتماع المغلق">Closed Meeting</a>
@@ -199,6 +199,13 @@
         </div>
         <button id="nav-meeting-btn" type="button" class="nav-cta" data-en="Request a Meeting"
           data-ar="اطلب اجتماعاً">Request a Meeting</button>
+        <button id="nav-menu-btn" class="nav-burger" type="button" aria-controls="primary-links"
+          aria-expanded="false" aria-label="Open navigation" data-en-aria-label="Open navigation"
+          data-ar-aria-label="فتح القائمة">
+          <span aria-hidden="true"></span>
+          <span aria-hidden="true"></span>
+          <span aria-hidden="true"></span>
+        </button>
       </div>
     </nav>
 
@@ -219,8 +226,7 @@
 
       <div class="hero-tag">
         <span class="dot"></span>
-        <span data-en="Where Minds Build Empires" data-ar="حيث تبني العقول الإمبراطوريات">Where Minds Build
-          Empires</span>
+        <span data-en="A clearer path from idea to action" data-ar="طريق أوضح من الفكرة إلى الفعل">A clearer path from idea to action</span>
       </div>
 
       <h1 class="htitle" id="hero-title" data-reveal="rise">
@@ -231,11 +237,11 @@
 
       <p class="hero-desc">
         <span
-          data-en="UrLife is not a social network. It's a &lt;strong&gt;project generation engine&lt;/strong&gt; — where ambitious ideas meet the right people, get filtered by AI, and transform into real businesses. &lt;strong&gt;Zero financial barriers. 100% merit-based.&lt;/strong&gt;"
-          data-ar="UrLife ليست شبكة اجتماعية. إنه &lt;strong&gt;محرك توليد المشاريع&lt;/strong&gt; — حيث تلتقي الأفكار الطموحة بالأشخاص المناسبين، تُفلتَر بالذكاء الاصطناعي، وتتحول إلى أعمال حقيقية. &lt;strong&gt;صفر حواجز مالية. 100% قائم على الجدارة.&lt;/strong&gt;">UrLife
-          is not a social network. It's a <strong>project generation engine</strong> — where ambitious ideas meet the
-          right people, get filtered by AI, and transform into real businesses. <strong>Zero financial barriers. 100%
-            merit-based.</strong></span>
+          data-en="UrLife is not a social network. It's a &lt;strong&gt;project collaboration platform&lt;/strong&gt; — bring a real problem, find complementary operators, and turn a first brief into a private decision. &lt;strong&gt;Contribute with an idea, a skill, or capital.&lt;/strong&gt;"
+          data-ar="UrLife ليست شبكة اجتماعية. إنها &lt;strong&gt;منصة للتعاون على المشاريع&lt;/strong&gt; — اطرح مشكلة حقيقية، واعثر على منفّذين متكاملين، وحوّل الموجز الأول إلى قرار خاص. &lt;strong&gt;ساهم بفكرة أو مهارة أو رأس مال.&lt;/strong&gt;">UrLife
+          is not a social network. It's a <strong>project collaboration platform</strong> — bring a real problem, find
+          complementary operators, and turn a first brief into a private decision. <strong>Contribute with an idea, a
+            skill, or capital.</strong></span>
       </p>
 
       <div class="hero-btns" data-reveal="fade" data-stagger="60">
@@ -261,7 +267,7 @@
         </div>
         <div class="hstat">
           <span class="hstat-v">AI</span>
-          <span class="hstat-l" data-en="Powered Matching Engine" data-ar="محرك مطابقة بالذكاء الاصطناعي">Powered
+          <span class="hstat-l" data-en="Explainable Matching Engine" data-ar="محرك مطابقة قابل للتفسير">Explainable
             Matching Engine</span>
         </div>
       </div>
@@ -346,12 +352,12 @@
                 <line x1="8" y1="16" x2="8" y2="16"></line>
                 <line x1="16" y1="16" x2="16" y2="16"></line>
               </svg></div>
-            <h3 data-en="AI Evaluation" data-ar="تقييم الذكاء الاصطناعي">AI Evaluation</h3>
-            <p data-en="GPT-4 analyzes viability, market size, and feasibility. A Viability Score from 0–100 is generated instantly."
-              data-ar="يحلل GPT-4 الجدوى وحجم السوق والقابلية للتنفيذ. يُولَّد Viability Score من 0 إلى 100 فوراً.">
-              GPT-4 analyzes viability, market size, and feasibility. A Viability Score from 0–100 is generated
-              instantly.</p>
-            <span class="ps-time" data-en="Automatic" data-ar="تلقائي">Automatic</span>
+            <h3 data-en="Structured Review" data-ar="مراجعة منظمة">Structured Review</h3>
+            <p data-en="A consistent review surfaces the problem, constraints, and open questions before anyone spends time in a meeting."
+              data-ar="تكشف مراجعة متسقة المشكلة والقيود والأسئلة المفتوحة قبل أن يخصص أي شخص وقتاً للاجتماع.">
+              A consistent review surfaces the problem, constraints, and open questions before anyone spends time in a
+              meeting.</p>
+            <span class="ps-time" data-en="Review" data-ar="مراجعة">Review</span>
           </div>
           <div class="ps">
             <span class="ps-num">STEP 03</span>
@@ -375,10 +381,10 @@
                 </path>
               </svg></div>
             <h3 data-en="Team Assembly" data-ar="تجميع الفريق">Team Assembly</h3>
-            <p data-en="AI matches the idea with Builders and experts from the platform based on complementary skills and ambition alignment."
-              data-ar="يطابق الذكاء الاصطناعي الفكرة مع البنّائين والخبراء من المنصة بناءً على المهارات التكميلية.">AI
-              matches the idea with Builders and experts from the platform based on complementary skills and ambition
-              alignment.</p>
+            <p data-en="The matching engine recommends Builders and experts from the platform using complementary skills, industries, and role fit."
+              data-ar="يقترح محرك المطابقة البنّائين والخبراء من المنصة باستخدام المهارات والصناعات وتوافق الأدوار.">The
+              matching engine recommends Builders and experts from the platform using complementary skills, industries,
+              and role fit.</p>
             <span class="ps-time" data-en="48–72h" data-ar="48–72 ساعة">48–72h</span>
           </div>
           <div class="ps" style="border-color:var(--goldl);">
@@ -414,10 +420,10 @@
         data-ar="3 أنواع من العقول&lt;br&gt;&lt;span class='g'&gt;تكمل بعضها&lt;/span&gt;">3 Types of Minds<br><span
           class="g">That Complete Each Other</span></h2>
       <p class="sec-body"
-        data-en="Every person on UrLife has something to give and something to gain. The AI matching engine ensures everyone finds exactly who completes them."
-        data-ar="كل شخص على UrLife لديه ما يعطيه وما يكسبه. يضمن محرك المطابقة الذكي أن يجد كل شخص من يكمله بالضبط.">
-        Every person on UrLife has something to give and something to gain. The AI matching engine ensures everyone
-        finds exactly who completes them.</p>
+        data-en="Every person on UrLife has something to give and something to gain. The matching engine makes the reasoning visible, so people can see why a counterpart is a fit."
+        data-ar="كل شخص على UrLife لديه ما يعطيه وما يكسبه. يجعل محرك المطابقة أسباب الترشيح واضحة، حتى يعرف كل شخص لماذا يناسبه الطرف الآخر.">
+        Every person on UrLife has something to give and something to gain. The matching engine makes the reasoning visible,
+        so people can see why a counterpart is a fit.</p>
 
       <div class="roles-grid reveal-3d" data-stagger="80">
         <div class="role-card rc-gold">
@@ -530,17 +536,17 @@
                 <polyline points="22,6 12,13 2,6"></polyline>
               </svg></div>
             <h4 data-en="Meeting Request" data-ar="طلب الاجتماع">Meeting Request</h4>
-            <p data-en="Submitted after AI Viability Score ≥60" data-ar="يُقدَّم بعد Viability Score ≥60">Submitted
-              after AI Viability Score ≥60</p>
+            <p data-en="Requested after a structured brief review" data-ar="يُطلب بعد مراجعة الموجز المنظم">Requested after a
+              structured brief review</p>
           </div>
           <div class="mbs">
             <div class="mbs-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
               </svg></div>
-            <h4 data-en="Pre-Meeting AI Brief" data-ar="ملخص AI قبل الاجتماع">Pre-Meeting AI Brief</h4>
-            <p data-en="AI prepares a full analysis before the session" data-ar="AI يحضّر تحليلاً كاملاً قبل الجلسة">AI
-              prepares a full analysis before the session</p>
+            <h4 data-en="Shared Meeting Brief" data-ar="موجز الاجتماع المشترك">Shared Meeting Brief</h4>
+            <p data-en="Everyone arrives with the same context and open questions" data-ar="يصل الجميع بالسياق والأسئلة المفتوحة نفسها">Everyone
+              arrives with the same context and open questions</p>
           </div>
           <div class="mbs">
             <div class="mbs-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -728,16 +734,15 @@
 
     <!-- ══════════ AI LAYER ══════════ -->
     <div class="section reveal in">
-      <div class="sec-chip" data-en="AI Intelligence" data-ar="الذكاء الاصطناعي">AI Intelligence</div>
+      <div class="sec-chip" data-en="Planned Intelligence" data-ar="ذكاء مخطط له">Planned Intelligence</div>
       <h2 class="sec-title"
-        data-en="AI Inside UrLife —&lt;br&gt;&lt;span class='g'&gt;The Force Multiplier&lt;/span&gt;"
-        data-ar="AI داخل UrLife —&lt;br&gt;&lt;span class='g'&gt;مُضاعف القوة&lt;/span&gt;">AI Inside UrLife —<br><span
-          class="g">The Force Multiplier</span></h2>
+        data-en="A sharper layer for&lt;br&gt;&lt;span class='g'&gt;better decisions&lt;/span&gt;"
+        data-ar="طبقة أذكى&lt;br&gt;&lt;span class='g'&gt;لقرارات أفضل&lt;/span&gt;">A sharper layer for<br><span
+          class="g">better decisions</span></h2>
       <p class="sec-body"
-        data-en="Not a feature — the core intelligence layer that makes UrLife faster, smarter, and more accurate than any human-only process."
-        data-ar="ليست ميزة — بل طبقة الذكاء الأساسية التي تجعل UrLife أسرع وأذكى وأدق من أي عملية بشرية بحتة.">Not a
-        feature — the core intelligence layer that makes UrLife faster, smarter, and more accurate than any human-only
-        process.</p>
+        data-en="The current release already ships structured briefs and explainable recommendations. This planned layer will add deeper evaluation without hiding the reasoning behind a score."
+        data-ar="الإصدار الحالي يقدّم موجزات منظمة وترشيحات قابلة للتفسير. ستضيف هذه الطبقة المخطط لها تقييماً أعمق دون إخفاء الأسباب خلف نتيجة واحدة.">The current release already ships structured briefs and explainable recommendations. This planned layer will add
+        deeper evaluation without hiding the reasoning behind a score.</p>
 
       <div class="ai-panel reveal-scale in">
         <div class="ai-head">
@@ -766,9 +771,9 @@
               <circle cx="32" cy="18" r="1.5" fill="rgba(255,255,255,0.5)"></circle>
               <ellipse cx="13" cy="11" rx="3" ry="1.8" fill="rgba(255,255,255,0.15)" transform="rotate(-25 13 11)">
               </ellipse>
-            </svg><span data-en="What AI Does Inside UrLife" data-ar="ما يفعله AI داخل UrLife">What AI Does Inside
-              UrLife</span></h3>
-          <span class="ai-badge" data-en="PHASE 2 LAUNCH" data-ar="إطلاق المرحلة 2">PHASE 2 LAUNCH</span>
+            </svg><span data-en="What the intelligence layer will add" data-ar="ما ستضيفه طبقة الذكاء">What the intelligence
+              layer will add</span></h3>
+          <span class="ai-badge" data-en="ROADMAP / PHASE 2" data-ar="خارطة الطريق / المرحلة 2">ROADMAP / PHASE 2</span>
         </div>
         <div class="ai-features">
           <div class="aif">
@@ -799,9 +804,9 @@
                 <circle cx="18" cy="8" r="1.5" fill="rgba(255,255,255,0.4)"></circle>
               </svg></div>
             <h4 data-en="Idea Evaluator" data-ar="مُقيّم الأفكار">Idea Evaluator</h4>
-            <p data-en="Analyzes any idea and generates a Viability Score with detailed feedback on market, competition, and feasibility."
-              data-ar="يحلل أي فكرة ويولّد Viability Score مع ملاحظات تفصيلية حول السوق والمنافسة والجدوى.">Analyzes any
-              idea and generates a Viability Score with detailed feedback on market, competition, and feasibility.</p>
+            <p data-en="Planned: turn a project brief into a consistent review of the problem, market, constraints, and open questions."
+              data-ar="مخطط له: تحويل موجز المشروع إلى مراجعة متسقة للمشكلة والسوق والقيود والأسئلة المفتوحة.">Planned: turn a
+              project brief into a consistent review of the problem, market, constraints, and open questions.</p>
           </div>
           <div class="aif">
             <div class="aif-ico"><svg width="36" height="36" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
@@ -935,10 +940,10 @@
           <div class="rm-n" aria-hidden="true">2</div>
           <div class="rm-when" data-en="MONTH 3–6 — MVP" data-ar="الشهر 3–6 — MVP">MONTH 3–6 — MVP</div>
           <h3 data-en="Build the Core Platform" data-ar="بناء المنصة الأساسية">Build the Core Platform</h3>
-          <p data-en="Webflow site + Airtable database + GPT-4 evaluation + Calendly + Notion for active projects. Bilingual Arabic and English from day one."
-            data-ar="موقع Webflow + قاعدة بيانات Airtable + تقييم GPT-4 + Calendly + Notion للمشاريع النشطة. عربي وإنجليزي من اليوم الأول.">
-            Webflow site + Airtable database + GPT-4 evaluation + Calendly + Notion for active projects. Bilingual
-            Arabic and English from day one.
+          <p data-en="Bilingual browser app + Supabase auth and data + Cal.com booking + explainable matching. The member console is live; automated evaluation is the next intelligence layer."
+            data-ar="تطبيق متصفح ثنائي اللغة + مصادقة وبيانات Supabase + حجز Cal.com + مطابقة قابلة للتفسير. لوحة الأعضاء متاحة الآن؛ والتقييم الآلي هو طبقة الذكاء التالية.">
+            Bilingual browser app + Supabase auth and data + Cal.com booking + explainable matching. The member console
+            is live; automated evaluation is the next intelligence layer.
           </p>
           <div class="rm-kpi" data-en="Goal: 200 members + 5 active projects" data-ar="هدف: 200 عضو + 5 مشاريع نشطة">
             Goal: 200 members + 5 active projects</div>
@@ -1017,8 +1022,8 @@
               </ellipse>
             </svg></div>
           <div>
-            <div class="tc-name">Webflow / Framer</div>
-            <div class="tc-role" data-en="MVP Frontend" data-ar="الواجهة الأمامية MVP">MVP Frontend</div>
+            <div class="tc-name">Vite / Vanilla JS</div>
+            <div class="tc-role" data-en="Web application" data-ar="تطبيق الويب">Web application</div>
           </div>
         </div>
         <div class="tech-card">
@@ -1045,8 +1050,8 @@
               </ellipse>
             </svg></div>
           <div>
-            <div class="tc-name">Airtable / Notion</div>
-            <div class="tc-role" data-en="Database + CRM" data-ar="قاعدة البيانات + CRM">Database + CRM</div>
+            <div class="tc-name">Supabase</div>
+            <div class="tc-role" data-en="Auth + database" data-ar="المصادقة + قاعدة البيانات">Auth + database</div>
           </div>
         </div>
         <div class="tech-card">
@@ -1075,8 +1080,8 @@
               </ellipse>
             </svg></div>
           <div>
-            <div class="tc-name">GPT-4 API</div>
-            <div class="tc-role" data-en="Idea Evaluation" data-ar="تقييم الأفكار">Idea Evaluation</div>
+            <div class="tc-name">Evaluation API</div>
+            <div class="tc-role" data-en="Planned idea evaluation" data-ar="تقييم الأفكار المخطط له">Planned idea evaluation</div>
           </div>
         </div>
         <div class="tech-card">
@@ -1109,8 +1114,8 @@
               <line x1="13" y1="7" x2="13" y2="23" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"></line>
             </svg></div>
           <div>
-            <div class="tc-name">Calendly</div>
-            <div class="tc-role" data-en="Closed Meeting Booking" data-ar="حجز الاجتماع المغلق">Closed Meeting Booking
+            <div class="tc-name">Cal.com</div>
+            <div class="tc-role" data-en="Closed meeting booking" data-ar="حجز الاجتماع المغلق">Closed meeting booking
             </div>
           </div>
         </div>
@@ -1314,8 +1319,8 @@
     <footer class="footer-luxe reveal-3d" data-reveal="rise">
       <div class="f-logo"><span>UR LF <span style="color:#D4A373;">✘</span> <span style="color:#ef4444;">UP
             ™</span></span></div>
-      <p class="footer-tagline">Where Minds Meet — Zero Financial Barriers</p>
-      <p class="footer-meta"><span>Global Platform</span><span class="footer-dot">·</span><span>AI-Powered</span></p>
+      <p class="footer-tagline">Where Minds Meet — Ideas, Skills, Capital</p>
+      <p class="footer-meta"><span>Bilingual Platform</span><span class="footer-dot">·</span><span>Explainable Matching</span></p>
     </footer>
 
   </div><!-- /page-wrap -->

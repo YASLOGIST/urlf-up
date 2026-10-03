@@ -64,6 +64,16 @@ describe('language switching', () => {
     expect(ar.getAttribute('aria-pressed')).toBe('true');
   });
 
+  it('translates documented aria-label attributes, including the responsive menu', () => {
+    initI18n();
+    const menu = document.getElementById('nav-menu-btn');
+    expect(menu.getAttribute('aria-label')).toBe('Open navigation');
+    setLanguage('ar');
+    expect(menu.getAttribute('aria-label')).toBe('فتح القائمة');
+    setLanguage('en');
+    expect(menu.getAttribute('aria-label')).toBe('Open navigation');
+  });
+
   it('persists the choice across a reload', () => {
     initI18n();
     document.querySelector('.lang-btn[data-lang="ar"]').click();
