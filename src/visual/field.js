@@ -28,7 +28,13 @@
 import { Field } from './sim.js';
 import { createWebGLRenderer } from './renderer-webgl.js';
 import { createCanvas2DRenderer } from './renderer-2d.js';
-import { deviceTier, maxPixelRatio, prefersReducedMotion, hasFinePointer } from '../motion/prefs.js';
+import {
+  deviceTier,
+  maxPixelRatio,
+  prefersReducedMotion,
+  hasFinePointer,
+  onPreferenceChange,
+} from '../motion/prefs.js';
 import { logger } from '../lib/logger.js';
 
 /** Particle budget per tier. Chosen so link work stays ~linear on each class. */
@@ -43,6 +49,10 @@ export function initField(options = {}) {
   const { canvasId = 'field-canvas', root = document, tier = deviceTier() } = options;
 
   const canvas = root.getElementById?.(canvasId) ?? document.getElementById(canvasId);
+  // WebGL context loss replaces this node with a Canvas2D sibling. Keep the
+  // active node authoritative so subsequent resize, preference and lifecycle
+  // work never writes to the detached WebGL canvas.
+  let activeCanvas = canvas;
   const result = {
     mode: 'none',
     reason: '',
@@ -59,9 +69,9 @@ export function initField(options = {}) {
    */
   function disable(reason, level = 'debug') {
     result.reason = reason;
-    if (canvas) {
-      canvas.hidden = true;
-      canvas.removeAttribute('data-ready');
+    if (activeCanvas) {
+      activeCanvas.hidden = true;
+      activeCanvas.removeAttribute('data-ready');
     }
     document.documentElement.classList.remove('has-field');
     document.documentElement.classList.add('field-static');
@@ -101,32 +111,37 @@ export function initField(options = {}) {
   if (!renderer) return disable('no 2d or webgl2 context', 'warn');
 
   function swapToCanvas2D() {
+    const previousCanvas = activeCanvas;
     try {
       renderer.destroy();
     } catch {
       /* already gone */
     }
-    // A canvas cannot change context type; replace the element.
-    const replacement = canvas.cloneNode(false);
-    canvas.replaceWith(replacement);
-    const next = createCanvas2DRenderer(replacement, field);
+    // A canvas cannot change context type; replace the element and make every
+    // later lifecycle operation point at the replacement, not the detached
+    // WebGL node.
+    const replacement = previousCanvas.cloneNode(false);
+    previousCanvas.replaceWith(replacement);
+    activeCanvas = replacement;
+    const next = createCanvas2DRenderer(activeCanvas, field);
     if (next) {
       renderer = next;
-      sizeToViewport(replacement);
-      // The IntersectionObserver still watches the DETACHED element, so it
-      // would keep reporting "visible" forever. Hand it the replacement.
-      io?.unobserve(canvas);
-      io?.observe(replacement);
+      sizeToViewport();
+      // The IntersectionObserver still watches the detached element, so it
+      // would keep reporting stale visibility without this handoff.
+      io?.unobserve(previousCanvas);
+      io?.observe(activeCanvas);
+    } else {
+      disable('canvas2d fallback unavailable', 'warn');
     }
   }
 
-  function sizeToViewport(target = canvas) {
+  function sizeToViewport() {
     const w = window.innerWidth;
     const h = window.innerHeight;
     const dpr = Math.min(dprCap, window.devicePixelRatio || 1);
     field.resize(w, h);
     renderer.resize(w, h, dpr);
-    void target;
   }
 
   // ── adaptive governor ─────────────────────────────────────────────────
@@ -155,6 +170,7 @@ export function initField(options = {}) {
   let last = 0;
   let fps = 0;
   let inViewport = true;
+  let preferencePaused = false;
 
   function tick(now) {
     if (!running) {
@@ -178,13 +194,13 @@ export function initField(options = {}) {
   }
 
   function start() {
-    if (running) return;
+    if (running || preferencePaused) return;
     if (document.visibilityState === 'hidden' || !inViewport) return;
     running = true;
     last = 0;
     rafId = requestAnimationFrame(tick);
-    canvas.hidden = false;
-    canvas.setAttribute('data-ready', '');
+    activeCanvas.hidden = false;
+    activeCanvas.setAttribute('data-ready', '');
     document.documentElement.classList.remove('field-static');
     document.documentElement.classList.add('has-field');
   }
@@ -224,6 +240,22 @@ export function initField(options = {}) {
     if (document.visibilityState === 'hidden') stop();
     else start();
   }
+
+  // The preference can change while the page is open (for example, an OS
+  // accessibility toggle). Stop immediately, reveal the static fallback, and
+  // resume only when the user explicitly allows motion again.
+  const unsubscribePreferences = onPreferenceChange(({ reducedMotion }) => {
+    preferencePaused = reducedMotion;
+    if (preferencePaused) {
+      stop();
+      activeCanvas.hidden = true;
+      activeCanvas.removeAttribute('data-ready');
+      document.documentElement.classList.remove('has-field');
+      document.documentElement.classList.add('field-static');
+      return;
+    }
+    start();
+  });
 
   // Pause when the backdrop scrolls out of view (long pages spend most of
   // their time with the fixed canvas fully covered by content).
@@ -290,12 +322,14 @@ export function initField(options = {}) {
         window.removeEventListener('pointermove', onPointerMove);
         window.removeEventListener('pointerleave', onPointerLeave);
       }
+      unsubscribePreferences();
       renderer.destroy();
       document.documentElement.classList.remove('has-field');
     },
     getStats: () => ({
       mode: renderer.kind,
       running,
+      preferencePaused,
       fps: Number(fps.toFixed(1)),
       avgFrameMs: Number(frameAvg.toFixed(2)),
       particles: field.count,

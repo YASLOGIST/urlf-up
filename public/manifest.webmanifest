@@ -12,7 +12,7 @@
   "dir": "auto",
   "lang": "en",
   "categories": ["business", "productivity", "social"],
-  "description": "A project generation engine: ambitious ideas meet the right people, get filtered by AI, and become real businesses. Zero financial barriers, 100% merit-based.",
+  "description": "A project generation engine: ambitious ideas meet the right people through transparent matching signals and become real businesses. Zero financial barriers, 100% merit-based.",
   "icons": [
     { "src": "icons/icon-48.png", "sizes": "48x48", "type": "image/png", "purpose": "any" },
     { "src": "icons/icon-64.png", "sizes": "64x64", "type": "image/png", "purpose": "any" },

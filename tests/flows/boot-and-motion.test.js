@@ -401,6 +401,53 @@ describe('ambient field', () => {
     window.matchMedia = mq;
   });
 
+  it('switches to the static fallback when reduced motion changes at runtime, then resumes only when allowed', async () => {
+    const originalMatchMedia = window.matchMedia;
+    let reduced = false;
+    const queries = new Map();
+    window.matchMedia = (query) => {
+      const listeners = new Set();
+      const media = {
+        media: query,
+        get matches() {
+          return query.includes('prefers-reduced-motion')
+            ? reduced
+            : /pointer:\s*fine|hover:\s*hover/.test(query);
+        },
+        addEventListener(type, listener) {
+          if (type === 'change') listeners.add(listener);
+        },
+        removeEventListener(type, listener) {
+          if (type === 'change') listeners.delete(listener);
+        },
+        emit() {
+          listeners.forEach((listener) => listener({ matches: media.matches, media: query }));
+        },
+      };
+      queries.set(query, media);
+      return media;
+    };
+
+    vi.resetModules();
+    const { initField } = await import('../../src/visual/field.js');
+    const handle = initField({ tier: 'mid' });
+    const reduceQuery = queries.get('(prefers-reduced-motion: reduce)');
+
+    reduced = true;
+    reduceQuery.emit();
+    expect(handle.getStats()).toMatchObject({ running: false, preferencePaused: true });
+    expect(document.getElementById('field-canvas').hidden).toBe(true);
+    expect(document.documentElement.classList.contains('field-static')).toBe(true);
+
+    reduced = false;
+    reduceQuery.emit();
+    expect(handle.getStats()).toMatchObject({ running: true, preferencePaused: false });
+    expect(document.getElementById('field-canvas').hidden).toBe(false);
+
+    handle.destroy();
+    window.matchMedia = originalMatchMedia;
+  });
+
   it('never throws when the canvas element is absent', async () => {
     document.getElementById('field-canvas').remove();
     const { initField } = await import('../../src/visual/field.js');

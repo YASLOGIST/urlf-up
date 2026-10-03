@@ -445,9 +445,11 @@ function _buildInterestCard(interest, profile, idea) {
     statusWrap.append(accept, decline)
   } else if (interest.status === 'accepted') {
     const deal = el('button', { className: 'btn-accept', type: 'button' }, t('nx.dealRoom'))
-    deal.addEventListener('click', () => openDealRoom({ ...profile, ...interest, idea_title: idea.title }, () => {
-      showToast({ message: t('nx.toast.dealLocked'), icon: 'check-seal', type: 'success' })
-    }))
+    deal.addEventListener('click', () => openDealRoom(
+      { ...profile, ...interest, idea_title: idea.title },
+      () => showToast({ message: t('nx.toast.termsReady'), icon: 'check-seal', type: 'success' }),
+      { trigger: deal }
+    ))
     statusWrap.appendChild(deal)
   }
 

@@ -1,3 +1,90 @@
+# UPGRADE LOG — Arena session (2026-10-03)
+
+- **TARGET:** `/home/user/urlf-up` (whole repository)
+- **MODE:** UPGRADE · **AUTONOMY:** FULL
+- **Branch:** `arena/01a10028-urlf-up` (session-fixed)
+- **Primary domain:** Web product / accessibility / runtime rendering
+- **Secondary domains:** product truth, i18n/RTL, WebGL/Canvas lifecycle, interaction design
+
+## W0–W1 recon and baseline
+
+- The application is a Vite 6, vanilla-ESM, static SPA with a lazy Supabase
+  console and a dependency-free WebGL2 → Canvas2D ambient renderer.
+- **MEASURED:** `npm run verify` passed: lint; **270/270** specs; production
+  build; bundle measure; contrast audit (**223/223 pass**); high/critical
+  dependency audit (0).
+- **MEASURED:** `npm run bench` reported a median **0.0234 ms/simulation frame**
+  at the shipping high-tier setting (130 particles); rendezvous scheduling added
+  no measurable CPU cost in that benchmark.
+- **UNMEASURED:** browser FPS, p95 frame time, GPU time, LCP/CLS/TBT and mobile
+  render output. This sandbox has no usable installed browser.
+- **BLOCKED (external):** `npm run check:links` cannot verify the live Cal.com
+  booking route or canonical host from this sandbox (network/DNS failures). The
+  existing default booking path must still be set to a verified live URL by the
+  operator; no replacement URL was invented.
+
+## Findings routed into implementation
+
+1. The accepted-interest “Deal Room” called a local `EscrowEngine` simulation
+   “Cryptographic Sign & Lock” and showed “Locked in Escrow.” It neither signed,
+   persisted, transferred, nor escrowed anything. This was a material product
+   truth failure.
+2. That same dynamic dialog bypassed the app’s modal stack, focus trap, inert
+   background, scroll lock, and focus restoration.
+3. The renderer documented runtime OS reduced-motion support, but did not
+   subscribe to the preference after initial boot. A user changing the setting
+   mid-session could still receive continuous animation.
+4. Landing-page copy described the shipped deterministic matching system as a
+   live GPT-4 / AI evaluation product. The in-repository implementation ranks
+   declared roles, skills, interests, trust and data-completeness signals;
+   future AI concepts are not active capabilities.
+
+## W2–W6 implementation
+
+| Upgrade                     | Result                                                                                                                                                                                                                                                                              |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Truthful terms workspace    | Replaced fake escrow/signing with a local “Terms workspace.” It validates proposed 0–100% shares and a milestone, clearly says nothing is signed/sent/funded/escrowed, and reports only that the draft is ready to discuss. Removed the unused simulation module.                   |
+| Accessible dialog lifecycle | Terms workspace now uses `app/modal.js`: focus starts in the first control, background becomes inert, Tab is trapped, Escape/backdrop close work, scroll is locked, and focus returns to the initiating control.                                                                    |
+| Runtime reduced-motion      | `visual/field.js` now observes preference changes, stops immediately, hides the canvas, exposes the CSS fallback, and resumes only if motion is re-enabled. Context-loss replacement now owns the active canvas node, preventing later lifecycle writes to a detached WebGL canvas. |
+| Product truth copy          | Current matching is now described as explainable/transparent. The AI panel and technology cards are explicitly marked as planned direction / inactive integrations rather than present capability. Meta descriptions and language-switched description follow the same rule.        |
+| Verification coverage       | Added terms-workspace lifecycle and truth-boundary specs; added a runtime reduced-motion state-change flow spec.                                                                                                                                                                    |
+
+## W7 verification (final measured state)
+
+- **PASS:** `npm run verify` — ESLint; **283/283** specs across 18 files;
+  production Vite build; bundle measure; **223/223** static contrast checks;
+  and zero high/critical dependency advisories. The audit reports three
+  lower-severity advisories, which were not force-upgraded without review.
+- **PASS:** `npm run test:coverage` — 78.5% statements, 76.4% branches and
+  71.7% functions across `src/`; configured global and per-file thresholds
+  passed. The new terms workspace is 98.2% line-covered.
+- **PASS:** `npm run measure:baseline` — critical path **55.7 kB gzip**, three
+  files, **72.9 kB / 56.7% smaller** than the committed baseline. All assets:
+  145.6 kB gzip; optional dashboard/terms CSS remains lazy.
+- **PASS:** `npm run bench` — shipping high-tier field simulation median
+  0.0233 ms/frame (minimum 0.0226 ms); the spatial-hash implementation was
+  2.97× faster than the legacy minimum in the final run’s benchmark headline.
+- **PASS:** `git diff --check`; no stale `escrowEngine` references remain in
+  active source or current documentation. The production build emits a separate
+  3.3 kB raw dashboard/terms stylesheet, so the new workspace does not inflate
+  the first-paint CSS.
+- The CSP contract caught the changed JSON-LD body after the truth-copy edit;
+  its exact SHA-256 source hash was regenerated and the contract now passes.
+
+## Decisions
+
+- Preserved the app’s distinctive rendezvous field rather than adding a 3D
+  framework: the existing two-draw-call renderer already has an adaptive
+  quality governor, typed-array simulation and a static fallback.
+- Did not fabricate booking availability or a Cal.com replacement URL.
+- Did not make terms persistent: durable agreements, signatures, escrow and
+  financial/legal meaning need explicit product, backend and authorization
+  design, which are out of scope for a static client-side draft.
+
+---
+
+## Prior session record (verbatim, 2026-10-02)
+
 # UPGRADE LOG — Arena session (V8 engine)
 
 - **TARGET:** `/home/user/urlf-up` (whole repository)
