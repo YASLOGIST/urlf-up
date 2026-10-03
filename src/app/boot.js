@@ -36,6 +36,7 @@ import { initCountUp } from '../motion/countup.js';
 import { initPointerFx } from '../motion/pointer-fx.js';
 import { initField } from '../visual/field.js';
 import { initCore } from '../core.js';
+import { initMobileNavigation } from './navigation.js';
 import { deviceTier, hasFinePointer, prefersReducedMotion } from '../motion/prefs.js';
 import { IS_DEV } from '../lib/env.js';
 
@@ -136,7 +137,8 @@ export async function boot() {
   // 2 ── language ─────────────────────────────────────────────────────────
   guard('i18n', initI18n);
 
-  // 3 ── overlays ─────────────────────────────────────────────────────────
+  // 3 ── overlays + navigation ────────────────────────────────────────────
+  own(guard('mobile-navigation', initMobileNavigation));
   guard('modals', initModalSystem);
 
   // 4 ── scroll-driven motion ─────────────────────────────────────────────

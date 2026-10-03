@@ -439,3 +439,109 @@ html[data-offline="true"] .requires-network {
   left: auto;
   right: 0;
 }
+
+/* ───────────────────────────────────────────────────────────────────────────
+ * Responsive primary navigation
+ *
+ * The legacy sheet hides `.nav-links` at 1024px, but the original menu button
+ * no longer existed in the HTML. Keep one source of links and turn it into a
+ * drawer instead of maintaining a second, drift-prone mobile menu.
+ * ─────────────────────────────────────────────────────────────────────────── */
+#nav-menu-btn {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  nav {
+    isolation: isolate;
+  }
+
+  nav .nav-logo,
+  nav .nav-right {
+    position: relative;
+    z-index: 2;
+  }
+
+  #nav-menu-btn {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+  }
+
+  nav .nav-links {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 0;
+    padding: 104px clamp(24px, 8vw, 96px) 40px;
+    background:
+      radial-gradient(700px 380px at 50% 0%, rgba(212, 175, 55, 0.11), transparent 68%), rgba(5, 5, 5, 0.98);
+    backdrop-filter: blur(28px);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(-10px);
+    transition:
+      opacity 180ms ease,
+      transform 180ms ease,
+      visibility 180ms ease;
+  }
+
+  nav .nav-links.is-open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+
+  nav .nav-links a {
+    display: flex;
+    align-items: center;
+    min-height: 58px;
+    width: 100%;
+    padding: 12px 4px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--ice-dim, rgba(245, 245, 245, 0.72));
+    font-size: clamp(1.2rem, 3vw, 1.7rem);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  nav .nav-links a:hover,
+  nav .nav-links a:focus-visible {
+    color: var(--gold-bright, #f4d77a);
+  }
+
+  [dir="rtl"] nav .nav-links a {
+    text-align: right;
+  }
+}
+
+@media (max-width: 600px) {
+  nav .nav-right {
+    gap: 6px;
+  }
+
+  nav .nav-logo {
+    font-size: 18px;
+  }
+
+  nav .lang-btn {
+    padding-inline: 9px;
+  }
+
+  nav .nav-links {
+    padding-inline: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  nav .nav-links {
+    transition: none;
+  }
+}

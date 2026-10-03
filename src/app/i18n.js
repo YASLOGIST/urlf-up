@@ -156,13 +156,20 @@ function applyTranslations(lang, root) {
 
   // Attribute-level translations: data-en-placeholder / data-ar-placeholder,
   // data-en-aria-label / data-ar-aria-label, data-en-title / data-ar-title.
-  const ATTR_MAP = { placeholder: 'placeholder', 'aria-label': 'ariaLabel', title: 'title' };
-  for (const attr of Object.keys(ATTR_MAP)) {
-    const key = attr.replace(/-/g, '');
-    root.querySelectorAll(`[data-${lang}-${key}]`).forEach((el) => {
-      const v = el.getAttribute(`data-${lang}-${key}`);
-      if (v != null) el.setAttribute(attr, v);
-    });
+  const ATTR_MAP = {
+    placeholder: ['placeholder'],
+    // Support the documented `data-en-aria-label` spelling as well as the
+    // compact form older console markup used before this module was centralised.
+    'aria-label': ['aria-label', 'arialabel'],
+    title: ['title'],
+  };
+  for (const [attr, sources] of Object.entries(ATTR_MAP)) {
+    for (const source of sources) {
+      root.querySelectorAll(`[data-${lang}-${source}]`).forEach((el) => {
+        const v = el.getAttribute(`data-${lang}-${source}`);
+        if (v != null) el.setAttribute(attr, v);
+      });
+    }
   }
 
   return swapped;
@@ -214,8 +221,8 @@ export function setLanguage(lang, opts = {}) {
 
 function descriptionFor(lang) {
   return lang === 'ar'
-    ? 'UrLife محرك لتوليد المشاريع: تلتقي الأفكار الطموحة بالأشخاص المناسبين، تُفلتَر بالذكاء الاصطناعي، وتتحول إلى شركات حقيقية. صفر حواجز مالية، وقائم بالكامل على الجدارة.'
-    : 'UrLife is a project generation engine: ambitious ideas meet the right people, get filtered by AI, and become real businesses. Zero financial barriers, 100% merit-based.';
+    ? 'UrLife منصة للتعاون على المشاريع: تلتقي الأفكار بالمشغّلين المتكاملين وتنتقل من موجز أولي إلى قرار خاص.'
+    : 'UrLife is a project collaboration platform: ideas meet complementary operators and move from a first brief to a private decision.';
 }
 
 export function getLanguage() {
