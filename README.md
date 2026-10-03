@@ -7,12 +7,12 @@
 <p>
   <strong>A project generation engine for the Arab world.</strong><br>
   Visionaries bring ideas. Builders bring skill. Enablers bring capital.<br>
-  An AI pre-brief and one 45-minute closed meeting decide what gets built.
+  A structured pre-brief and one 45-minute closed meeting decide what gets built.
 </p>
 
 <p>
-  <img alt="critical path 53.9 kB gzip" src="https://img.shields.io/badge/critical%20path-53.9%20kB%20gzip-D4AF37?style=flat-square&labelColor=0B0B0B">
-  <img alt="270 specs passing" src="https://img.shields.io/badge/specs-270%20passing-D4AF37?style=flat-square&labelColor=0B0B0B">
+  <img alt="critical path 54.9 kB gzip" src="https://img.shields.io/badge/critical%20path-54.9%20kB%20gzip-D4AF37?style=flat-square&labelColor=0B0B0B">
+  <img alt="274 specs passing" src="https://img.shields.io/badge/specs-274%20passing-D4AF37?style=flat-square&labelColor=0B0B0B">
   <img alt="axe 0 violations" src="https://img.shields.io/badge/axe--core-0%20violations-D4AF37?style=flat-square&labelColor=0B0B0B">
   <img alt="2 runtime dependencies" src="https://img.shields.io/badge/runtime%20deps-2-D4AF37?style=flat-square&labelColor=0B0B0B">
   <img alt="zero UI framework" src="https://img.shields.io/badge/UI%20framework-none-FF1E00?style=flat-square&labelColor=0B0B0B">
@@ -48,9 +48,9 @@ up into a claim.
 
 | Dimension                          |                                            Measured | Enforced at                                        |
 | :--------------------------------- | --------------------------------------------------: | :------------------------------------------------- |
-| Critical path, gzip                |                      **53.9 kB** across **3 files** | build fails above 24 kB HTML / 170 kB total        |
-| Reduction vs. pre-upgrade baseline |                    **−58.1 %** (128.7 kB → 53.9 kB) | `measure:baseline` exits 1 on regression           |
-| Automated specs                    |                             **270** across 15 files | CI, every push                                     |
+| Critical path, gzip                |                      **54.9 kB** across **3 files** | build fails above 24 kB HTML / 170 kB total        |
+| Reduction vs. pre-upgrade baseline |                    **−57.3 %** (128.7 kB → 54.9 kB) | `measure:baseline` exits 1 on regression           |
+| Automated specs                    |                             **274** across 16 files | CI, every push                                     |
 | Accessibility                      |      **0** axe-core violations in **5** page states | CI, every push                                     |
 | Runtime dependencies               |  **2** (`@supabase/supabase-js`, `@capacitor/core`) | contract test proves each is imported              |
 | Simulation cost                    | **0.0134 ms/frame** @ 80 particles (legacy: 0.0394) | `npm run bench`                                    |
@@ -162,7 +162,7 @@ stacking document listeners — which is what makes HMR and the test suite safe.
 | `index.html`        |     23.1 kB | the document, with all markup and no executable inline script |
 | `assets/main-*.js`  |     17.0 kB | boot, i18n, modals, motion, the field                         |
 | `assets/main-*.css` |     13.9 kB | the design system                                             |
-| **Total**           | **53.9 kB** | **3 requests**                                                |
+| **Total**           | **54.9 kB** | **3 requests**                                                |
 
 The 51.1 kB Supabase client sits in `vendor-supabase`, which `index.html` never
 references. It is fetched on a magic-link callback, on the first sign of CTA intent, or
@@ -331,20 +331,20 @@ simulation, no backend contract · ◌ not built
 
 ### 2.2 Member console — every module lazily imported
 
-| Capability                                | Where                                               | State | Note                                                                                        |
-| :---------------------------------------- | :-------------------------------------------------- | :---: | :------------------------------------------------------------------------------------------ |
-| Email + password sign-in / registration   | `src/auth.js`                                       |   ●   | validation runs **before** any network call                                                 |
-| Magic link                                | `boot.js` → `account.js`                            |   ●   | loaded eagerly; the token must be consumed before expiry                                    |
-| PKCE session, `storageKey: 'urlife-auth'` | `src/lib/supabase.js`                               |   ●   | one client, global-keyed singleton                                                          |
-| Role selection against the Postgres enum  | `src/validators.js`                                 |   ●   | anything outside the enum is rejected                                                       |
-| Idea submission with field-level errors   | `src/ideas.js`                                      |   ●   | schema-aligned `author_id` + `problem_statement`, auto-publishes open ideas                 |
-| Ideas feed                                | `#ideas-feed-list`                                  |   ●   | every field written via `textContent`; accepts current and legacy problem aliases           |
-| Nexus recommendations dashboard           | `src/dashboard.js`                                  |   ●   | reads `ideas_public` + `idea_interests`; no absent match table dependency                   |
-| Explainable match scoring                 | `src/matchingEngine.js`                             |   ●   | role, fuzzy skills, industry, capital, reputation and data-confidence axes                  |
-| Realtime interest / idea updates          | `supabase.channel('nexus')`                         |   ◐   | `postgres_changes`; untested against a live project                                         |
-| Deal room + escrow state machine          | `src/components/DealRoom.js`, `src/escrowEngine.js` |   ○   | `Pending → Locked → Verified → Released`, **in-browser only — no custody, no payment rail** |
-| Verification badge tiers                  | `src/components/VerificationBadge.js`               |   ○   | presentational; no issuing authority                                                        |
-| Settings + avatar upload                  | `src/settings.js`, `src/avatar.js`                  |   ●   | Supabase Storage                                                                            |
+| Capability                                | Where                                 | State | Note                                                                                 |
+| :---------------------------------------- | :------------------------------------ | :---: | :----------------------------------------------------------------------------------- |
+| Email + password sign-in / registration   | `src/auth.js`                         |   ●   | validation runs **before** any network call                                          |
+| Magic link                                | `boot.js` → `account.js`              |   ●   | loaded eagerly; the token must be consumed before expiry                             |
+| PKCE session, `storageKey: 'urlife-auth'` | `src/lib/supabase.js`                 |   ●   | one client, global-keyed singleton                                                   |
+| Role selection against the Postgres enum  | `src/validators.js`                   |   ●   | anything outside the enum is rejected                                                |
+| Idea submission with field-level errors   | `src/ideas.js`                        |   ●   | schema-aligned `author_id` + `problem_statement`, auto-publishes open ideas          |
+| Ideas feed                                | `#ideas-feed-list`                    |   ●   | every field written via `textContent`; accepts current and legacy problem aliases    |
+| Nexus recommendations dashboard           | `src/dashboard.js`                    |   ●   | reads `ideas_public` + `idea_interests`; no absent match table dependency            |
+| Explainable match scoring                 | `src/matchingEngine.js`               |   ●   | role, fuzzy skills, industry, capital, reputation and data-confidence axes           |
+| Realtime interest / idea updates          | `supabase.channel('nexus')`           |   ◐   | `postgres_changes`; untested against a live project                                  |
+| Terms workspace (local discussion draft)  | `src/components/DealRoom.js`          |   ●   | validates proposed shares and milestone; no save, send, signature, funding or escrow |
+| Verification badge tiers                  | `src/components/VerificationBadge.js` |   ○   | presentational; no issuing authority                                                 |
+| Settings + avatar upload                  | `src/settings.js`, `src/avatar.js`    |   ●   | Supabase Storage                                                                     |
 
 ### 2.3 Platform and delivery
 
@@ -498,19 +498,19 @@ graph LR
   S -->|yes| R["rankMatches → sorted"]
   R --> C["match card · viability ring · accept / pass"]
   C -->|accept| DB[("matches.status = accepted")]
-  C --> DR["DealRoom → escrowEngine"]
-  DR --> ST["Pending → Locked → Verified → Released"]
+  C --> DR["Terms workspace"]
+  DR --> DISCUSS["local discussion draft"]
 
-  classDef sim fill:#141414,stroke:#FF1E00,color:#ffd9d2;
-  class DR,ST sim;
+  classDef draft fill:#141414,stroke:#D4AF37,color:#fff0bd;
+  class DR,DISCUSS draft;
 ```
 
 > [!NOTE]
-> The red path is a **client-side simulation**. `escrowEngine.js` is a state machine with
-> validated transitions and an audit trail in memory — there is no custody, no payment
-> rail and no counterparty verification behind it. It is honest scaffolding for the
-> interaction design, and it is labelled as such here so nobody mistakes it for a
-> financial control.
+> The terms workspace is intentionally **not a transaction system**. It validates a
+> proposed split and milestone only for an in-browser discussion draft; nothing is
+> saved, sent, signed, funded, escrowed or treated as an agreement. Durable terms,
+> signatures, custody and payments require explicit product, backend and authorization
+> design before they can be represented in the interface.
 
 ## 3.6 Language switch
 
@@ -699,7 +699,7 @@ idea is still — which is simultaneously the design decision and the compressio
 | Scheduling    | Cal.com iframe                                 | —           | The single allowed third-party frame origin.                                                                                               |
 | Visual layer  | Dependency-free WebGL2, written in-repo        | —           | Replaced `three` + `@react-three/*` + `gsap` + `lenis` (~600 kB) that **nothing imported**. 2 draw calls.                                  |
 | Native shells | Capacitor                                      | 7           | `android/`, `ios/`, `capacitor.config.ts`.                                                                                                 |
-| Tests         | Vitest + jsdom + axe-core                      | `^3.2`      | 270 specs: unit, flow, contract, accessibility.                                                                                            |
+| Tests         | Vitest + jsdom + axe-core                      | `^3.2`      | 274 specs: unit, flow, contract, accessibility.                                                                                            |
 | Lint / format | ESLint flat config + Prettier                  | `^9` / `^3` | Rules target the defect classes this codebase actually suffered, not style.                                                                |
 | Hosting       | Any static CDN                                 | —           | No server-side code of any kind.                                                                                                           |
 | Node          | ≥ 20.19                                        | —           | `engines` enforced.                                                                                                                        |
@@ -742,15 +742,15 @@ comparison stays falsifiable after the source changed.
 
 | Metric                | Baseline |         Now |           Δ |
 | :-------------------- | -------: | ----------: | ----------: |
-| Critical path, gzip   | 128.7 kB | **53.9 kB** | **−58.1 %** |
-| Critical path, brotli | 108.1 kB |     45.6 kB |     −57.8 % |
-| Critical path, raw    | 522.5 kB |    216.1 kB |     −58.6 % |
+| Critical path, gzip   | 128.7 kB | **54.9 kB** | **−57.3 %** |
+| Critical path, brotli | 108.1 kB |     46.4 kB |     −57.1 % |
+| Critical path, raw    | 522.5 kB |    220.4 kB |     −57.8 % |
 | Critical path, files  |        7 |       **3** |     −57.1 % |
-| All assets, gzip      | 129.1 kB |    135.3 kB |      +4.8 % |
+| All assets, gzip      | 129.1 kB |    144.4 kB |     +11.9 % |
 
-The "all assets" line moves a little: the 2026-10 field upgrade (rendezvous events,
-scroll parallax, depth-graded rendering — §3) added ~2.6 kB gzip to the main chunk.
-The same code still exists, it is simply no longer downloaded before first paint.
+The "all assets" line is intentionally reported separately: it includes every lazy
+feature chunk and source map. The critical path remains the release gate because it is
+what a visitor downloads before first interaction.
 
 ### Simulation and draw cost
 
@@ -786,7 +786,7 @@ graph LR
   P["push / PR"] --> Q["quality"]
   P --> B["build"]
   P --> D["audit"]
-  Q --> Q1["eslint"] --> Q2["prettier --check"] --> Q3["270 specs<br/>unit · flow · contract · a11y"] --> Q4["coverage + per-file thresholds"]
+  Q --> Q1["eslint"] --> Q2["prettier --check"] --> Q3["274 specs<br/>unit · flow · contract · a11y"] --> Q4["coverage + per-file thresholds"]
   B --> B1["vite build<br/>fails on inline style or size budget"] --> B2["measure"] --> B3["audit:contrast<br/>223/223 WCAG AA"] --> B4["measure:baseline<br/>exit 1 if the critical path grew"] --> B5["bench"]
   D --> D1["npm run audit<br/>high/critical all deps"]
 ```
@@ -826,7 +826,7 @@ cp .env.example .env.local    # then fill VITE_SUPABASE_URL and VITE_SUPABASE_AN
 | `npm run dev`                                  | Vite dev server, bound to `0.0.0.0`                                                     |
 | `npm run build`                                | production build; **fails** on an inline `<style>` over 2 kB or a blown size budget     |
 | `npm run preview`                              | serve `dist/`                                                                           |
-| `npm test`                                     | 270 specs — unit, flow, contract, accessibility                                         |
+| `npm test`                                     | 274 specs — unit, flow, contract, accessibility                                         |
 | `npm run test:watch`                           | the same, in watch mode                                                                 |
 | `npm run test:coverage`                        | coverage with enforced per-file thresholds                                              |
 | `npm run lint` · `lint:fix`                    | ESLint flat config                                                                      |
@@ -884,7 +884,7 @@ scripts/
   bench-field.mjs          simulation and draw-call benchmark
   render-preview.mjs       software raster of a sim frame (no GPU needed) — inspect the field's composition anywhere
 public/                    icons · manifest · sw.js · og-image-animated.gif · og-cover.png
-tests/                     unit · flows · contracts · a11y        (270 specs)
+tests/                     unit · flows · contracts · a11y        (274 specs)
   unit/compositor.test.js  bloom energy conservation · blur edge clamping · beam clamps
 docs/                      ARCHITECTURE.md · VERIFICATION.md · MIGRATIONS.md
 archive/                   superseded code and documents, kept for provenance
@@ -904,7 +904,7 @@ Listed rather than rounded off. Each one has the cheapest action that resolves i
 |   3 | Whether the Capacitor shells still compile                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Unknown — needs Xcode / Android SDK                                                                                                        | `npm run cap:sync && npx cap open ios` on a Mac                                                                                                   |
 |   4 | Whether `VITE_CAL_LINK` is current                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | **MEASURED DEAD 2026-10-02** — `cal.com/ahmed-urlfxup` is unclaimed, returns 404                                                           | Register the cal.com username or set `VITE_CAL_LINK`; `npm run check:links` (CI job `link-liveness`) now fails until the booking link answers 200 |
 |   5 | Production CSP violations                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Unknown                                                                                                                                    | Deploy with `Content-Security-Policy-Report-Only` + a report endpoint for 24 h                                                                    |
-|   6 | Escrow / deal room / verification tiers                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | **Simulation by design**                                                                                                                   | Treat as interaction scaffolding until a custody provider and an issuing authority exist                                                          |
+|   6 | Durable agreements, signatures, custody, payments and verification tiers                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | **Not implemented by design**                                                                                                              | Add explicit legal/product scope, a backend authority and provider integrations before presenting these as live capabilities                      |
 
 ---
 

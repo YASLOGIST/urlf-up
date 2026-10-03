@@ -10,7 +10,7 @@ either directly verifiable in the repository or marked with a confidence level.
 
 A single-page, zero-framework marketing site for an Arab-world startup studio
 ("the YCombinator for the Arab world"), with an embedded, progressively-loaded
-member console (auth, idea submission, AI-match dashboard, account settings)
+member console (auth, idea submission, explainable deterministic-match dashboard, account settings)
 backed entirely by Supabase from the browser.
 
 ## 2. Definition of success
@@ -225,6 +225,10 @@ the spec that enforces it.
     the card does not.
 13. Closing restores focus to the element that opened the dialog and unlocks
     scroll only when the last dialog closes. (`flows/modal.test.js`)
+14. The accepted-interest terms workspace is registered with this same modal
+    controller. It validates proposed percentages and a milestone, but is
+    explicitly an in-browser discussion draft: it does not sign an agreement,
+    save terms, transfer money or create escrow. (`flows/deal-room.test.js`)
 
 ### 7.4 Authentication
 
@@ -253,7 +257,9 @@ the spec that enforces it.
 21. One `IntersectionObserver` drives all reveals — no element is ever watched
     by two of them — and each element is unobserved after it fires once.
 22. Under `prefers-reduced-motion`, everything is revealed immediately and no
-    continuous loop starts.
+    continuous loop starts. If the OS preference changes while the page is open,
+    the field stops immediately, hides its canvas and yields to the static
+    fallback; it resumes only if the user later re-allows motion.
 23. Scroll writes a single custom property `--scroll-progress` and mirrors it to
     `aria-valuenow` on the progressbar, from one passive scroll listener.
 24. Pointer effects write only CSS custom properties, read geometry at most once

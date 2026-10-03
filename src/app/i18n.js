@@ -214,8 +214,8 @@ export function setLanguage(lang, opts = {}) {
 
 function descriptionFor(lang) {
   return lang === 'ar'
-    ? 'UrLife محرك لتوليد المشاريع: تلتقي الأفكار الطموحة بالأشخاص المناسبين، تُفلتَر بالذكاء الاصطناعي، وتتحول إلى شركات حقيقية. صفر حواجز مالية، وقائم بالكامل على الجدارة.'
-    : 'UrLife is a project generation engine: ambitious ideas meet the right people, get filtered by AI, and become real businesses. Zero financial barriers, 100% merit-based.';
+    ? 'UrLife محرك لتوليد المشاريع: تلتقي الأفكار الطموحة بالأشخاص المناسبين عبر إشارات مطابقة واضحة، وتتحول إلى شركات حقيقية. صفر حواجز مالية، وقائم بالكامل على الجدارة.'
+    : 'UrLife is a project generation engine: ambitious ideas meet the right people through clear matching signals and become real businesses. Zero financial barriers, 100% merit-based.';
 }
 
 export function getLanguage() {

@@ -17,7 +17,7 @@ npm ci
 
 npm run lint            # ESLint flat config, 0 errors expected
 npm run format:check    # Prettier, 0 differences expected
-npm run test            # 270 specs across 15 files
+npm run test            # 274 specs across 16 files
 npm run test:coverage   # coverage + per-file thresholds
 npm run build           # fails on inline-style or size-budget violations
 npm run measure         # size report for dist/
@@ -36,17 +36,16 @@ npm run verify          # lint + test + build + measure + audit in one shot
 
 | metric                  |     baseline |       final |      change |
 | ----------------------- | -----------: | ----------: | ----------: |
-| **critical path, gzip** | **128.7 kB** | **53.9 kB** | **−58.1 %** |
-| critical path, brotli   |     108.1 kB |     45.6 kB |     −57.8 % |
-| critical path, raw      |     522.5 kB |    216.1 kB |     −58.6 % |
+| **critical path, gzip** | **128.7 kB** | **54.9 kB** | **−57.3 %** |
+| critical path, brotli   |     108.1 kB |     46.4 kB |     −57.1 % |
+| critical path, raw      |     522.5 kB |    220.4 kB |     −57.8 % |
 | critical path, files    |            7 |           3 |     −57.1 % |
-| all assets, gzip        |     129.1 kB |    135.3 kB |      +4.8 % |
-| all assets, raw         |     523.1 kB |    498.9 kB |      −4.6 % |
+| all assets, gzip        |     129.1 kB |    144.4 kB |     +11.9 % |
+| all assets, raw         |     523.1 kB |    530.3 kB |      +1.4 % |
 
-> The critical path grew 51.4 → 53.9 kB gz in the 2026-10 field upgrade
-> (rendezvous events, scroll parallax camera, depth-graded + dithered
-> rendering — see §3.4). ~2.6 kB gz bought the entire story layer; the
-> baseline gate (`measure:baseline`) still passes with 74.8 kB of headroom.
+> The critical-path baseline gate (`measure:baseline`) passes with **73.7 kB gzip**
+> of headroom. The all-assets row also includes every optional lazy feature and its
+> source map, so it is reported separately from first-paint cost.
 
 "Critical path" = `index.html` plus every asset it references with a `src`/`href`.
 Code reachable only through a dynamic `import()` is excluded because the browser
@@ -235,7 +234,7 @@ and not only in JS; a visible `:focus-visible` ring exists.
 
 ## 6. Test suite
 
-`npm run test` — **270 specs, 15 files, all passing.**
+`npm run test` — **274 specs, 16 files, all passing.**
 
 | file                                  | specs | covers                                                                                                               |
 | ------------------------------------- | ----: | -------------------------------------------------------------------------------------------------------------------- |
@@ -250,9 +249,11 @@ and not only in JS; a visible `:focus-visible` ring exists.
 | `tests/flows/i18n.test.js`            |    14 | EN⇄AR switching, persistence, `renderRichText` XSS                                                                   |
 | `tests/flows/modal.test.js`           |    15 | focus trap/restore, inert, ESC stacking, scroll lock                                                                 |
 | `tests/flows/auth-and-ideas.test.js`  |    15 | sign-in, registration, magic link, idea submission, role gate                                                        |
-| `tests/flows/boot-and-motion.test.js` |    26 | boot order, idempotency, lazy account loading, reveal, scroll, count-up, field fallback chain + scroll camera        |
+| `tests/flows/boot-and-motion.test.js` |    27 | boot order, idempotency, lazy account loading, motion preference changes, field fallback chain + scroll camera       |
 | `tests/flows/ui-and-network.test.js`  |    31 | error slots, toasts, loading, offline, degraded notice, pointer fx                                                   |
-| `tests/a11y/axe.test.js`              |    13 | 5 axe page states + 8 structural invariants                                                                          |
+| `tests/flows/console-i18n.test.js`    |    18 | bilingual console and dashboard re-rendering, safe translated markup                                                 |
+| `tests/flows/deal-room.test.js`       |     3 | shared dialog lifecycle, local-draft validation/truth boundary, Arabic rendering                                     |
+| `tests/a11y/axe.test.js`              |    13 | five axe page states plus structural invariants                                                                      |
 
 Every spec runs against the **real `index.html`**, never a fixture. That choice
 is deliberate: the entire class of bug found during analysis — `#canvas3d`,
@@ -265,10 +266,10 @@ page — is invisible to fixture-based tests.
 
 | scope         | statements | branches | functions |
 | ------------- | ---------: | -------: | --------: |
-| whole `src/`  |     68.6 % |   77.8 % |    59.9 % |
-| `src/app/`    |     74.7 % |   77.8 % |    80.7 % |
-| `src/motion/` |     91.7 % |   76.7 % |    79.1 % |
-| `src/visual/` |     95.9 % |   82.6 % |    78.8 % |
+| whole `src/`  |     78.1 % |   76.2 % |    70.9 % |
+| `src/app/`    |     83.3 % |   78.9 % |    82.4 % |
+| `src/motion/` |     93.2 % |   77.6 % |    81.8 % |
+| `src/visual/` |     95.5 % |   82.8 % |    78.9 % |
 | `src/lib/`    |     82.1 % |   83.7 % |    63.5 % |
 
 Per-file thresholds are enforced in `vitest.config.js` and fail CI. They are
@@ -343,11 +344,11 @@ These are real gaps, stated rather than papered over.
 | Critical-path payload             | 128.7 kB gz, 7 files                                                  | **51.4 kB gz, 3 files**                                                                                                         |
 | Module entry points               | 8                                                                     | **1**                                                                                                                           |
 | Supabase clients at runtime       | 2 (racing refresh timers)                                             | **1**                                                                                                                           |
-| Automated tests                   | 0                                                                     | **270**                                                                                                                         |
+| Automated tests                   | 0                                                                     | **274**                                                                                                                         |
 | axe violations                    | not measured; ≥5 real defects present                                 | **0 in 5 page states**                                                                                                          |
 | CSP                               | `script-src 'unsafe-inline'`, no `frame-src` (booking iframe blocked) | hardened, 6 directives, booking works                                                                                           |
 | Service worker                    | 2 lines, cache-poisoning hazard                                       | versioned, strategy-based, offline fallback                                                                                     |
 | Unused runtime dependencies       | 7 (react, react-dom, three, @react-three ×2, gsap, lenis)             | **0**, enforced by a test                                                                                                       |
 | Simulation cost @ equal params    | 0.0405 ms/frame                                                       | **0.0108 ms/frame**                                                                                                             |
 | Canvas state-changing calls/frame | 585                                                                   | **90**                                                                                                                          |
-| CI                                | none                                                                  | lint · format · 270 tests · axe · coverage thresholds · size budget · contrast audit · bench · dependency audit · link liveness |
+| CI                                | none                                                                  | lint · format · 274 tests · axe · coverage thresholds · size budget · contrast audit · bench · dependency audit · link liveness |
