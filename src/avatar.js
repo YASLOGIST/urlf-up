@@ -1,31 +1,60 @@
 import { showToast } from './ui.js'
 import { t } from './app/strings.js'
 
-const MAX_OUTPUT_BYTES = 1_000_000 // 1MB post-compression hard cap
+const MAX_INPUT_BYTES = 10_000_000
+const MAX_OUTPUT_BYTES = 250_000
+const AVATAR_SIZE = 256
+const ACCEPTED_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp'])
 
-async function _resizeToBase64(file) {
-  const bitmap = await createImageBitmap(file)
-  const SIZE = 256
-  const canvas = new OffscreenCanvas(SIZE, SIZE)
-  const ctx = canvas.getContext('2d')
-
-  // Center-crop to square
-  const s = Math.min(bitmap.width, bitmap.height)
-  const sx = (bitmap.width - s) / 2
-  const sy = (bitmap.height - s) / 2
-  ctx.drawImage(bitmap, sx, sy, s, s, 0, 0, SIZE, SIZE)
-
-  const blob = await canvas.convertToBlob({ type: 'image/webp', quality: 0.85 })
-  if (blob.size > MAX_OUTPUT_BYTES) {
-    throw new Error(`Compressed image too large: ${(blob.size / 1024).toFixed(0)}KB (max 1000KB)`)
+function _canvasToBlob(canvas) {
+  if ('convertToBlob' in canvas) {
+    return canvas.convertToBlob({ type: 'image/webp', quality: 0.85 })
   }
-
   return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(reader.result)
-    reader.onerror = reject
-    reader.readAsDataURL(blob)
+    canvas.toBlob(
+      blob => (blob ? resolve(blob) : reject(new Error('Avatar encoding failed'))),
+      'image/webp',
+      0.85,
+    )
   })
+}
+
+/** Resize and centre-crop an avatar without assuming OffscreenCanvas support.
+ * Safari (and therefore the Capacitor iOS shell) uses the HTML canvas path. */
+export async function resizeAvatar(file) {
+  if (!ACCEPTED_TYPES.has(file?.type)) throw new Error('format')
+  if (!file.size || file.size > MAX_INPUT_BYTES) throw new Error('size')
+
+  const bitmap = await createImageBitmap(file)
+  try {
+    const canvas = typeof OffscreenCanvas === 'function'
+      ? new OffscreenCanvas(AVATAR_SIZE, AVATAR_SIZE)
+      : Object.assign(document.createElement('canvas'), {
+          width: AVATAR_SIZE,
+          height: AVATAR_SIZE,
+        })
+    const ctx = canvas.getContext('2d')
+    if (!ctx) throw new Error('canvas')
+
+    const side = Math.min(bitmap.width, bitmap.height)
+    ctx.drawImage(
+      bitmap,
+      (bitmap.width - side) / 2,
+      (bitmap.height - side) / 2,
+      side,
+      side,
+      0,
+      0,
+      AVATAR_SIZE,
+      AVATAR_SIZE,
+    )
+
+    const blob = await _canvasToBlob(canvas)
+    if (blob.size > MAX_OUTPUT_BYTES) throw new Error('size')
+    return blob
+  } finally {
+    bitmap.close?.()
+  }
 }
 
 function _probeUrl(url) {
@@ -48,16 +77,22 @@ export function initAvatarZone(zone, { onchange }) {
   const btnUpload = zone.querySelector('[data-action=upload]')
   const btnUrl = zone.querySelector('[data-action=url]')
   const btnRemove = zone.querySelector('[data-action=remove]')
+  let objectUrl = null
 
-  function _setPreview(dataUrl) {
-    if (dataUrl) {
-      img.src = dataUrl
+  function _setPreview(value) {
+    if (objectUrl) {
+      URL.revokeObjectURL(objectUrl)
+      objectUrl = null
+    }
+    const preview = value instanceof Blob ? (objectUrl = URL.createObjectURL(value)) : value
+    if (preview) {
+      img.src = preview
       img.hidden = false
       if (placeholder) placeholder.hidden = true
       if (btnRemove) btnRemove.hidden = false
       zone.dataset.mode = 'filled'
     } else {
-      img.src = ''
+      img.removeAttribute('src')
       img.hidden = true
       if (placeholder) placeholder.hidden = false
       if (btnRemove) btnRemove.hidden = true
@@ -70,16 +105,17 @@ export function initAvatarZone(zone, { onchange }) {
   fileInput?.addEventListener('change', async () => {
     const file = fileInput.files?.[0]
     if (!file) return
-    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+    if (!ACCEPTED_TYPES.has(file.type)) {
       showToast({ type: 'error', message: t('avatar.error.format') })
       return
     }
     try {
-      const dataUrl = await _resizeToBase64(file)
-      _setPreview(dataUrl)
-      onchange(dataUrl)
+      const blob = await resizeAvatar(file)
+      _setPreview(blob)
+      onchange(blob)
     } catch (err) {
-      showToast({ type: 'error', message: err.message || t('avatar.error.upload') })
+      const key = err.message === 'size' ? 'avatar.error.size' : 'avatar.error.upload'
+      showToast({ type: 'error', message: t(key) })
     } finally {
       fileInput.value = ''
     }
@@ -96,7 +132,7 @@ export function initAvatarZone(zone, { onchange }) {
     if (e.key !== 'Enter') return
     const raw = urlInput.value.trim()
     if (!raw) return
-    if (!/^https?:\/\//i.test(raw)) {
+    if (!/^https:\/\//i.test(raw)) {
       showToast({ type: 'error', message: t('avatar.error.https') })
       return
     }

@@ -12,7 +12,7 @@
 
 <p>
   <img alt="critical path 55.6 kB gzip" src="https://img.shields.io/badge/critical%20path-55.6%20kB%20gzip-D4AF37?style=flat-square&labelColor=0B0B0B">
-  <img alt="277 specs passing" src="https://img.shields.io/badge/specs-277%20passing-D4AF37?style=flat-square&labelColor=0B0B0B">
+  <img alt="279 specs passing" src="https://img.shields.io/badge/specs-279%20passing-D4AF37?style=flat-square&labelColor=0B0B0B">
   <img alt="axe 0 violations" src="https://img.shields.io/badge/axe--core-0%20violations-D4AF37?style=flat-square&labelColor=0B0B0B">
   <img alt="2 runtime dependencies" src="https://img.shields.io/badge/runtime%20deps-2-D4AF37?style=flat-square&labelColor=0B0B0B">
   <img alt="zero UI framework" src="https://img.shields.io/badge/UI%20framework-none-FF1E00?style=flat-square&labelColor=0B0B0B">
@@ -50,7 +50,7 @@ up into a claim.
 | :--------------------------------- | --------------------------------------------------: | :------------------------------------------------- |
 | Critical path, gzip                |                      **55.6 kB** across **3 files** | build fails above 24 kB HTML / 170 kB total        |
 | Reduction vs. pre-upgrade baseline |                    **−56.8 %** (128.7 kB → 55.6 kB) | `measure:baseline` exits 1 on regression           |
-| Automated specs                    |                             **277** across 16 files | CI, every push                                     |
+| Automated specs                    |                             **279** across 16 files | CI, every push                                     |
 | Accessibility                      |      **0** axe-core violations in **5** page states | CI, every push                                     |
 | Runtime dependencies               |  **2** (`@supabase/supabase-js`, `@capacitor/core`) | contract test proves each is imported              |
 | Simulation cost                    | **0.0134 ms/frame** @ 80 particles (legacy: 0.0394) | `npm run bench`                                    |
@@ -699,7 +699,7 @@ idea is still — which is simultaneously the design decision and the compressio
 | Scheduling    | Cal.com iframe                                 | —           | The single allowed third-party frame origin.                                                                                               |
 | Visual layer  | Dependency-free WebGL2, written in-repo        | —           | Replaced `three` + `@react-three/*` + `gsap` + `lenis` (~600 kB) that **nothing imported**. 2 draw calls.                                  |
 | Native shells | Capacitor                                      | 7           | `android/`, `ios/`, `capacitor.config.ts`.                                                                                                 |
-| Tests         | Vitest + jsdom + axe-core                      | `^3.2`      | 277 specs: unit, flow, contract, accessibility.                                                                                            |
+| Tests         | Vitest + jsdom + axe-core                      | `^3.2`      | 279 specs: unit, flow, contract, accessibility.                                                                                            |
 | Lint / format | ESLint flat config + Prettier                  | `^9` / `^3` | Rules target the defect classes this codebase actually suffered, not style.                                                                |
 | Hosting       | Any static CDN                                 | —           | No server-side code of any kind.                                                                                                           |
 | Node          | ≥ 20.19                                        | —           | `engines` enforced.                                                                                                                        |
@@ -786,7 +786,7 @@ graph LR
   P["push / PR"] --> Q["quality"]
   P --> B["build"]
   P --> D["audit"]
-  Q --> Q1["eslint"] --> Q2["prettier --check"] --> Q3["277 specs<br/>unit · flow · contract · a11y"] --> Q4["coverage + per-file thresholds"]
+  Q --> Q1["eslint"] --> Q2["prettier --check"] --> Q3["279 specs<br/>unit · flow · contract · a11y"] --> Q4["coverage + per-file thresholds"]
   B --> B1["vite build<br/>fails on inline style or size budget"] --> B2["measure"] --> B3["audit:contrast<br/>223/223 WCAG AA"] --> B4["measure:baseline<br/>exit 1 if the critical path grew"] --> B5["bench"]
   D --> D1["npm run audit<br/>high/critical all deps"]
 ```
@@ -826,7 +826,7 @@ cp .env.example .env.local    # then fill VITE_SUPABASE_URL and VITE_SUPABASE_AN
 | `npm run dev`                                  | Vite dev server, bound to `0.0.0.0`                                                     |
 | `npm run build`                                | production build; **fails** on an inline `<style>` over 2 kB or a blown size budget     |
 | `npm run preview`                              | serve `dist/`                                                                           |
-| `npm test`                                     | 277 specs — unit, flow, contract, accessibility                                         |
+| `npm test`                                     | 279 specs — unit, flow, contract, accessibility                                         |
 | `npm run test:watch`                           | the same, in watch mode                                                                 |
 | `npm run test:coverage`                        | coverage with enforced per-file thresholds                                              |
 | `npm run lint` · `lint:fix`                    | ESLint flat config                                                                      |
@@ -884,7 +884,7 @@ scripts/
   bench-field.mjs          simulation and draw-call benchmark
   render-preview.mjs       software raster of a sim frame (no GPU needed) — inspect the field's composition anywhere
 public/                    icons · manifest · sw.js · og-image-animated.gif · og-cover.png
-tests/                     unit · flows · contracts · a11y        (277 specs)
+tests/                     unit · flows · contracts · a11y        (279 specs)
   unit/compositor.test.js  bloom energy conservation · blur edge clamping · beam clamps
 docs/                      ARCHITECTURE.md · VERIFICATION.md · MIGRATIONS.md
 archive/                   superseded code and documents, kept for provenance

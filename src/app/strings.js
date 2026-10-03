@@ -235,6 +235,7 @@ export const STRINGS = {
     /* avatar & chip inputs */
     'avatar.error.format': 'Use PNG, JPEG, or WebP.',
     'avatar.error.upload': 'Upload failed.',
+    'avatar.error.size': 'Choose an image smaller than 10 MB.',
     'avatar.error.https': 'URL must start with https://',
     'avatar.error.load': 'Could not load image from that URL.',
     'chips.max': 'Max {max} reached',
@@ -468,6 +469,7 @@ export const STRINGS = {
     /* الصورة الشخصية والمهارات */
     'avatar.error.format': 'استخدم PNG أو JPEG أو WebP.',
     'avatar.error.upload': 'فشل الرفع.',
+    'avatar.error.size': 'اختر صورة بحجم أقل من 10 ميجابايت.',
     'avatar.error.https': 'يجب أن يبدأ الرابط بـ https://',
     'avatar.error.load': 'تعذّر تحميل الصورة من ذلك الرابط.',
     'chips.max': 'بلغت الحد الأقصى ({max})',

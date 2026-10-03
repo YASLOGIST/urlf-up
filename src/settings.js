@@ -17,7 +17,8 @@ import { initAvatarZone } from './avatar.js'
 let _dialog = null
 let _skillChipInput = null
 let _interestChipInput = null
-let _avatarDataUrl = null   // current avatar value (base64 or URL or null)
+let _avatarValue = null // persisted URL, pending WebP Blob, or null
+let _avatarDirty = false
 let _currentSession = null
 let _openedAt = 0
 let _fromRole = null
@@ -51,14 +52,15 @@ function _fillForm(profile) {
   }
 
   // Avatar preview
-  _avatarDataUrl = profile?.avatar_url || null
+  _avatarValue = profile?.avatar_url || null
+  _avatarDirty = false
   const avatarZone = document.getElementById('settings-avatar-zone')
   if (avatarZone) {
     const img = avatarZone.querySelector('.avatar-img')
     const placeholder = avatarZone.querySelector('.avatar-placeholder')
     const btnRemove = avatarZone.querySelector('[data-action=remove]')
-    if (_avatarDataUrl && img) {
-      img.src = _avatarDataUrl
+    if (_avatarValue && img) {
+      img.src = _avatarValue
       img.hidden = false
       if (placeholder) placeholder.hidden = true
       if (btnRemove) btnRemove.hidden = false
@@ -153,6 +155,26 @@ export async function openSettings({
   }
 }
 
+async function _persistAvatar(value, userId) {
+  const path = `${userId}/avatar.webp`
+  if (value === null) {
+    const { error } = await supabase.storage.from('avatars').remove([path])
+    if (error) throw error
+    return null
+  }
+  if (!(value instanceof Blob)) return value
+
+  const { error } = await supabase.storage
+    .from('avatars')
+    .upload(path, value, { contentType: 'image/webp', upsert: true, cacheControl: '3600' })
+  if (error) throw error
+
+  const { data } = supabase.storage.from('avatars').getPublicUrl(path)
+  if (!data?.publicUrl) throw new Error('Avatar URL was not returned')
+  // Bust intermediary caches after an upsert while retaining a stable object path.
+  return `${data.publicUrl}?v=${Date.now()}`
+}
+
 // ── Submit handler ─────────────────────────────────────────────────────────
 async function _handleSubmit(e) {
   e.preventDefault()
@@ -168,8 +190,6 @@ async function _handleSubmit(e) {
   const skills = _skillChipInput ? _skillChipInput.getChips() : []
   const interests = _interestChipInput ? _interestChipInput.getChips() : []
   const bio = document.getElementById('settings-bio')?.value.trim() || null
-  const avatar_url = _avatarDataUrl || null
-
   if (!isValidRoleType(roleType)) {
     showError('settings-error', t('settings.error.role'))
     return
@@ -188,13 +208,16 @@ async function _handleSubmit(e) {
 
   setLoading(submitBtn, true)
   try {
+    const avatarUrl = _avatarDirty
+      ? await _persistAvatar(_avatarValue, _currentSession.user.id)
+      : _avatarValue
     const updatePayload = { role_type: roleType }
     if (mode !== 'rapid-switch' || fullName) updatePayload.full_name = fullName || undefined
     if (mode !== 'rapid-switch' || skills.length) updatePayload.skills = skills.length ? skills : undefined
     // Always include new fields (null is valid for bio/avatar)
     updatePayload.interests = interests
     updatePayload.bio = bio
-    updatePayload.avatar_url = avatar_url
+    updatePayload.avatar_url = avatarUrl
 
     for (const k of Object.keys(updatePayload)) {
       if (updatePayload[k] === undefined) delete updatePayload[k]
@@ -288,7 +311,12 @@ function _initModal() {
   // Avatar zone
   const avatarZone = document.getElementById('settings-avatar-zone')
   if (avatarZone) {
-    initAvatarZone(avatarZone, { onchange: (val) => { _avatarDataUrl = val } })
+    initAvatarZone(avatarZone, {
+      onchange: val => {
+        _avatarValue = val
+        _avatarDirty = true
+      },
+    })
   }
 
   // Bio counter
