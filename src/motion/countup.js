@@ -24,7 +24,7 @@ const easeOutExpo = (t) => (t === 1 ? 1 : 1 - Math.pow(2, -10 * t));
 /**
  * @param {HTMLElement} el must carry `data-countup="<number>"`
  */
-function run(el) {
+function run(el, animations = null) {
   const target = Number.parseFloat(el.dataset.countup ?? '');
   if (!Number.isFinite(target)) return;
 
@@ -49,16 +49,21 @@ function run(el) {
   }
 
   const start = performance.now();
+  let frameId = 0;
   function tick(now) {
     const t = Math.min(1, (now - start) / duration);
     el.textContent = format(target * easeOutExpo(t));
-    if (t < 1) requestAnimationFrame(tick);
-    else {
+    if (t < 1) {
+      frameId = requestAnimationFrame(tick);
+      animations?.add(frameId);
+    } else {
       el.textContent = format(target);
       el.setAttribute('data-countup-done', '');
     }
+    if (frameId) animations?.delete(frameId);
   }
-  requestAnimationFrame(tick);
+  frameId = requestAnimationFrame(tick);
+  animations?.add(frameId);
 }
 
 /**
@@ -68,6 +73,7 @@ function run(el) {
 export function initCountUp({ root = document } = {}) {
   const nodes = Array.from(root.querySelectorAll('[data-countup]'));
   if (!nodes.length) return { destroy() {}, count: 0 };
+  const animations = new Set();
 
   // `aria-live` would announce every intermediate value; instead the final
   // value is the accessible name and the animation is purely visual.
@@ -85,8 +91,14 @@ export function initCountUp({ root = document } = {}) {
   });
 
   if (typeof IntersectionObserver === 'undefined') {
-    nodes.forEach(run);
-    return { destroy() {}, count: nodes.length };
+    nodes.forEach((node) => run(node, animations));
+    return {
+      destroy() {
+        animations.forEach((id) => cancelAnimationFrame(id));
+        animations.clear();
+      },
+      count: nodes.length,
+    };
   }
 
   const io = new IntersectionObserver(
@@ -94,12 +106,19 @@ export function initCountUp({ root = document } = {}) {
       for (const entry of entries) {
         if (!entry.isIntersecting) continue;
         io.unobserve(entry.target);
-        run(entry.target);
+        run(entry.target, animations);
       }
     },
     { threshold: 0.4 }
   );
   nodes.forEach((el) => io.observe(el));
 
-  return { destroy: () => io.disconnect(), count: nodes.length };
+  return {
+    destroy() {
+      io.disconnect();
+      animations.forEach((id) => cancelAnimationFrame(id));
+      animations.clear();
+    },
+    count: nodes.length,
+  };
 }
