@@ -36,6 +36,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve as resolvePath } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import process from 'node:process';
 
 import { BRAND, hexToBytes } from '../../scripts/lib/brand.mjs';
 import { encodePNGFromRGB } from '../../scripts/lib/png.mjs';
@@ -115,8 +116,6 @@ const ROLES = [
   const [x, y] = polar(HUB.x, HUB.y, r.angle, RING.roles);
   return { ...r, x, y, i, bow: i === 1 ? 0.07 : -0.07 };
 });
-
-const VISIONARY = ROLES[0];
 
 /**
  * Convergence filaments: a bowed quadratic from each role to the core.
@@ -680,7 +679,7 @@ function renderSignature() {
     paintMask(
       work,
       mask,
-      (x, y) => {
+      (x) => {
         const d = x / SS - sx;
         const k = Math.exp(-(d * d) / 1800);
         if (k < 0.01) return null;
