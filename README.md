@@ -1,6 +1,8 @@
 <div align="center">
 
-<img src="public/og-image-animated.gif" alt="UR LF ✘ UP — Where Minds Meet. Visionary, Builder and Enabler converging on one mark." width="880">
+<img src="assets/readme/urlife-hero.gif" alt="UrLife — Where Minds Meet. A cinematic animated hero: VISIONARY, BUILDER and ENABLER converge on a 45-minute session dial, with the YASLOGIST signature. Nine-second seamless loop." width="100%">
+
+<sub>Still poster: <a href="assets/readme/urlife-hero-poster.png">urlife-hero-poster.png</a> · Rendered from repository code by <a href="assets/readme/render-readme-assets.mjs">assets/readme/render-readme-assets.mjs</a> · No third-party artwork</sub>
 
 <h1>UrLife — Where Minds Meet</h1>
 
@@ -11,26 +13,175 @@
 </p>
 
 <p>
-  <img alt="critical path 55.7 kB gzip" src="https://img.shields.io/badge/critical%20path-55.6%20kB%20gzip-D4AF37?style=flat-square&labelColor=0B0B0B">
-  <img alt="283 specs passing" src="https://img.shields.io/badge/specs-279%20passing-D4AF37?style=flat-square&labelColor=0B0B0B">
-  <img alt="axe 0 violations" src="https://img.shields.io/badge/axe--core-0%20violations-D4AF37?style=flat-square&labelColor=0B0B0B">
   <img alt="2 runtime dependencies" src="https://img.shields.io/badge/runtime%20deps-2-D4AF37?style=flat-square&labelColor=0B0B0B">
   <img alt="zero UI framework" src="https://img.shields.io/badge/UI%20framework-none-FF1E00?style=flat-square&labelColor=0B0B0B">
   <img alt="Vite 6" src="https://img.shields.io/badge/build-Vite%206-D4AF37?style=flat-square&labelColor=0B0B0B">
+  <img alt="Node 20.19 or newer" src="https://img.shields.io/badge/node-%E2%89%A520.19-D4AF37?style=flat-square&labelColor=0B0B0B">
 </p>
 
 <p>
-  <a href="#1--system-architecture"><b>System Architecture</b></a> ·
-  <a href="#2--feature-matrix"><b>Feature Matrix</b></a> ·
-  <a href="#3--core-workflows"><b>Core Workflows</b></a> ·
-  <a href="#4--tech-stack"><b>Tech Stack</b></a> ·
-  <a href="#7--quick-start">Quick start</a> ·
-  <a href="#9--known-gaps">Known gaps</a>
+  <a href="#01--the-system"><b>The system</b></a> ·
+  <a href="#02--core-capabilities"><b>Capabilities</b></a> ·
+  <a href="#03--engineering-architecture"><b>Architecture</b></a> ·
+  <a href="#04--execution-intelligence"><b>Execution</b></a> ·
+  <a href="#05--ignition"><b>Ignition</b></a> ·
+  <a href="#06--deep-system-access"><b>Deep docs</b></a> ·
+  <a href="#07--engineering-status"><b>Status</b></a> ·
+  <a href="#08--yaslogist"><b>YASLOGIST</b></a>
 </p>
 
 </div>
 
----
+<p align="center"><img src="assets/readme/divider.gif" width="100%" alt=""></p>
+
+## 01 · The system
+
+UrLife is a single-page marketing site with a progressively loaded member console in the
+same document. It is written in vanilla ES2022 modules, with no UI framework and no
+application server. The browser talks to Supabase (Postgres, GoTrue auth, Realtime,
+Storage) directly, and Postgres row-level security is the authorisation boundary.
+
+The product workflow is the one the site describes. Members submit a **structured idea
+brief**. A deterministic **matching engine** scores compatibility across the three roles
+the product is built around, **Visionary**, **Builder** and **Enabler** (the Postgres enum
+`user_role_type`). The process ends in one **45-minute private session with the UrLife
+team**, where partnership terms are discussed.
+
+**How to read the hero**
+
+| Element on the instrument | What it represents |
+| :-- | :-- |
+| Three role nodes on the orbit | The roles the platform matches across |
+| Light moving along the orbit | The complementary pairings the engine recognises: Visionary ↔ Builder and Visionary ↔ Enabler |
+| Packets flowing into the core | Each role's signal converging on the same mark |
+| 45 ticks and the sweep arm | The 45-minute session, one tick per minute, turning once per loop |
+
+## 02 · Core capabilities
+
+**Legend** — ● implemented and covered by specs · ◐ implemented with a named limit · ○ client-side simulation, no backend contract
+
+| Capability | Where | State |
+| :-- | :-- | :-: |
+| Structured idea submission with field-level validation | `src/ideas.js` · `nexus-schema.sql` | ● |
+| Role selection constrained to the Postgres enum | `src/validators.js` | ● |
+| Explainable matching across six weighted axes | `src/matchingEngine.js` | ● |
+| Recommendations dashboard over public ideas and interests | `src/dashboard.js` | ● |
+| Email + password and magic-link sign-in, PKCE session | `src/auth.js` · `src/lib/supabase.js` | ● |
+| Realtime interest and idea updates | `supabase.channel('nexus')` | ◐ |
+| Terms workspace (local draft, no save, send or escrow) | `src/components/DealRoom.js` | ○ |
+| Verification badge tiers (presentational) | `src/components/VerificationBadge.js` | ○ |
+| Bilingual EN ⇄ AR interface with full RTL inversion | `src/app/i18n.js` | ● |
+| Degraded mode when no backend credentials are configured | `src/lib/supabase.js` | ● |
+| Service worker v3 with offline fallback document | `public/sw.js` | ● |
+| Build-enforced size budgets and inline-style guard | `vite.config.js` | ● |
+| Accessibility checks (axe-core) and WCAG AA contrast audit in CI | `tests/a11y` · `scripts/audit-contrast.mjs` | ● |
+
+## 03 · Engineering architecture
+
+- **One module entry.** `index.html` loads `src/main.js`, which runs one ordered, idempotent
+  boot sequence in `src/app/boot.js`. Dependencies are checked by tests, not by convention.
+- **The backend is lazy.** `src/app/account.js` and every Supabase-backed module load on a
+  magic-link callback, the first call-to-action intent, or idle time. A visitor who only
+  reads the page downloads no backend code.
+- **Authorisation lives in Postgres.** RLS is enabled and forced on the tables defined in
+  `nexus-schema.sql`. The anon key is public by design, so RLS is the only real boundary.
+- **The visual field degrades by capability.** WebGL2, then Canvas2D, then no field at all.
+  Content never depends on the animation.
+
+```mermaid
+flowchart LR
+  subgraph Browser["Browser · static origin · no application server"]
+    direction TB
+    HTML["index.html<br/>one document"] --> MAIN["src/main.js<br/>single module entry"]
+    MAIN --> BOOT["src/app/boot.js<br/>ordered, idempotent boot"]
+    BOOT --> CORE["i18n · modal · motion · visual/field.js"]
+    BOOT -->|"magic link · first CTA intent · idle"| ACCT["src/app/account.js<br/>lazy backend wiring"]
+    ACCT --> FEAT["auth · ideas · settings"]
+    ACCT --> DASH["dashboard.js"]
+    DASH --> MATCH["matchingEngine.js<br/>explainable scoring"]
+    ACCT --> SBC["src/lib/supabase.js<br/>one client"]
+  end
+  SBC -->|"REST · GoTrue · Realtime · Storage"| SUPA[("Supabase Postgres<br/>RLS enabled and forced")]
+  HTML -->|"iframe · CSP frame-src allow-list"| CAL["Cal.com booking embed"]
+  HTML -.->|"production + secure context"| SW["public/sw.js"]
+
+  classDef lazy fill:#1a1a1a,stroke:#D4AF37,color:#f5f5f5;
+  classDef core fill:#111,stroke:#888,color:#eee;
+  class ACCT,FEAT,DASH,MATCH,SBC lazy;
+  class HTML,MAIN,BOOT,CORE core;
+```
+
+Full module graph, trust boundary and data plane: [§1](#1--system-architecture).
+
+## 04 · Execution intelligence
+
+**Cold start.** The sequence below is what runs before the first interaction. The
+backend is not part of it.
+
+1. The browser parses `index.html`: CSP, preconnect and manifest.
+2. `src/main.js` calls `boot()`, which sets data-tier and error reporting, then network state.
+3. The i18n, modal, motion and pointer modules initialise in order.
+4. The field renders through the capability ladder, and boot dispatches `urlife:ready`.
+5. Pointer, focus and click intent are armed. The member console loads only when a visitor
+   acts on it, and a click that arrives while the module is still loading is replayed
+   once the module is ready.
+
+**Explainable matching.** `src/matchingEngine.js` is deterministic. Each axis returns a
+score, a confidence and a human-readable note, so the dashboard can explain every ranking.
+The default weights are:
+
+| Axis | Default weight | What it measures |
+| :-- | --: | :-- |
+| Skills | 0.34 | Fuzzy overlap between the two skill sets |
+| Industry | 0.20 | Sector alignment |
+| Role | 0.16 | Complementarity of the two roles |
+| Data quality | 0.12 | Confidence when fields are sparse |
+| Capital | 0.10 | Capital-pool fit |
+| Reputation | 0.08 | Reputation signal |
+
+Missing fields lower confidence rather than breaking the conversion path. Weights can be
+overridden through `createWeightProfile`, which rejects negative values and totals above 1.0.
+
+## 05 · Ignition
+
+Requires Node.js 20.19 or newer.
+
+```bash
+npm ci
+npm run dev          # Vite, bound to 0.0.0.0:5173
+```
+
+No `.env` is required. Without Supabase credentials the site runs in degraded mode: everything
+renders and animates, and only authenticated flows report that they are unavailable.
+
+```bash
+npm test             # unit, flow, contract and accessibility specs
+npm run build        # production build; fails on a size or inline-style budget breach
+npm run verify       # lint, tests, build, bundle measurement, contrast and dependency audit
+node assets/readme/render-readme-assets.mjs   # regenerate the README hero, divider and signature
+```
+
+The full command reference is in [§7](#7--quick-start).
+
+## 06 · Deep system access
+
+The complete engineering specification follows. Section numbers are unchanged from earlier
+revisions, so existing links keep working.
+
+| Section | Topic |
+| :-- | :-- |
+| [§1](#1--system-architecture) | System architecture, module ownership, data plane, trust boundary |
+| [§2](#2--feature-matrix) | Feature matrix with per-capability state |
+| [§3](#3--core-workflows) | Cold start, intent capture, authentication, matching, degraded mode, OG asset pipeline |
+| [§4](#4--tech-stack) | Stack, versions and dependency budget |
+| [§5](#5--performance-envelope) | Payload, simulation and draw-call measurements |
+| [§6](#6--quality-gates) | CI quality gates and thresholds |
+| [§7](#7--quick-start) | Quick start and full command reference |
+| [§8](#8--repository-map) | Repository map |
+| [§9](#9--known-gaps) | Known gaps and cheapest resolutions |
+| [§10](#10--security-licence-provenance) | Security, licence and provenance |
+
+<p align="center"><img src="assets/readme/divider.gif" width="100%" alt=""></p>
 
 ## Abstract
 
@@ -941,7 +1092,48 @@ measured), [`docs/MIGRATIONS.md`](docs/MIGRATIONS.md).
 
 </details>
 
+
+<p align="center"><img src="assets/readme/divider.gif" width="100%" alt=""></p>
+
+## 07 · Engineering status
+
+Status is stated by evidence, not intent. The detailed matrix is in [§2](#2--feature-matrix);
+open items and their cheapest resolutions are in [§9](#9--known-gaps).
+
+| Status | What it covers |
+| :-- | :-- |
+| **Implemented and covered** | Auth flows, idea submission, ideas feed, explainable matching, the dashboard, settings and avatar upload, bilingual interface, dialog stack, service worker, build and size budgets, contrast and accessibility checks |
+| **Implemented with a named limit** | Realtime updates (`postgres_changes`, untested against a live Supabase project), custom cursor (fine pointer only), Capacitor shells (not exercised in CI), no-JavaScript fallback (content renders, console unavailable) |
+| **Client-side simulation by design** | Terms workspace (no save, send, signature, funding or escrow), verification badge tiers (no issuing authority) |
+| **Unverified in this repository** | Real-browser frame rate, LCP and CLS; native Capacitor builds; the booking link's current availability (see [§9](#9--known-gaps)) |
+
+The hero, divider and signature are generated from code in `assets/readme/`. The hero GIF
+was decoded with an independent decoder: all 180 frames are present, and the loop seam
+differs by about the same amount as ordinary consecutive frames. Representative frames were
+inspected visually. GitHub's own renderer was not available here, so its display is unverified.
+
+## 08 · YASLOGIST
+
+<p align="center">
+  <img src="assets/readme/yaslogist-signature.gif" width="520" alt="YASLOGIST — www.yaslogist.com. Animated closing signature with a light sweep across the wordmark.">
+</p>
+
+<p align="center">
+  <sub><a href="assets/readme/yaslogist-signature.png">Still signature</a></sub>
+</p>
+
+**UrLife** is presented under the **YASLOGIST** creative signature. The product name stays
+the primary identity; the YASLOGIST signature sits beside it in the hero, in this section and
+in the closing line below. The repository contains no official YASLOGIST logo file, so the
+wordmark is typeset from the same stroke geometry as the UrLife product mark, and no logo
+has been invented.
+
+| Link | Destination |
+| :-- | :-- |
+| YASLOGIST | [www.yaslogist.com](https://www.yaslogist.com) |
+| UrLife | [urlifeisup.com](https://urlifeisup.com/) |
+
 <div align="center">
 <br>
-<sub><b>UR LF ✘ UP</b> · <a href="https://urlifeisup.com/">urlifeisup.com</a> · Where Minds Meet</sub>
+<sub><b>UR LF ✘ UP</b> · Where Minds Meet · a <b>YASLOGIST</b> signature · <a href="https://www.yaslogist.com">www.yaslogist.com</a></sub>
 </div>
