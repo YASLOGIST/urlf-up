@@ -3,7 +3,7 @@
   "version": "2.0.0",
   "private": true,
   "type": "module",
-  "description": "UrLife \u2014 Where Minds Meet. Vanilla-JS, zero-UI-framework marketing site and member console.",
+  "description": "UrLife — Where Minds Meet. Vanilla-JS, zero-UI-framework marketing site and member console.",
   "license": "UNLICENSED",
   "engines": {
     "node": ">=20.19"
@@ -42,7 +42,7 @@
     "@capacitor/cli": "^7.0.0",
     "@capacitor/ios": "^7.0.0",
     "@eslint/js": "^9.39.5",
-    "@vitest/coverage-v8": "^3.2.7",
+    "@vitest/coverage-v8": "^5.0.3",
     "axe-core": "^4.13.0",
     "eslint": "^9.39.5",
     "globals": "^17.12.0",
@@ -52,6 +52,6 @@
     "typescript": "^6.0.3",
     "vite": "^6.0.0",
     "vite-plugin-compression2": "^2.5.3",
-    "vitest": "^3.2.7"
+    "vitest": "^5.0.3"
   }
 }
