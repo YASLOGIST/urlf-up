@@ -12,9 +12,15 @@
 
 import { spawnSync } from 'node:child_process';
 
+// npm inherits project-scoped settings from the parent npm run process.
+// A user-level allow-scripts setting is not valid in a project context and
+// would otherwise make a clean security audit fail before scanning anything.
+const auditEnv = { ...process.env };
+delete auditEnv.npm_config_allow_scripts;
 const result = spawnSync('npm', ['audit', '--json'], {
   encoding: 'utf8',
   stdio: ['ignore', 'pipe', 'pipe'],
+  env: auditEnv,
 });
 
 if (result.error) {

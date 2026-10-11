@@ -14,7 +14,7 @@ env:
   # The build must never depend on real credentials. Everything that needs the
   # backend is exercised against the in-repo stub, so CI deliberately runs in
   # degraded mode — which also proves degraded mode still builds and boots.
-  NODE_VERSION: '20'
+  NODE_VERSION: '24'
 
 jobs:
   quality:
